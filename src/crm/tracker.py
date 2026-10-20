@@ -13,6 +13,7 @@ from typing import List, Dict, Any, Optional
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data"))
 JSON_PATH = os.path.join(DATA_DIR, "leads.json")
 CSV_PATH = os.path.join(DATA_DIR, "leads.csv")
+EXEC_JSON_PATH = os.path.join(DATA_DIR, "executive_leads.json")
 
 CSV_COLUMNS = [
     "id",
@@ -179,3 +180,46 @@ class LeadTracker:
                 self.save()
                 return True
         return False
+
+
+class ExecutiveTracker:
+    def __init__(self, json_path: str = EXEC_JSON_PATH):
+        self.json_path = json_path
+        os.makedirs(os.path.dirname(self.json_path), exist_ok=True)
+        self.leads: Dict[str, Dict[str, Any]] = self._load_leads()
+
+    def _load_leads(self) -> Dict[str, Dict[str, Any]]:
+        if os.path.exists(self.json_path):
+            try:
+                with open(self.json_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"[!] Warning reading {self.json_path}: {e}")
+        return {}
+
+    def save(self):
+        with open(self.json_path, "w", encoding="utf-8") as f:
+            json.dump(self.leads, f, indent=2, ensure_ascii=False)
+
+    def get_leads(self, status_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+        self.leads = self._load_leads()
+        leads_list = list(self.leads.values())
+        if status_filter:
+            leads_list = [l for l in leads_list if l.get("status", "").lower() == status_filter.lower()]
+        return leads_list
+
+    def update_lead(self, lead_id: str, updates: Dict[str, Any]) -> bool:
+        self.leads = self._load_leads()
+        if lead_id in self.leads:
+            self.leads[lead_id].update(updates)
+            self.save()
+            return True
+        return False
+
+    def add_lead(self, data: Dict[str, Any]) -> str:
+        self.leads = self._load_leads()
+        lead_id = data.get("id") or f"exec_{len(self.leads) + 1}"
+        data["id"] = lead_id
+        self.leads[lead_id] = data
+        self.save()
+        return lead_id
