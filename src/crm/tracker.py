@@ -181,6 +181,28 @@ class LeadTracker:
                 return True
         return False
 
+    def update_lead(self, lead_id: str, updates: Dict[str, Any]) -> bool:
+        self.leads = self._load_leads()
+        if lead_id in self.leads:
+            self.leads[lead_id].update(updates)
+            self.save()
+            return True
+        # Try matching by name
+        for key, lead in self.leads.items():
+            if lead.get("name", "").lower() == lead_id.lower():
+                lead.update(updates)
+                self.save()
+                return True
+        return False
+
+    def delete_lead(self, lead_id: str) -> bool:
+        self.leads = self._load_leads()
+        if lead_id in self.leads:
+            del self.leads[lead_id]
+            self.save()
+            return True
+        return False
+
 
 class ExecutiveTracker:
     def __init__(self, json_path: str = EXEC_JSON_PATH):
@@ -223,3 +245,11 @@ class ExecutiveTracker:
         self.leads[lead_id] = data
         self.save()
         return lead_id
+
+    def delete_lead(self, lead_id: str) -> bool:
+        self.leads = self._load_leads()
+        if lead_id in self.leads:
+            del self.leads[lead_id]
+            self.save()
+            return True
+        return False

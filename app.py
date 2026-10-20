@@ -768,6 +768,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
     }
+    .btn-edit {
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    .btn-edit:hover {
+      background: rgba(56, 189, 248, 0.25);
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fda4af;
+      font-weight: 600;
+    }
+    .btn-danger:hover {
+      background: rgba(244, 63, 94, 0.3);
+      border-color: #f43f5e;
+      color: #ffffff;
+    }
+    .modal-card-lg {
+      max-width: 680px;
+    }
+    .form-row-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 600px) {
+      .form-row-2col { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -938,6 +972,147 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px;">
         <button class="btn" onclick="closeAddLeadModal()">Cancel</button>
         <button class="btn btn-primary" onclick="submitNewLead()">Save Lead</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Lead Modal -->
+  <div class="modal-overlay" id="edit-lead-modal">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <div class="modal-title" id="edit-modal-title">✏️ Edit Lead</div>
+        <button class="close-btn" onclick="closeEditLeadModal()">&times;</button>
+      </div>
+
+      <!-- Edit Media Fields -->
+      <div id="edit-media-fields" style="display: none;">
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Podcast Name</label>
+            <input type="text" id="edit-show-name" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Host / Target Contact</label>
+            <input type="text" id="edit-show-host" class="form-input">
+          </div>
+        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Contact Email</label>
+            <input type="email" id="edit-show-email" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="edit-show-status" class="form-input"></select>
+          </div>
+        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Website URL</label>
+            <input type="url" id="edit-show-website" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LinkedIn URL</label>
+            <input type="url" id="edit-show-linkedin" class="form-input">
+          </div>
+        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">YouTube URL / Channel</label>
+            <input type="url" id="edit-show-youtube" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Active Commented Video URL</label>
+            <input type="url" id="edit-show-video-url" class="form-input">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label">Topic / Genre / Reach</label>
+          <input type="text" id="edit-show-topic" class="form-input">
+        </div>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label">Engagement Hook / Rupert Angle</label>
+          <textarea id="edit-show-hook" class="form-input" rows="2"></textarea>
+        </div>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label">Current Activity & Interaction Notes</label>
+          <textarea id="edit-show-activity" class="form-input" rows="2"></textarea>
+        </div>
+      </div>
+
+      <!-- Edit Exec Fields -->
+      <div id="edit-exec-fields" style="display: none;">
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Executive Name</label>
+            <input type="text" id="edit-exec-name" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Entity / Company</label>
+            <input type="text" id="edit-exec-company" class="form-input">
+          </div>
+        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Title / Role</label>
+            <input type="text" id="edit-exec-title" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select id="edit-exec-status" class="form-input"></select>
+          </div>
+        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select id="edit-exec-priority" class="form-input">
+              <option value="P1">P1 - High Priority</option>
+              <option value="P2">P2 - Secondary</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Strategic Group</label>
+            <select id="edit-exec-group" class="form-input">
+              <option value="Group 1">Group 1: Co-investors (ARCH, AIIM, Leapfrog)</option>
+              <option value="Group 2">Group 2: Operating Partners (Atradius, IFU, Norfund)</option>
+              <option value="Group 3">Group 3: Family Offices</option>
+              <option value="Group 4">Group 4: Founders & Portco Execs</option>
+              <option value="Unassigned">Unassigned</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Direct Email</label>
+            <input type="email" id="edit-exec-email" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LinkedIn Profile URL</label>
+            <input type="url" id="edit-exec-linkedin" class="form-input">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label class="form-label">Strategic Angle / Entry Hook</label>
+          <textarea id="edit-exec-hook" class="form-input" rows="2"></textarea>
+        </div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Current Pipeline Activity</label>
+            <input type="text" id="edit-exec-activity" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Next Move</label>
+            <input type="text" id="edit-exec-next-move" class="form-input">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid var(--border); padding-top: 14px;">
+        <button class="btn btn-danger" onclick="deleteLeadFromModal()">🗑️ Delete Lead</button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" onclick="closeEditLeadModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveLeadEdits()">Save Changes</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1204,13 +1379,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="lead-card" id="card-${escapeHtml(lead.id)}">
           <div class="card-top">
             <div class="card-title-group">
-              <div class="card-title">${escapeHtml(lead.name || 'Untitled Show')}</div>
+              <div class="card-title" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" style="cursor: pointer;" title="Click to edit">${escapeHtml(lead.name || 'Untitled Show')}</div>
               <div class="card-subtitle">
                 <span class="pill-badge badge-media">${escapeHtml(lead.genre || lead.topic || 'Media')}</span>
                 ${lead.reach_metrics ? `<span style="font-size: 11px; color: var(--text-muted);">• ${escapeHtml(lead.reach_metrics)}</span>` : ''}
               </div>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" title="Edit show details">✏️ Edit</button>
               <select class="status-select ${statusClass}" onchange="updatePodcastStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_MEDIA.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
@@ -1302,14 +1478,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div class="lead-card" id="card-${escapeHtml(lead.id)}">
           <div class="card-top">
             <div class="card-title-group">
-              <div class="card-title">${escapeHtml(lead.name || 'Unnamed Contact')}</div>
+              <div class="card-title" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" style="cursor: pointer;" title="Click to edit">${escapeHtml(lead.name || 'Unnamed Contact')}</div>
               <div class="card-subtitle">
                 <span class="pill-badge badge-exec">${escapeHtml(lead.company || 'Enterprise')}</span>
                 ${lead.priority ? `<span class="pill-badge badge-p1">${escapeHtml(lead.priority)}</span>` : ''}
                 ${lead.group ? `<span class="pill-badge badge-group">${escapeHtml(lead.group)}</span>` : ''}
               </div>
             </div>
-            <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" title="Edit lead details">✏️ Edit</button>
               <select class="status-select ${statusClass}" onchange="updateExecutiveStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_EXEC.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
@@ -1358,11 +1535,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <th>Links</th>
             <th>Activity / Video</th>
             <th>Engagement Hook</th>
+            <th style="text-align: center;">Action</th>
           </tr>
         `;
 
         if (leads.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
           return;
         }
 
@@ -1374,7 +1552,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               </select>
             </td>
             <td class="td-title">
-              <div>${escapeHtml(l.name)}</div>
+              <div onclick="openEditLeadModal('${escapeHtml(l.id)}', 'media')" style="cursor: pointer; text-decoration: underline dotted;" title="Click to edit">${escapeHtml(l.name)}</div>
               <div style="font-size: 10px; color: var(--text-muted); font-weight: normal;">${escapeHtml(l.genre || l.topic || '')}</div>
             </td>
             <td>${escapeHtml(l.host || 'Host')}</td>
@@ -1398,6 +1576,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(l.current_activity || '')}</div>
             </td>
             <td style="max-width: 320px; font-size: 11.5px; line-height: 1.4;">${escapeHtml(l.rupert_angle || l.pitch_angle || '')}</td>
+            <td style="text-align: center;">
+              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'media')" title="Edit show details">✏️ Edit</button>
+            </td>
           </tr>
         `).join('');
       } else {
@@ -1410,11 +1591,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <th>Activity</th>
             <th>Strategic Hook</th>
             <th>LinkedIn</th>
+            <th style="text-align: center;">Action</th>
           </tr>
         `;
 
         if (leads.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
           return;
         }
 
@@ -1425,7 +1607,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 ${STATUS_OPTIONS_EXEC.map(opt => `<option value="${escapeHtml(opt)}" ${l.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
             </td>
-            <td class="td-title">${escapeHtml(l.name)}</td>
+            <td class="td-title">
+              <span onclick="openEditLeadModal('${escapeHtml(l.id)}', 'exec')" style="cursor: pointer; text-decoration: underline dotted;" title="Click to edit">${escapeHtml(l.name)}</span>
+            </td>
             <td>
               <span class="pill-badge badge-exec">${escapeHtml(l.company)}</span>
             </td>
@@ -1437,6 +1621,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <td style="max-width: 300px; font-size: 11.5px; line-height: 1.4;">${escapeHtml(l.hook || '')}</td>
             <td>
               ${l.linkedin_url ? `<a href="${l.linkedin_url}" target="_blank" class="btn-xs" style="color: #38bdf8;">💼 Profile</a>` : '<span style="color: var(--text-muted);">-</span>'}
+            </td>
+            <td style="text-align: center;">
+              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'exec')" title="Edit lead details">✏️ Edit</button>
             </td>
           </tr>
         `).join('');
@@ -1568,6 +1755,170 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderLeads();
     }
 
+    /* Edit Lead Modal Logic */
+    let editingLeadId = null;
+    let editingPipelineType = null;
+
+    function openEditLeadModal(id, type) {
+      editingLeadId = id;
+      editingPipelineType = type || activePipeline;
+
+      const modal = document.getElementById('edit-lead-modal');
+      const titleEl = document.getElementById('edit-modal-title');
+      const mediaFields = document.getElementById('edit-media-fields');
+      const execFields = document.getElementById('edit-exec-fields');
+
+      if (editingPipelineType === 'media') {
+        const lead = mediaLeads.find(l => l.id === id);
+        if (!lead) return;
+        titleEl.innerText = `✏️ Edit Podcast: ${lead.name || 'Show'}`;
+        mediaFields.style.display = 'block';
+        execFields.style.display = 'none';
+
+        document.getElementById('edit-show-name').value = lead.name || '';
+        document.getElementById('edit-show-host').value = lead.host || '';
+        document.getElementById('edit-show-email').value = lead.contact_email || '';
+        document.getElementById('edit-show-website').value = lead.website || '';
+        document.getElementById('edit-show-linkedin').value = lead.linkedin_url || '';
+        document.getElementById('edit-show-youtube').value = lead.youtube_url || '';
+        document.getElementById('edit-show-video-url').value = lead.video_url || '';
+        document.getElementById('edit-show-topic').value = lead.genre || lead.topic || '';
+        document.getElementById('edit-show-hook').value = lead.rupert_angle || lead.pitch_angle || '';
+        document.getElementById('edit-show-activity').value = lead.current_activity || lead.notes || '';
+
+        const statusSelect = document.getElementById('edit-show-status');
+        statusSelect.innerHTML = STATUS_OPTIONS_MEDIA.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
+      } else {
+        const lead = execLeads.find(l => l.id === id);
+        if (!lead) return;
+        titleEl.innerText = `✏️ Edit Executive: ${lead.name || 'Lead'}`;
+        mediaFields.style.display = 'none';
+        execFields.style.display = 'block';
+
+        document.getElementById('edit-exec-name').value = lead.name || '';
+        document.getElementById('edit-exec-company').value = lead.company || '';
+        document.getElementById('edit-exec-title').value = lead.title || '';
+        document.getElementById('edit-exec-priority').value = lead.priority || 'P1';
+        document.getElementById('edit-exec-group').value = lead.group || 'Unassigned';
+        document.getElementById('edit-exec-email').value = lead.email || '';
+        document.getElementById('edit-exec-linkedin').value = lead.linkedin_url || '';
+        document.getElementById('edit-exec-hook').value = lead.hook || '';
+        document.getElementById('edit-exec-activity').value = lead.current_activity || '';
+        document.getElementById('edit-exec-next-move').value = lead.next_move || '';
+
+        const statusSelect = document.getElementById('edit-exec-status');
+        statusSelect.innerHTML = STATUS_OPTIONS_EXEC.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('');
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeEditLeadModal() {
+      document.getElementById('edit-lead-modal').classList.remove('active');
+      editingLeadId = null;
+      editingPipelineType = null;
+    }
+
+    async function saveLeadEdits() {
+      if (!editingLeadId) return;
+
+      if (editingPipelineType === 'media') {
+        const name = document.getElementById('edit-show-name').value.trim();
+        if (!name) return alert('Podcast name is required');
+
+        const updates = {
+          name: name,
+          host: document.getElementById('edit-show-host').value.trim(),
+          contact_email: document.getElementById('edit-show-email').value.trim(),
+          status: document.getElementById('edit-show-status').value,
+          website: document.getElementById('edit-show-website').value.trim(),
+          linkedin_url: document.getElementById('edit-show-linkedin').value.trim(),
+          youtube_url: document.getElementById('edit-show-youtube').value.trim(),
+          video_url: document.getElementById('edit-show-video-url').value.trim(),
+          topic: document.getElementById('edit-show-topic').value.trim(),
+          genre: document.getElementById('edit-show-topic').value.trim(),
+          rupert_angle: document.getElementById('edit-show-hook').value.trim(),
+          current_activity: document.getElementById('edit-show-activity').value.trim(),
+          notes: document.getElementById('edit-show-activity').value.trim()
+        };
+
+        const res = await fetch('/api/leads/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingLeadId, updates: updates })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const target = mediaLeads.find(l => l.id === editingLeadId);
+          if (target) Object.assign(target, updates);
+          showToast('Podcast updated successfully');
+        }
+      } else {
+        const name = document.getElementById('edit-exec-name').value.trim();
+        const company = document.getElementById('edit-exec-company').value.trim();
+        if (!name || !company) return alert('Executive name and company are required');
+
+        const updates = {
+          name: name,
+          company: company,
+          title: document.getElementById('edit-exec-title').value.trim(),
+          status: document.getElementById('edit-exec-status').value,
+          priority: document.getElementById('edit-exec-priority').value,
+          group: document.getElementById('edit-exec-group').value,
+          email: document.getElementById('edit-exec-email').value.trim(),
+          linkedin_url: document.getElementById('edit-exec-linkedin').value.trim(),
+          hook: document.getElementById('edit-exec-hook').value.trim(),
+          current_activity: document.getElementById('edit-exec-activity').value.trim(),
+          next_move: document.getElementById('edit-exec-next-move').value.trim()
+        };
+
+        const res = await fetch('/api/executives/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingLeadId, updates: updates })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const target = execLeads.find(l => l.id === editingLeadId);
+          if (target) Object.assign(target, updates);
+          showToast('Executive lead updated successfully');
+        }
+      }
+
+      closeEditLeadModal();
+      renderKPIs();
+      renderLeads();
+    }
+
+    async function deleteLeadFromModal() {
+      if (!editingLeadId) return;
+      if (!confirm('Are you sure you want to permanently delete this lead from the CRM?')) return;
+
+      if (editingPipelineType === 'media') {
+        await fetch('/api/leads/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingLeadId })
+        });
+        mediaLeads = mediaLeads.filter(l => l.id !== editingLeadId);
+        document.getElementById('badge-media-count').innerText = mediaLeads.length;
+        showToast('Podcast deleted');
+      } else {
+        await fetch('/api/executives/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingLeadId })
+        });
+        execLeads = execLeads.filter(l => l.id !== editingLeadId);
+        document.getElementById('badge-exec-count').innerText = execLeads.length;
+        showToast('Executive lead deleted');
+      }
+
+      closeEditLeadModal();
+      renderKPIs();
+      renderLeads();
+    }
+
     /* Clipboard Copy Utility */
     function copyText(str) {
       if (!str) return;
@@ -1616,16 +1967,39 @@ def get_leads():
 def update_lead():
     data = request.get_json() or {}
     lead_id = data.get("id")
+    updates = data.get("updates")
+    if updates and isinstance(updates, dict):
+        success = tracker.update_lead(lead_id, updates)
+        return jsonify({"success": success})
+    
     status = data.get("status")
     notes = data.get("notes", "")
     angle = data.get("pitch_angle", "")
     current_activity = data.get("current_activity", "")
 
-    tracker.update_status(lead_id, status=status, notes=notes, pitch_angle=angle)
-    if current_activity and lead_id in tracker.leads:
-        tracker.leads[lead_id]["current_activity"] = current_activity
-        tracker.save()
-    return jsonify({"success": True})
+    up = {}
+    if status is not None: up["status"] = status
+    if notes: up["notes"] = notes
+    if angle: up["rupert_angle"] = angle
+    if current_activity: up["current_activity"] = current_activity
+    success = tracker.update_lead(lead_id, up)
+    return jsonify({"success": success})
+
+
+@app.route("/api/leads/delete", methods=["POST"])
+def delete_lead():
+    data = request.get_json() or {}
+    lead_id = data.get("id")
+    success = tracker.delete_lead(lead_id)
+    return jsonify({"success": success})
+
+
+@app.route("/api/executives/delete", methods=["POST"])
+def delete_executive():
+    data = request.get_json() or {}
+    lead_id = data.get("id")
+    success = exec_tracker.delete_lead(lead_id)
+    return jsonify({"success": success})
 
 
 @app.route("/api/leads/add", methods=["POST"])
