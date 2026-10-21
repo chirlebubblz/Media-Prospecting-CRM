@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Ethics Insight - Executive Outreach & Media CRM
+Executive Outreach & Media CRM
 Dual-Pipeline CRM:
 1. Podcast & Media Pipeline (P4 - Target Shows & Enriched Media)
 2. Executive & Dealmaker Pipeline (Master Leads & Outreach - PE/VC/DFI Partners)
@@ -54,7 +54,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ethics Insight | Executive Outreach & Media CRM</title>
+  <title>Media & Executive Outreach CRM</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -902,13 +902,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <!-- Top Navigation Bar -->
   <header class="top-navbar">
     <div class="brand-section">
-      <div class="brand-logo">🛡️</div>
+      <div class="brand-logo">🎙️</div>
       <div>
         <div class="brand-title">
-          Ethics Insight
-          <span class="brand-badge">Executive CRM</span>
+          Media & Outreach
+          <span class="brand-badge">CRM</span>
         </div>
-        <div class="brand-sub">Behavioral Due Diligence & Media Outreach</div>
+        <div class="brand-sub">Executive Prospecting & Pipeline Intelligence</div>
       </div>
     </div>
 
@@ -1129,7 +1129,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <input type="text" id="edit-show-topic" class="form-input">
         </div>
         <div class="form-group" style="margin-bottom: 8px;">
-          <label class="form-label">Engagement Hook / Rupert Angle</label>
+          <label class="form-label">Engagement Hook / Strategic Angle</label>
           <textarea id="edit-show-hook" class="form-input" rows="2"></textarea>
         </div>
         <div class="form-group" style="margin-bottom: 8px;">
@@ -1232,7 +1232,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <div>
         <label class="form-label">Suggested Topic Angles (Click to auto-fill):</label>
         <div class="preset-chips-wrap">
-          <span class="preset-chip" onclick="selectPresetTopic('Corporate compliance, ethics and fraud investigations')">🛡️ Compliance & Fraud</span>
+          <span class="preset-chip" onclick="selectPresetTopic('Corporate governance, risk management and operational compliance')">🛡️ Governance & Risk</span>
           <span class="preset-chip" onclick="selectPresetTopic('Operational friction, margin leakage and supply chain productivity')">⚙️ Operations & Margin</span>
           <span class="preset-chip" onclick="selectPresetTopic('Founder blindspots, executive mental health and scaleup resilience')">🧠 Founder Blindspots</span>
           <span class="preset-chip" onclick="selectPresetTopic('Private equity due diligence, M&A cultural integration and people risk')">💼 PE & M&A Diligence</span>
@@ -1295,13 +1295,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <!-- Spinner Box (Active during search) -->
       <div class="spinner-box" id="discover-spinner">
         <div class="spinner-icon">🔄</div>
-        <div>Searching directories, extracting RSS feeds & generating Rupert Evill angles...</div>
+        <div>Searching directories, extracting RSS feeds & generating outreach angles...</div>
         <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">This takes about 5 to 10 seconds.</div>
       </div>
 
       <!-- Action Buttons -->
       <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px;" id="discover-actions">
-        <button class="btn btn-success" onclick="autoDiscoverAllPresets()" title="Auto-crawl across all 4 Ethics Insight core industry categories">
+        <button class="btn btn-success" onclick="autoDiscoverAllPresets()" title="Auto-crawl across core industry categories">
           <span>⚡ Auto-Discover 4 Core Niches</span>
         </button>
         <div style="display: flex; gap: 8px;">
@@ -1412,7 +1412,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <option value="Founder">Founder Psychology & Blindspots</option>
           <option value="Venture">Venture Capital & Scaleups</option>
           <option value="M&A">Private Equity & M&A Diligence</option>
-          <option value="Governance">Compliance, Ethics & Fraud</option>
+          <option value="Governance">Governance, Risk & Strategy</option>
         `;
       } else {
         catSelect.innerHTML = `
@@ -1691,10 +1691,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             ${lead.spotify_url ? `<a href="${lead.spotify_url}" target="_blank" class="link-pill">🎧 Spotify</a>` : ''}
           </div>
 
-          <!-- Engagement Hook / Rupert Angle -->
+          <!-- Engagement Hook / Strategic Angle -->
           <div class="hook-box">
             <div class="hook-label">🎙️ Engagement Hook / Topic:</div>
-            <div>${escapeHtml(lead.rupert_angle || lead.pitch_angle || lead.theme || 'Behavioral due diligence, people risk, and organizational fraud controls.')}</div>
+            <div>${escapeHtml(lead.rupert_angle || lead.pitch_angle || lead.theme || 'Strategic discussion, executive insights, and industry leadership.')}</div>
           </div>
 
           <!-- Notes & Current Activity Field -->
@@ -2475,7 +2475,7 @@ def export_excel():
     wb.save(buf)
     buf.seek(0)
 
-    filename = f"Ethics_Insight_Progress_Sheet_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    filename = f"Media_Executive_Progress_Sheet_{datetime.now().strftime('%Y%m%d')}.xlsx"
     return send_file(
         buf,
         as_attachment=True,
@@ -2581,5 +2581,5 @@ def search_presets():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5050))
     host = os.environ.get("HOST", "0.0.0.0")
-    print(f"[*] Starting Ethics Insight Media Dashboard on http://{host}:{port}")
+    print(f"[*] Starting Media & Executive Dashboard on http://{host}:{port}")
     app.run(host=host, port=port, debug=False)

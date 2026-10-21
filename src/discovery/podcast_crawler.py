@@ -1,7 +1,7 @@
 """
-Podcast Crawler module for Ethics Insight.
+Podcast Crawler module.
 Queries public podcast directories (Apple Podcasts / iTunes Search API)
-to discover podcasts matching compliance, risk, ethics, and finance keywords.
+to discover podcasts matching executive, leadership, strategy, and business keywords.
 """
 
 import json
@@ -10,17 +10,17 @@ import urllib.request
 from typing import List, Dict, Any, Optional
 
 DEFAULT_PRESET_QUERIES = [
-    "corporate compliance",
-    "risk management",
-    "business ethics",
-    "financial crime",
-    "internal audit",
-    "regulatory compliance",
-    "fintech compliance",
-    "fraud investigation",
+    "leadership",
+    "business strategy",
+    "operations",
+    "private equity",
+    "venture capital",
+    "corporate governance",
+    "technology",
+    "investing",
 ]
 
-USER_AGENT = "EthicsInsight-MediaDiscovery/1.0 (+https://ethicsinsight.local)"
+USER_AGENT = "MediaOutreach-CRM/1.0"
 
 
 def search_podcasts(query: str, limit: int = 25) -> List[Dict[str, Any]]:

@@ -1,5 +1,5 @@
 """
-RSS Feed Extractor module for Ethics Insight.
+RSS Feed Extractor module.
 Inspects podcast RSS XML feeds to extract host contact emails,
 show websites, social media links, description summaries, and recent episode topics.
 """

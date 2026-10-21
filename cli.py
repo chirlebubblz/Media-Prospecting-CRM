@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Ethics Insight - Media Discovery & Outreach CLI
-Discover, extract contact info, and track outreach for podcasts and shows
-in compliance, risk, and finance.
+Media Discovery & Outreach CLI
+Discover, extract contact info, and track outreach for podcasts and shows.
 """
 
 import argparse
@@ -160,7 +159,7 @@ def cmd_export(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ethics Insight Media Outreach & Discovery Tool",
+        description="Media Outreach & Discovery Tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     subparsers = parser.add_subparsers(dest="command")

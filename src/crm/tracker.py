@@ -1,7 +1,7 @@
 """
-CRM and Lead Tracker module for Ethics Insight.
+CRM and Lead Tracker module.
 Stores rich podcast prospecting data, social media links, editorial summaries,
-and custom Rupert Evill / Ethics Insight angles in local CSV and JSON.
+and custom engagement angles in local CSV and JSON.
 """
 
 import csv

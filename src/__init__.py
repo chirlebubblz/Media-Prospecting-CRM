@@ -1,1 +1,1 @@
-# Ethics Insight package
+# Media Prospecting CRM package
