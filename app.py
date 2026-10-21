@@ -802,6 +802,75 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     @media (max-width: 600px) {
       .form-row-2col { grid-template-columns: 1fr; }
     }
+
+    /* Preset & Discovery Chips */
+    .preset-chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      margin-bottom: 14px;
+    }
+    .preset-chip {
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #7dd3fc;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .preset-chip:hover {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+    .engine-radio-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 5px;
+    }
+    .engine-pill-label {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-weight: 600;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .engine-pill-label input { display: none; }
+    .engine-pill-label.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+    .spinner-box {
+      display: none;
+      text-align: center;
+      padding: 24px 10px;
+      color: #38bdf8;
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+    .spinner-icon {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -838,11 +907,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <button class="view-btn" id="view-table-btn" onclick="setViewMode('table')">📋 Table</button>
       </div>
 
+      <button class="btn btn-primary" id="btn-discover-top" onclick="openDiscoverModal()" style="background: linear-gradient(135deg, #0284c7, #38bdf8); color: #070b14; font-weight: 800; border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);">
+        <span>⚡ Discover Podcasts</span>
+      </button>
+
       <a href="/api/export/excel" class="btn btn-success" title="Download Excel Progress Sheet matching your format">
         <span>📥 Export Excel</span>
       </a>
 
-      <button class="btn btn-primary" onclick="openAddLeadModal()">
+      <button class="btn" onclick="openAddLeadModal()">
         <span>➕ Add Lead</span>
       </button>
     </div>
@@ -858,9 +931,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Filter & Search Toolbar -->
     <div class="filter-toolbar">
-      <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="global-search-input" class="search-input" placeholder="Search by name, company, show, host, topic, hook, or notes..." oninput="handleSearchInput()">
+      <div class="search-input-wrap" style="display: flex; gap: 8px; align-items: center;">
+        <div style="position: relative; flex: 1;">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="global-search-input" class="search-input" placeholder="Search by name, company, show, host, topic, hook, or notes..." oninput="handleSearchInput()" onkeydown="if(event.key==='Enter') triggerQuickDiscover()">
+        </div>
+        <button class="btn btn-primary" id="btn-quick-discover" onclick="triggerQuickDiscover()" style="padding: 9px 14px; font-size: 12px; white-space: nowrap;" title="Search online directories for new podcasts">
+          <span>🌐 Search Online</span>
+        </button>
       </div>
 
       <div class="filter-controls">
@@ -1112,6 +1190,105 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <div style="display: flex; gap: 8px;">
           <button class="btn" onclick="closeEditLeadModal()">Cancel</button>
           <button class="btn btn-primary" onclick="saveLeadEdits()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discover Podcasts Modal -->
+  <div class="modal-overlay" id="discover-modal">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">⚡ Discover New Podcasts & Video Shows</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+            Search Apple Podcasts, iTunes, RSS feeds & YouTube to find new shows and extract verified contacts.
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeDiscoverModal()">&times;</button>
+      </div>
+
+      <!-- Quick Preset Topic Chips -->
+      <div>
+        <label class="form-label">Suggested Topic Angles (Click to auto-fill):</label>
+        <div class="preset-chips-wrap">
+          <span class="preset-chip" onclick="selectPresetTopic('Corporate compliance, ethics and fraud investigations')">🛡️ Compliance & Fraud</span>
+          <span class="preset-chip" onclick="selectPresetTopic('Operational friction, margin leakage and supply chain productivity')">⚙️ Operations & Margin</span>
+          <span class="preset-chip" onclick="selectPresetTopic('Founder blindspots, executive mental health and scaleup resilience')">🧠 Founder Blindspots</span>
+          <span class="preset-chip" onclick="selectPresetTopic('Private equity due diligence, M&A cultural integration and people risk')">💼 PE & M&A Diligence</span>
+          <span class="preset-chip" onclick="selectPresetTopic('Venture capital diligence, early stage startup governance')">🚀 Venture Capital</span>
+          <span class="preset-chip" onclick="selectPresetTopic('Family office direct investing, governance and character de-risking')">🏛️ Family Offices</span>
+        </div>
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label class="form-label">Topic / Focus Keywords *</label>
+          <input type="text" id="discover-topic" class="form-input" placeholder="e.g. corporate compliance, private equity, fraud, M&A...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Show Name (Optional)</label>
+          <input type="text" id="discover-show-name" class="form-input" placeholder="e.g. The Diary Of A CEO, Masters in Business...">
+        </div>
+      </div>
+
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label class="form-label">Host Name or Professional Role (Optional)</label>
+          <input type="text" id="discover-host" class="form-input" placeholder="e.g. Patrick O'Shaughnessy, General Partner, Investor...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Results Limit</label>
+          <select id="discover-limit" class="form-input">
+            <option value="6">6 shows (Fast)</option>
+            <option value="12" selected>12 shows (Recommended)</option>
+            <option value="24">24 shows (Comprehensive)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label class="form-label">Search Source</label>
+        <div class="engine-radio-group">
+          <label class="engine-pill-label active" onclick="setDiscoveryEngine('all', this)">
+            <input type="radio" name="discover-engine" value="all" checked>
+            <span>🌐 All Media (Audio + Video)</span>
+          </label>
+          <label class="engine-pill-label" onclick="setDiscoveryEngine('podcast', this)">
+            <input type="radio" name="discover-engine" value="podcast">
+            <span>🎙️ Apple Podcasts & RSS</span>
+          </label>
+          <label class="engine-pill-label" onclick="setDiscoveryEngine('youtube', this)">
+            <input type="radio" name="discover-engine" value="youtube">
+            <span>▶️ YouTube Video Podcasts</span>
+          </label>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+        <input type="checkbox" id="discover-enrich" checked style="accent-color: var(--primary); cursor: pointer;">
+        <label for="discover-enrich" style="font-size: 12px; color: #cbd5e1; cursor: pointer;">
+          Auto-enrich contacts: Scrape RSS feed masthead for direct booking emails, Twitter, and website
+        </label>
+      </div>
+
+      <!-- Spinner Box (Active during search) -->
+      <div class="spinner-box" id="discover-spinner">
+        <div class="spinner-icon">🔄</div>
+        <div>Searching directories, extracting RSS feeds & generating Rupert Evill angles...</div>
+        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">This takes about 5 to 10 seconds.</div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px;" id="discover-actions">
+        <button class="btn btn-success" onclick="autoDiscoverAllPresets()" title="Auto-crawl across all 4 Ethics Insight core industry categories">
+          <span>⚡ Auto-Discover 4 Core Niches</span>
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" onclick="closeDiscoverModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="performDiscoverySearch()" style="padding: 9px 20px; font-weight: 800;">
+            <span>🔍 Search & Add to CRM</span>
+          </button>
         </div>
       </div>
     </div>
@@ -1919,6 +2096,117 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderLeads();
     }
 
+    /* Podcast Discovery Modal Logic */
+    function openDiscoverModal(prefillQuery = '') {
+      const modal = document.getElementById('discover-modal');
+      if (prefillQuery && typeof prefillQuery === 'string') {
+        document.getElementById('discover-topic').value = prefillQuery;
+      } else {
+        const currentSearch = document.getElementById('global-search-input')?.value.trim() || '';
+        if (currentSearch && !document.getElementById('discover-topic').value) {
+          document.getElementById('discover-topic').value = currentSearch;
+        }
+      }
+      modal.classList.add('active');
+    }
+
+    function closeDiscoverModal() {
+      document.getElementById('discover-modal').classList.remove('active');
+      document.getElementById('discover-spinner').style.display = 'none';
+      document.getElementById('discover-actions').style.display = 'flex';
+    }
+
+    function selectPresetTopic(topic) {
+      document.getElementById('discover-topic').value = topic;
+    }
+
+    function setDiscoveryEngine(engine, element) {
+      document.querySelectorAll('.engine-pill-label').forEach(el => el.classList.remove('active'));
+      element.classList.add('active');
+      element.querySelector('input').checked = true;
+    }
+
+    function triggerQuickDiscover() {
+      const q = (document.getElementById('global-search-input')?.value || '').trim();
+      openDiscoverModal(q);
+    }
+
+    async function performDiscoverySearch() {
+      const topic = (document.getElementById('discover-topic')?.value || '').trim();
+      const showName = (document.getElementById('discover-show-name')?.value || '').trim();
+      const host = (document.getElementById('discover-host')?.value || '').trim();
+      const limit = parseInt(document.getElementById('discover-limit')?.value || '12');
+      const enrich = document.getElementById('discover-enrich')?.checked !== false;
+
+      const engineEl = document.querySelector('input[name="discover-engine"]:checked');
+      const engine = engineEl ? engineEl.value : 'all';
+
+      if (!topic && !showName && !host) {
+        alert('Please enter a topic/keyword or show name to search.');
+        return;
+      }
+
+      document.getElementById('discover-spinner').style.display = 'block';
+      document.getElementById('discover-actions').style.display = 'none';
+      showToast('Searching podcast directories & YouTube...');
+
+      try {
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topic,
+            name: showName,
+            host: host,
+            engine: engine,
+            limit: limit,
+            enrich: enrich
+          })
+        });
+        const updatedLeads = await res.json();
+        const beforeCount = mediaLeads.length;
+        mediaLeads = updatedLeads;
+        const newCount = mediaLeads.length - beforeCount;
+
+        document.getElementById('badge-media-count').innerText = mediaLeads.length;
+        closeDiscoverModal();
+        switchPipeline('media');
+        showToast(newCount > 0 ? `Discovered & added ${newCount} new shows!` : 'Search complete. Matching shows updated.');
+      } catch (err) {
+        console.error('Error during podcast discovery:', err);
+        showToast('Error searching directories. Please try again.');
+        document.getElementById('discover-spinner').style.display = 'none';
+        document.getElementById('discover-actions').style.display = 'flex';
+      }
+    }
+
+    async function autoDiscoverAllPresets() {
+      document.getElementById('discover-spinner').style.display = 'block';
+      document.getElementById('discover-actions').style.display = 'none';
+      showToast('Running preset crawlers across Governance, M&A, VC & Productivity...');
+
+      try {
+        const res = await fetch('/api/search/presets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const updatedLeads = await res.json();
+        const beforeCount = mediaLeads.length;
+        mediaLeads = updatedLeads;
+        const newCount = mediaLeads.length - beforeCount;
+
+        document.getElementById('badge-media-count').innerText = mediaLeads.length;
+        closeDiscoverModal();
+        switchPipeline('media');
+        showToast(`Preset discovery complete! Added ${Math.max(0, newCount)} new shows.`);
+      } catch (err) {
+        console.error('Error running preset discovery:', err);
+        showToast('Error discovering presets.');
+        document.getElementById('discover-spinner').style.display = 'none';
+        document.getElementById('discover-actions').style.display = 'flex';
+      }
+    }
+
     /* Clipboard Copy Utility */
     function copyText(str) {
       if (!str) return;
@@ -2185,6 +2473,22 @@ def search():
     for show in discovered:
         tracker.add_or_update_lead(show)
 
+    tracker.save()
+    return jsonify(tracker.get_leads())
+
+
+@app.route("/api/search/presets", methods=["POST"])
+def search_presets():
+    results = search_preset_categories(limit_per_query=6)
+    for show in results:
+        show["media_type"] = "Audio Podcast"
+        if show.get("feed_url"):
+            try:
+                rss_info = enrich_from_rss(show["feed_url"])
+                show.update(rss_info)
+            except Exception:
+                pass
+        tracker.add_or_update_lead(show)
     tracker.save()
     return jsonify(tracker.get_leads())
 
