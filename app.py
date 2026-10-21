@@ -334,7 +334,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 9px 12px 9px 36px;
+      padding: 9px 34px 9px 36px;
       color: #ffffff;
       font-size: 13.5px;
       outline: none;
@@ -342,6 +342,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     .search-input:focus {
       border-color: var(--primary);
+    }
+    .search-clear-btn {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-muted);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      transition: all 0.15s;
+    }
+    .search-clear-btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
     }
     .search-icon {
       position: absolute;
@@ -908,7 +932,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
 
       <button class="btn btn-primary" id="btn-discover-top" onclick="openDiscoverModal()" style="background: linear-gradient(135deg, #0284c7, #38bdf8); color: #070b14; font-weight: 800; border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);">
-        <span>⚡ Discover Podcasts</span>
+        <span>🌐 Search Online Directories</span>
       </button>
 
       <a href="/api/export/excel" class="btn btn-success" title="Download Excel Progress Sheet matching your format">
@@ -931,14 +955,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Filter & Search Toolbar -->
     <div class="filter-toolbar">
-      <div class="search-input-wrap" style="display: flex; gap: 8px; align-items: center;">
-        <div style="position: relative; flex: 1;">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="global-search-input" class="search-input" placeholder="Search by name, company, show, host, topic, hook, or notes..." oninput="handleSearchInput()" onkeydown="if(event.key==='Enter') triggerQuickDiscover()">
-        </div>
-        <button class="btn btn-primary" id="btn-quick-discover" onclick="triggerQuickDiscover()" style="padding: 9px 14px; font-size: 12px; white-space: nowrap;" title="Search online directories for new podcasts">
-          <span>🌐 Search Online</span>
-        </button>
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="global-search-input" class="search-input" placeholder="Search existing CRM leads (by show, host, company, topic, hook, notes...)" oninput="handleSearchInput()">
+        <button id="search-clear-btn" class="search-clear-btn" onclick="clearSearchInput()" title="Clear search filter">✕</button>
       </div>
 
       <div class="filter-controls">
@@ -1469,7 +1489,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     function handleSearchInput() {
-      searchQuery = (document.getElementById('global-search-input').value || '').toLowerCase().trim();
+      const input = document.getElementById('global-search-input');
+      const val = input ? input.value : '';
+      searchQuery = val.toLowerCase().trim();
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) {
+        clearBtn.style.display = val ? 'flex' : 'none';
+      }
+      renderLeads();
+    }
+
+    function clearSearchInput() {
+      const input = document.getElementById('global-search-input');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      searchQuery = '';
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.style.display = 'none';
       renderLeads();
     }
 
@@ -1534,7 +1572,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     function renderCardsView(leads) {
       const container = document.getElementById('leads-cards-container');
       if (leads.length === 0) {
-        container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">No leads matching current search & filters.</div>`;
+        if (searchQuery) {
+          container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 45px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">
+              <div style="font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 6px;">
+                No existing ${activePipeline === 'media' ? 'podcasts' : 'executives'} match "${escapeHtml(searchQuery)}"
+              </div>
+              <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
+                ${activePipeline === 'media' ? 'Looking for a show not yet in your CRM? You can search external podcast directories & YouTube.' : 'This contact is not in your CRM database.'}
+              </div>
+              <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <button class="btn btn-secondary" onclick="clearSearchInput()" style="padding: 7px 14px; font-size: 12px;">Clear Filter</button>
+                ${activePipeline === 'media' ? `
+                  <button class="btn btn-primary" onclick="openDiscoverModal('${escapeHtml(searchQuery)}')" style="padding: 7px 16px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #38bdf8); color: #070b14;">
+                    <span>🌐 Search Online Directories for "${escapeHtml(searchQuery)}"</span>
+                  </button>
+                ` : `
+                  <button class="btn btn-primary" onclick="openAddLeadModal()" style="padding: 7px 16px; font-size: 12px;">
+                    <span>➕ Add New Lead</span>
+                  </button>
+                `}
+              </div>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">No leads matching current filters.</div>`;
+        }
         return;
       }
 
@@ -1717,7 +1780,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         `;
 
         if (leads.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
+          if (searchQuery) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <div style="font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 6px;">No existing podcasts match "${escapeHtml(searchQuery)}"</div>
+                  <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; align-items: center;">
+                    <button class="btn btn-secondary" onclick="clearSearchInput()" style="padding: 6px 12px; font-size: 12px;">Clear Filter</button>
+                    <button class="btn btn-primary" onclick="openDiscoverModal('${escapeHtml(searchQuery)}')" style="padding: 6px 14px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #38bdf8); color: #070b14;">
+                      <span>🌐 Search Online Directories for "${escapeHtml(searchQuery)}"</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          } else {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
+          }
           return;
         }
 
@@ -1773,7 +1852,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         `;
 
         if (leads.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
+          if (searchQuery) {
+            tbody.innerHTML = `
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  <div style="font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 6px;">No existing executives match "${escapeHtml(searchQuery)}"</div>
+                  <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; align-items: center;">
+                    <button class="btn btn-secondary" onclick="clearSearchInput()" style="padding: 6px 12px; font-size: 12px;">Clear Filter</button>
+                    <button class="btn btn-primary" onclick="openAddLeadModal()" style="padding: 6px 14px; font-size: 12px;">
+                      <span>➕ Add New Lead</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          } else {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
+          }
           return;
         }
 
@@ -2101,11 +2196,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const modal = document.getElementById('discover-modal');
       if (prefillQuery && typeof prefillQuery === 'string') {
         document.getElementById('discover-topic').value = prefillQuery;
-      } else {
-        const currentSearch = document.getElementById('global-search-input')?.value.trim() || '';
-        if (currentSearch && !document.getElementById('discover-topic').value) {
-          document.getElementById('discover-topic').value = currentSearch;
-        }
       }
       modal.classList.add('active');
     }
@@ -2124,11 +2214,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       document.querySelectorAll('.engine-pill-label').forEach(el => el.classList.remove('active'));
       element.classList.add('active');
       element.querySelector('input').checked = true;
-    }
-
-    function triggerQuickDiscover() {
-      const q = (document.getElementById('global-search-input')?.value || '').trim();
-      openDiscoverModal(q);
     }
 
     async function performDiscoverySearch() {
