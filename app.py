@@ -124,6 +124,9 @@ def get_default_voice_profiles():
     ]
 
 
+DEFAULT_VOICES = get_default_voice_profiles()
+
+
 def get_voice_profile_by_id(voice_id):
     profiles = (db.get_voice_profiles() if db.is_connected else None) or get_default_voice_profiles()
     for p in profiles:
@@ -1431,13 +1434,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
         <!-- Leads Display Container (Cards View) -->
-    <div class="leads-grid" id="leads-cards-container">
-      <div id="initial-loading-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">
-        <div style="font-size: 28px; animation: spin 1s linear infinite; display: inline-block; margin-bottom: 12px;">🔄</div>
-        <div style="font-size: 16px; font-weight: 700; color: #f1f5f9;">Loading People & Executive Leads...</div>
-        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Connecting to Neon cloud database...</div>
-      </div>
-    </div>
+    <div class="leads-grid" id="leads-cards-container"></div>
 
     <!-- Content Engine Display Container (Grid) -->
     <div class="content-grid" id="content-cards-container" style="display: none;">
@@ -1972,6 +1969,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <!-- Toast Element -->
   <div id="toast">Changes saved</div>
 
+  <!-- Server Data Payload for Instant Hydration -->
+  <script id="server-data-payload" type="application/json">__SERVER_DATA_PLACEHOLDER__</script>
+
   <!-- Client JavaScript -->
   <script>
     let activePipeline = 'exec'; // 'media', 'exec', or 'content'
@@ -1981,6 +1981,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     let contentItems = [];
     let voiceProfiles = [];
     let neonConnected = true;
+
+    // Immediately hydrate from server data payload (0ms)
+    try {
+      const rawPayload = document.getElementById('server-data-payload');
+      if (rawPayload && rawPayload.textContent && rawPayload.textContent.trim() !== '__SERVER_DATA_PLACEHOLDER__') {
+        const sData = JSON.parse(rawPayload.textContent);
+        if (Array.isArray(sData.exec_leads) && sData.exec_leads.length > 0) execLeads = sData.exec_leads;
+        if (Array.isArray(sData.media_leads) && sData.media_leads.length > 0) mediaLeads = sData.media_leads;
+        if (Array.isArray(sData.content_items) && sData.content_items.length > 0) contentItems = sData.content_items;
+        if (Array.isArray(sData.voice_profiles) && sData.voice_profiles.length > 0) voiceProfiles = sData.voice_profiles;
+        if (typeof sData.neon_connected === 'boolean') neonConnected = sData.neon_connected;
+      }
+    } catch (e) {
+      console.warn('Initial server payload parse error:', e);
+    }
 
     let searchQuery = '';
     let statusFilter = 'ALL';
@@ -2014,19 +2029,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       'Monitoring'
     ];
 
-        async function fetchJsonSafe(url, fallbackVal, retries = 3) {
+        async function fetchJsonSafe(url, fallbackVal, retries = 2, timeoutMs = 4000) {
       for (let i = 0; i < retries; i++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
         try {
-          const res = await fetch(url);
+          const res = await fetch(url, { signal: controller.signal });
+          clearTimeout(timer);
           if (res.ok) {
             const data = await res.json();
             return data;
           }
         } catch (err) {
-          console.warn(`Fetch ${url} attempt ${i + 1} failed:`, err);
+          clearTimeout(timer);
+          console.warn(`Fetch ${url} attempt ${i + 1} timed out or failed:`, err);
         }
         if (i < retries - 1) {
-          await new Promise(r => setTimeout(r, 600 * (i + 1)));
+          await new Promise(r => setTimeout(r, 400 * (i + 1)));
         }
       }
       return fallbackVal;
@@ -3537,7 +3556,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // Initialize on page load
+    // Initialize immediately from server data (0ms delay)
+    document.getElementById('badge-exec-count').innerText = execLeads.length;
+    document.getElementById('badge-media-count').innerText = mediaLeads.length;
+    document.getElementById('badge-content-count').innerText = contentItems.length;
+    updateCloudStatusIndicator(neonConnected);
+    updateTopActionButtons();
+    updateFilterDropdowns();
+    renderKPIs();
+    renderQuickFilterPills();
+    renderLeads();
+
+    // Background asynchronous sync with AbortController timeout
     loadAllData();
   </script>
 </body>
@@ -3547,7 +3577,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 @app.route("/")
 def index():
-    return render_template_string(HTML_TEMPLATE)
+    initial_exec = (db.get_all_executive_leads() if db.is_connected else None) or exec_tracker.get_leads()
+    initial_media = (db.get_all_media_leads() if db.is_connected else None) or tracker.get_leads()
+    initial_content = (db.get_content_items() if db.is_connected else None) or load_local_content()
+    initial_voices = (db.get_voice_profiles() if db.is_connected else None) or DEFAULT_VOICES
+    payload = {
+        "exec_leads": initial_exec or [],
+        "media_leads": initial_media or [],
+        "content_items": initial_content or [],
+        "voice_profiles": initial_voices or [],
+        "neon_connected": bool(db.is_connected)
+    }
+    html = HTML_TEMPLATE.replace("__SERVER_DATA_PLACEHOLDER__", json.dumps(payload))
+    return html
 
 
 @app.route("/api/status")
