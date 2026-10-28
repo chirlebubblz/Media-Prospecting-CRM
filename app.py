@@ -1362,14 +1362,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <!-- 3 Central Tabs -->
-    <div class="pipeline-switcher">
-      <button class="pipeline-tab tab-media active" id="tab-pipeline-media" onclick="switchPipeline('media')">
+        <div class="pipeline-switcher">
+      <button class="pipeline-tab tab-exec active" id="tab-pipeline-exec" onclick="switchPipeline('exec')">
+        <span>👥 People & Executives</span>
+        <span class="tab-counter" id="badge-exec-count">0</span>
+      </button>
+      <button class="pipeline-tab tab-media" id="tab-pipeline-media" onclick="switchPipeline('media')">
         <span>🎙️ Podcasts & Media</span>
         <span class="tab-counter" id="badge-media-count">0</span>
-      </button>
-      <button class="pipeline-tab tab-exec" id="tab-pipeline-exec" onclick="switchPipeline('exec')">
-        <span>💼 Executive Leads</span>
-        <span class="tab-counter" id="badge-exec-count">0</span>
       </button>
       <button class="pipeline-tab tab-content" id="tab-pipeline-content" onclick="switchPipeline('content')">
         <span>📝 Content Engine</span>
@@ -1430,9 +1430,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
-    <!-- Leads Display Container (Cards View) -->
+        <!-- Leads Display Container (Cards View) -->
     <div class="leads-grid" id="leads-cards-container">
-      <!-- Injected via JavaScript -->
+      <div id="initial-loading-card" style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">
+        <div style="font-size: 28px; animation: spin 1s linear infinite; display: inline-block; margin-bottom: 12px;">🔄</div>
+        <div style="font-size: 16px; font-weight: 700; color: #f1f5f9;">Loading People & Executive Leads...</div>
+        <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Connecting to Neon cloud database...</div>
+      </div>
     </div>
 
     <!-- Content Engine Display Container (Grid) -->
@@ -1970,7 +1974,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
   <!-- Client JavaScript -->
   <script>
-    let activePipeline = 'media'; // 'media', 'exec', or 'content'
+    let activePipeline = 'exec'; // 'media', 'exec', or 'content'
     let viewMode = 'cards'; // 'cards' or 'table'
     let mediaLeads = [];
     let execLeads = [];
@@ -2010,28 +2014,85 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       'Monitoring'
     ];
 
-    // Load initial data from APIs
+        async function fetchJsonSafe(url, fallbackVal, retries = 3) {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            return data;
+          }
+        } catch (err) {
+          console.warn(`Fetch ${url} attempt ${i + 1} failed:`, err);
+        }
+        if (i < retries - 1) {
+          await new Promise(r => setTimeout(r, 600 * (i + 1)));
+        }
+      }
+      return fallbackVal;
+    }
+
+    // Load initial data from APIs with auto-retry & instant cache
     async function loadAllData() {
+      // 1. Instant Cache Hydration: Render immediately from localStorage if available
       try {
-        const [resStatus, resMedia, resExec, resContent, resVoices] = await Promise.all([
-          fetch('/api/status'),
-          fetch('/api/leads'),
-          fetch('/api/executives'),
-          fetch('/api/content'),
-          fetch('/api/voices')
+        const cachedExec = localStorage.getItem('crm_exec_leads');
+        const cachedMedia = localStorage.getItem('crm_media_leads');
+        const cachedContent = localStorage.getItem('crm_content_items');
+        if (cachedExec) {
+          execLeads = JSON.parse(cachedExec);
+          document.getElementById('badge-exec-count').innerText = execLeads.length;
+        }
+        if (cachedMedia) {
+          mediaLeads = JSON.parse(cachedMedia);
+          document.getElementById('badge-media-count').innerText = mediaLeads.length;
+        }
+        if (cachedContent) {
+          contentItems = JSON.parse(cachedContent);
+          document.getElementById('badge-content-count').innerText = contentItems.length;
+        }
+        if (execLeads.length > 0 || mediaLeads.length > 0) {
+          updateTopActionButtons();
+          updateFilterDropdowns();
+          renderKPIs();
+          renderQuickFilterPills();
+          renderLeads();
+        }
+      } catch (e) {
+        console.warn('Cache parse error:', e);
+      }
+
+      // 2. Fetch fresh data from APIs safely with auto-retry
+      try {
+        const [statusData, freshExec, freshMedia, freshContent, freshVoices] = await Promise.all([
+          fetchJsonSafe('/api/status', { neon_connected: false }),
+          fetchJsonSafe('/api/executives', []),
+          fetchJsonSafe('/api/leads', []),
+          fetchJsonSafe('/api/content', []),
+          fetchJsonSafe('/api/voices', [])
         ]);
 
-        const statusData = await resStatus.json();
-        neonConnected = Boolean(statusData.neon_connected);
+        neonConnected = Boolean(statusData && statusData.neon_connected);
         updateCloudStatusIndicator(neonConnected);
 
-        mediaLeads = await resMedia.json();
-        execLeads = await resExec.json();
-        contentItems = await resContent.json();
-        voiceProfiles = await resVoices.json();
+        if (Array.isArray(freshExec) && freshExec.length > 0) {
+          execLeads = freshExec;
+          localStorage.setItem('crm_exec_leads', JSON.stringify(execLeads));
+        }
+        if (Array.isArray(freshMedia) && freshMedia.length > 0) {
+          mediaLeads = freshMedia;
+          localStorage.setItem('crm_media_leads', JSON.stringify(mediaLeads));
+        }
+        if (Array.isArray(freshContent) && freshContent.length > 0) {
+          contentItems = freshContent;
+          localStorage.setItem('crm_content_items', JSON.stringify(contentItems));
+        }
+        if (Array.isArray(freshVoices)) {
+          voiceProfiles = freshVoices;
+        }
 
-        document.getElementById('badge-media-count').innerText = mediaLeads.length;
         document.getElementById('badge-exec-count').innerText = execLeads.length;
+        document.getElementById('badge-media-count').innerText = mediaLeads.length;
         document.getElementById('badge-content-count').innerText = contentItems.length;
 
         updateTopActionButtons();
@@ -2041,7 +2102,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         renderLeads();
       } catch (err) {
         console.error('Error loading CRM leads:', err);
-        showToast('Error loading CRM data');
+        const container = document.getElementById('leads-cards-container');
+        if (container && execLeads.length === 0 && mediaLeads.length === 0) {
+          container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">
+              <div style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+              <div style="font-size: 15px; font-weight: 700; color: #f1f5f9; margin-bottom: 6px;">Connecting to Cloud Database...</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">The server or database is warming up. Please click below to load.</div>
+              <button class="btn btn-primary" onclick="loadAllData()" style="padding: 8px 18px;">🔄 Retry Loading CRM</button>
+            </div>
+          `;
+        }
       }
     }
 
