@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """
-Executive Outreach & Media CRM
-Dual-Pipeline CRM:
+Media & Outreach CRM | Executive Prospecting & Content Studio
+Dual-Pipeline Outreach & Content Engine:
 1. Podcast & Media Pipeline (P4 - Target Shows & Enriched Media)
 2. Executive & Dealmaker Pipeline (Master Leads & Outreach - PE/VC/DFI Partners)
+3. Voice-Conditioned Content Engine & Research Dossiers (Carousels, Essays, Articles)
+Powered by Neon PostgreSQL with automatic local fallback.
 """
 
 import os
@@ -33,6 +35,8 @@ for p in [
 from src.discovery.podcast_crawler import search_podcasts, search_preset_categories, DEFAULT_PRESET_QUERIES
 from src.discovery.rss_extractor import enrich_from_rss
 from src.crm.tracker import LeadTracker, ExecutiveTracker, CSV_PATH, JSON_PATH, EXEC_JSON_PATH
+from src.crm.db import DatabaseManager
+from src.content.engine import ResearchSynthesizer, extract_text_from_pdf, extract_text_from_url
 
 try:
     from youtube_search import search_youtube
@@ -47,6 +51,85 @@ except ImportError:
 app = Flask(__name__)
 tracker = LeadTracker()
 exec_tracker = ExecutiveTracker()
+db = DatabaseManager()
+synthesizer = ResearchSynthesizer()
+
+CONTENT_JSON_PATH = os.path.join(BASE_DIR, "data", "content_items.json")
+VOICES_JSON_PATH = os.path.join(BASE_DIR, "data", "voice_profiles.json")
+
+
+def load_local_content():
+    if os.path.exists(CONTENT_JSON_PATH):
+        try:
+            with open(CONTENT_JSON_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
+def save_local_content(items):
+    try:
+        os.makedirs(os.path.dirname(CONTENT_JSON_PATH), exist_ok=True)
+        with open(CONTENT_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump(items, f, indent=2, default=str)
+    except Exception as e:
+        print(f"[!] Error saving local content: {e}")
+
+
+def save_local_content_item(item):
+    items = load_local_content()
+    idx = next((i for i, x in enumerate(items) if x.get("id") == item["id"]), None)
+    if idx is not None:
+        items[idx] = item
+    else:
+        items.insert(0, item)
+    save_local_content(items)
+
+
+def delete_local_content_item(item_id):
+    items = load_local_content()
+    items = [x for x in items if x.get("id") != item_id]
+    save_local_content(items)
+
+
+def get_default_voice_profiles():
+    if os.path.exists(VOICES_JSON_PATH):
+        try:
+            with open(VOICES_JSON_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if data:
+                    return data
+        except Exception:
+            pass
+    return [
+        {
+            "id": "forensic-operator",
+            "name": "Rupert / Forensic Risk Operator",
+            "role": "Crisis Investigator & Board Risk Advisor",
+            "philosophy": "Corporate failures and breakdowns are driven by human behaviour under pressure, not lack of paperwork. Traditional compliance creates an illusion of security.",
+            "tone": "Authoritative, analytical, contrarian yet constructive, grounded, zero corporate fluff, forensic insider.",
+            "cadence": "Short 1-2 sentence lines with double spacing. Punchy, memorable mental models.",
+            "banned_words": "delve, game-changer, holistic journey, agree?, synergy, paradigm shift"
+        },
+        {
+            "id": "growth-dealmaker",
+            "name": "Strategic Dealmaker & M&A Operator",
+            "role": "Private Equity Partner & Strategic Acquirer",
+            "philosophy": "Value creation in M&A happens through operational discipline and cultural integration, not financial engineering.",
+            "tone": "Pragmatic, commercially sharp, direct, experienced, metric-informed.",
+            "cadence": "Concise bullets, clear investment theses, stark risk-reward comparisons.",
+            "banned_words": "revolutionary, disruptive, silver bullet, no-brainer, unicorn vibes"
+        }
+    ]
+
+
+def get_voice_profile_by_id(voice_id):
+    profiles = (db.get_voice_profiles() if db.is_connected else None) or get_default_voice_profiles()
+    for p in profiles:
+        if p.get("id") == voice_id:
+            return p
+    return profiles[0] if profiles else get_default_voice_profiles()[0]
 
 
 HTML_TEMPLATE = """<!DOCTYPE html>
@@ -54,7 +137,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Media & Executive Outreach CRM</title>
+  <title>Media & Outreach CRM | Executive Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -99,170 +182,287 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      gap: 16px;
     }
+
     .brand-section {
       display: flex;
       align-items: center;
       gap: 12px;
-      text-decoration: none;
-      color: inherit;
+      cursor: pointer;
     }
+
     .brand-logo {
-      width: 36px;
-      height: 36px;
-      border-radius: 9px;
-      background: linear-gradient(135deg, #0ea5e9, #a855f7);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
-      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+      font-size: 20px;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
     }
+
     .brand-title {
       font-size: 17px;
       font-weight: 800;
-      letter-spacing: -0.02em;
       color: #ffffff;
+      letter-spacing: -0.02em;
       display: flex;
       align-items: center;
       gap: 8px;
     }
+
     .brand-badge {
-      font-size: 10px;
-      font-weight: 700;
       background: rgba(56, 189, 248, 0.15);
       color: var(--primary);
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      font-size: 10.5px;
+      font-weight: 700;
       padding: 2px 7px;
-      border-radius: 5px;
+      border-radius: 6px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
+
     .brand-sub {
-      font-size: 11px;
+      font-size: 11.5px;
       color: var(--text-muted);
+      font-weight: 500;
     }
 
-    /* Central Pipeline Switcher */
+    /* 3 Central Tabs */
     .pipeline-switcher {
       display: flex;
       background: rgba(7, 11, 20, 0.8);
+      padding: 4px;
+      border-radius: 12px;
       border: 1px solid var(--border);
-      padding: 3px;
-      border-radius: 10px;
       gap: 4px;
     }
+
     .pipeline-tab {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 7px 18px;
-      border-radius: 7px;
+      font-family: inherit;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s ease;
-    }
-    .pipeline-tab:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .pipeline-tab.active {
-      background: #1e293b;
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-    .pipeline-tab.active.tab-media {
-      background: linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(56, 189, 248, 0.1));
-      border: 1px solid rgba(56, 189, 248, 0.4);
-      color: #38bdf8;
-    }
-    .pipeline-tab.active.tab-exec {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(192, 132, 252, 0.1));
-      border: 1px solid rgba(168, 85, 247, 0.4);
-      color: #c084fc;
-    }
-    .tab-counter {
-      font-size: 11px;
-      padding: 1px 7px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.1);
-      color: inherit;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Top Right Controls */
+    .pipeline-tab:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .pipeline-tab.active {
+      color: #ffffff;
+      background: var(--card-bg);
+      border: 1px solid var(--border-accent);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .pipeline-tab.tab-media.active {
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #38bdf8;
+    }
+
+    .pipeline-tab.tab-exec.active {
+      border-color: rgba(168, 85, 247, 0.5);
+      color: #c084fc;
+    }
+
+    .pipeline-tab.tab-content.active {
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #34d399;
+    }
+
+    .tab-counter {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 7px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .pipeline-tab.active .tab-counter {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Top Actions & Cloud Status */
     .top-actions {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .btn {
+
+    .cloud-status-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 14px;
-      font-size: 12.5px;
-      font-weight: 600;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text);
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s ease;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
       white-space: nowrap;
     }
+
+    .cloud-status-pill.offline {
+      border-color: rgba(245, 158, 11, 0.3);
+      background: rgba(245, 158, 11, 0.1);
+      color: #fbbf24;
+    }
+
+    .cloud-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    .cloud-status-pill.offline .cloud-pulse-dot {
+      background: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
     .btn:hover {
       background: var(--card-hover);
       border-color: var(--border-accent);
-      color: #ffffff;
+      transform: translateY(-1px);
     }
+
     .btn-primary {
-      background: var(--primary);
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
       color: #070b14;
-      border-color: var(--primary);
       font-weight: 700;
+      border: 1px solid #38bdf8;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.25);
     }
+
     .btn-primary:hover {
-      background: var(--primary-hover);
-      border-color: var(--primary-hover);
+      background: linear-gradient(135deg, #0369a1, #0ea5e9);
       color: #070b14;
+      border-color: #0ea5e9;
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
     }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: #ffffff;
+      font-weight: 700;
+      border: 1px solid #10b981;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-emerald:hover {
+      background: linear-gradient(135deg, #047857, #059669);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    }
+
     .btn-success {
       background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
       border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
     }
+
     .btn-success:hover {
-      background: rgba(16, 185, 129, 0.3);
-      border-color: #34d399;
-      color: #ffffff;
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #10b981;
     }
+
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: #fb7185;
+    }
+
+    .btn-danger:hover {
+      background: rgba(244, 63, 94, 0.25);
+      border-color: #f43f5e;
+    }
+
+    .btn-xs {
+      font-size: 11px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .btn-xs:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-color: var(--border-accent);
+    }
+
     .view-toggle-group {
       display: flex;
       background: rgba(7, 11, 20, 0.8);
       border: 1px solid var(--border);
-      padding: 2px;
       border-radius: 8px;
+      padding: 2px;
     }
+
     .view-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      padding: 5px 10px;
+      font-family: inherit;
       font-size: 12px;
       font-weight: 600;
+      padding: 5px 10px;
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.15s;
     }
+
     .view-btn.active {
-      background: #1e293b;
-      color: #38bdf8;
+      background: var(--card-bg);
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
 
     /* Main Container */
@@ -272,676 +472,923 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       padding: 24px 28px;
     }
 
-    /* KPI Summary Ribbon */
+    /* KPI Ribbon */
     .kpi-ribbon {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
     }
-    .kpi-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      transition: transform 0.15s, border-color 0.15s;
-    }
-    .kpi-card:hover {
-      border-color: var(--border-accent);
-      transform: translateY(-1px);
-    }
-    .kpi-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .kpi-val {
-      font-size: 20px;
-      font-weight: 800;
-      color: #ffffff;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .kpi-val.sky { color: #38bdf8; }
-    .kpi-val.emerald { color: #34d399; }
-    .kpi-val.purple { color: #c084fc; }
-    .kpi-val.amber { color: #fbbf24; }
 
-    /* Filter & Search Bar */
-    .filter-toolbar {
+    .kpi-card {
       background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 14px 18px;
-      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .kpi-card::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+    }
+
+    .kpi-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-val {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-val.sky { color: #38bdf8; }
+    .kpi-val.emerald { color: #34d399; }
+    .kpi-val.amber { color: #fbbf24; }
+    .kpi-val.purple { color: #c084fc; }
+
+    /* Quick Filter Pills Row */
+    .quick-filters-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      margin-bottom: 14px;
+    }
+
+    .quick-pill {
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quick-pill:hover {
+      border-color: var(--primary);
+      color: var(--text);
+    }
+
+    .quick-pill.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .quick-pill.active.pill-purple {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: #a855f7;
+      color: #c084fc;
+    }
+
+    .quick-pill.active.pill-emerald {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: #10b981;
+      color: #34d399;
+    }
+
+    /* Filter & Search Toolbar */
+    .filter-toolbar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 22px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
       justify-content: space-between;
+      gap: 12px;
     }
+
     .search-input-wrap {
       flex: 1;
       min-width: 280px;
       position: relative;
+      display: flex;
+      align-items: center;
     }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
     .search-input {
       width: 100%;
-      background: var(--bg);
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 9px 34px 9px 36px;
       color: #ffffff;
-      font-size: 13.5px;
+      font-family: inherit;
+      font-size: 13px;
+      padding: 9px 36px 9px 34px;
+      border-radius: 8px;
       outline: none;
-      transition: border-color 0.15s;
+      transition: all 0.2s;
     }
+
     .search-input:focus {
       border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
     }
+
     .search-clear-btn {
       position: absolute;
       right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255, 255, 255, 0.1);
+      background: none;
       border: none;
       color: var(--text-muted);
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      cursor: pointer;
+      font-size: 14px;
       display: none;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 700;
-      line-height: 1;
-      transition: all 0.15s;
     }
+
     .search-clear-btn:hover {
-      background: rgba(255, 255, 255, 0.22);
       color: #ffffff;
     }
-    .search-icon {
-      position: absolute;
-      left: 11px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 14px;
-      color: var(--text-muted);
-    }
+
     .filter-controls {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
       gap: 10px;
+      flex-wrap: wrap;
     }
+
     .select-filter {
-      background: var(--bg);
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      color: #e2e8f0;
+      color: var(--text);
+      font-family: inherit;
       font-size: 12.5px;
+      font-weight: 500;
       padding: 8px 12px;
       border-radius: 8px;
       outline: none;
       cursor: pointer;
+      transition: all 0.2s;
     }
+
     .select-filter:focus {
       border-color: var(--primary);
     }
 
-    /* Cards Grid View */
+    /* Lead Cards Grid */
     .leads-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(430px, 1fr));
-      gap: 18px;
-    }
-    @media (max-width: 500px) {
-      .leads-grid { grid-template-columns: 1fr; }
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
     }
 
-    /* Lead Card */
     .lead-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .lead-card:hover {
+      border-color: var(--border-accent);
+      background: var(--card-hover);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .card-title-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title:hover {
+      color: var(--primary);
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .pill-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-media { background: rgba(56, 189, 248, 0.12); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-exec { background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-p1 { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-group { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .status-select {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .status-select.status-booked { background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #34d399; }
+    .status-select.status-active { background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; color: #38bdf8; }
+    .status-select.status-sent { background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; color: #fbbf24; }
+    .status-select.status-watch { background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #c084fc; }
+
+    /* Compact Scannable Contact Row */
+    .contact-box {
+      background: rgba(7, 11, 20, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .contact-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .contact-target {
+      font-size: 12px;
+      color: #cbd5e1;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .contact-email-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .host-subcards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(7, 11, 20, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    .host-subcard {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 5px;
+    }
+
+    .host-subcard:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .host-subcard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .host-subcard-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .host-subcard-role {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    /* Links Toolbar */
+    .links-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .link-pill {
+      font-size: 11px;
+      font-weight: 500;
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+    }
+
+    .link-pill:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border-color: var(--border-accent);
+    }
+
+    .link-pill.pill-yt { color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+    .link-pill.pill-li { color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); }
+    .link-pill.pill-video-comment {
+      background: rgba(244, 63, 94, 0.1);
+      border-color: rgba(244, 63, 94, 0.35);
+      color: #fb7185;
+      font-weight: 600;
+      width: 100%;
+      justify-content: center;
+      padding: 5px 10px;
+    }
+
+    /* Engagement Hook Quote Box */
+    .hook-box {
+      background: rgba(56, 189, 248, 0.04);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      padding: 9px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+
+    .hook-box.hook-exec {
+      background: rgba(168, 85, 247, 0.04);
+      border-left-color: var(--purple);
+    }
+
+    .hook-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      margin-bottom: 3px;
+    }
+
+    .hook-label.label-exec {
+      color: var(--purple);
+    }
+
+    /* Card Bottom Action Bar */
+    .card-actions-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 8px;
+      margin-top: auto;
+    }
+
+    .activity-preview {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+      cursor: pointer;
+    }
+
+    .activity-preview:hover {
+      color: var(--primary);
+    }
+
+    /* Content Engine Cards Grid */
+    .content-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 18px;
+    }
+
+    .content-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      transition: all 0.2s ease;
-      position: relative;
+      gap: 12px;
+      transition: all 0.2s;
     }
-    .lead-card:hover {
+
+    .content-card:hover {
       border-color: var(--border-accent);
       background: var(--card-hover);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
-    .card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .card-title-group {
-      flex: 1;
-      min-width: 0;
-    }
-    .card-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #ffffff;
-      line-height: 1.3;
-      margin-bottom: 4px;
-      word-break: break-word;
-    }
-    .card-subtitle {
-      font-size: 12px;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .pill-badge {
-      display: inline-flex;
-      align-items: center;
-      font-size: 10.5px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 5px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .badge-media { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-    .badge-exec { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
-    .badge-p1 { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .badge-p2 { background: rgba(96, 165, 250, 0.15); color: #93c5fd; border: 1px solid rgba(96, 165, 250, 0.3); }
-    .badge-group { background: rgba(255, 255, 255, 0.06); color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.1); }
 
-    /* Interactive Status Selector */
-    .status-select {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: #f1f5f9;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      outline: none;
-      transition: all 0.15s;
-    }
-    .status-select.status-active { border-color: #10b981; color: #34d399; }
-    .status-select.status-booked { border-color: #38bdf8; color: #38bdf8; }
-    .status-select.status-sent { border-color: #fbbf24; color: #fbbf24; }
-    .status-select.status-watch { border-color: #f43f5e; color: #fb7185; }
-
-    /* Contact Details Block */
-    .contact-box {
-      background: rgba(7, 11, 20, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .contact-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 12px;
-    }
-    .contact-target {
-      font-weight: 600;
-      color: #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .contact-email-val {
-      font-family: 'JetBrains Mono', monospace;
-      color: #38bdf8;
-      font-size: 11.5px;
-      word-break: break-all;
-    }
-
-    /* Links & Socials Toolbar */
-    .links-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .link-pill {
+    .tier-badge {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 4px 9px;
+      padding: 3px 9px;
       border-radius: 6px;
-      font-size: 11.5px;
-      font-weight: 500;
-      color: #cbd5e1;
-      text-decoration: none;
-      transition: all 0.15s;
-    }
-    .link-pill:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .link-pill.pill-li:hover { border-color: #0a66c2; color: #38bdf8; }
-    .link-pill.pill-yt { border-color: rgba(244, 63, 94, 0.3); color: #fb7185; }
-    .link-pill.pill-yt:hover { border-color: #f43f5e; color: #ffffff; background: rgba(244, 63, 94, 0.2); }
-    .link-pill.pill-video-comment {
-      background: rgba(244, 63, 94, 0.15);
-      border: 1px solid rgba(244, 63, 94, 0.4);
-      color: #fda4af;
-      font-weight: 700;
-    }
-    .link-pill.pill-video-comment:hover {
-      background: rgba(244, 63, 94, 0.3);
-      color: #ffffff;
-      border-color: #f43f5e;
-    }
-
-    /* Multi-Host Subcards */
-    .host-subcards-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .host-subcard {
-      background: rgba(14, 22, 38, 0.7);
-      border: 1px solid rgba(168, 85, 247, 0.25);
-      border-left: 3px solid #c084fc;
-      border-radius: 6px;
-      padding: 8px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .host-subcard-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 6px;
-    }
-    .host-subcard-name {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #ffffff;
-    }
-    .host-subcard-role {
       font-size: 11px;
-      color: #d8b4fe;
+      font-weight: 700;
+      letter-spacing: 0.03em;
     }
 
-    /* Angle / Hook Accent Box */
-    .hook-box {
-      background: rgba(56, 189, 248, 0.05);
-      border-left: 3px solid var(--primary);
-      border-radius: 0 8px 8px 0;
-      padding: 10px 12px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: #e2e8f0;
-    }
-    .hook-box.hook-exec {
-      background: rgba(168, 85, 247, 0.05);
-      border-left-color: var(--purple);
-    }
-    .hook-label {
-      font-size: 10.5px;
+    .tier-badge.t1 { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+    .tier-badge.t2 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+    .tier-badge.t3 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+
+    .content-card-title {
+      font-size: 16px;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+      color: #ffffff;
+      line-height: 1.35;
+      cursor: pointer;
+    }
+
+    .content-card-title:hover {
       color: var(--primary);
-      margin-bottom: 3px;
     }
-    .hook-label.label-exec { color: #c084fc; }
 
-    /* Current Activity & Notes Field */
-    .notes-section {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .content-card-excerpt {
+      font-size: 12.5px;
+      color: #94a3b8;
+      line-height: 1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
-    .notes-label {
-      font-size: 10.5px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .notes-input {
-      width: 100%;
-      background: rgba(7, 11, 20, 0.7);
+
+    .dossier-stats-strip {
+      background: rgba(7, 11, 20, 0.6);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 10px;
+      border-radius: 8px;
+      padding: 8px 12px;
       font-size: 11.5px;
       color: #cbd5e1;
-      font-family: inherit;
-      resize: vertical;
-      min-height: 48px;
-    }
-    .notes-input:focus {
-      outline: none;
-      border-color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    /* Compact CRM Table View */
+    .content-actions-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 10px;
+      margin-top: auto;
+    }
+
+    /* Table View Styles */
     .table-container {
-      background: var(--bg-surface);
+      background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 12px;
       overflow-x: auto;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     }
+
     .crm-table {
       width: 100%;
       border-collapse: collapse;
-      text-align: left;
       font-size: 12.5px;
+      text-align: left;
     }
+
     .crm-table th {
-      background: rgba(7, 11, 20, 0.95);
-      padding: 12px 14px;
-      font-size: 11px;
-      font-weight: 700;
+      background: rgba(7, 11, 20, 0.8);
       color: var(--text-muted);
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }
+
     .crm-table td {
       padding: 12px 14px;
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      color: #cbd5e1;
+      color: #e2e8f0;
       vertical-align: middle;
     }
+
     .crm-table tr:hover td {
       background: rgba(255, 255, 255, 0.02);
-      color: #ffffff;
-    }
-    .td-title {
-      font-weight: 700;
-      color: #ffffff;
     }
 
-    /* Toast Notification */
-    #toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #1e293b;
-      color: #ffffff;
-      border: 1px solid var(--border-accent);
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s;
-      transform: translateY(10px);
-    }
-    #toast.show {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
-    /* Modal Styling */
+    /* Modal Styles */
     .modal-overlay {
       position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      display: flex;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(7, 11, 20, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 200;
+      display: none;
       align-items: center;
       justify-content: center;
-      z-index: 200;
       padding: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
     }
+
     .modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
+      display: flex;
     }
+
     .modal-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-accent);
       border-radius: 14px;
       width: 100%;
-      max-width: 580px;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
       padding: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
       display: flex;
       flex-direction: column;
       gap: 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      position: relative;
     }
+
+    .modal-card-lg { max-width: 760px; }
+    .modal-card-xl { max-width: 980px; }
+
     .modal-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 14px;
     }
+
     .modal-title {
       font-size: 18px;
       font-weight: 800;
       color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
+
     .close-btn {
-      background: transparent;
+      background: none;
       border: none;
       color: var(--text-muted);
-      font-size: 20px;
+      font-size: 22px;
       cursor: pointer;
+      line-height: 1;
     }
+
+    .close-btn:hover {
+      color: #ffffff;
+    }
+
     .form-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
+
     .form-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      color: #cbd5e1;
     }
+
     .form-input {
-      background: var(--bg);
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 8px 12px;
       color: #ffffff;
+      font-family: inherit;
       font-size: 13px;
-    }
-    .form-input:focus {
+      padding: 9px 12px;
+      border-radius: 8px;
       outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus {
       border-color: var(--primary);
     }
 
-    /* Helper Utilities */
-    .btn-xs {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--border);
-      color: #cbd5e1;
-      padding: 3px 7px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-    }
-    .btn-xs:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-    }
-    .btn-edit {
-      background: rgba(56, 189, 248, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.35);
-      color: #38bdf8;
-      font-weight: 600;
-    }
-    .btn-edit:hover {
-      background: rgba(56, 189, 248, 0.25);
-      color: #ffffff;
-      border-color: #38bdf8;
-    }
-    .btn-danger {
-      background: rgba(244, 63, 94, 0.15);
-      border: 1px solid rgba(244, 63, 94, 0.4);
-      color: #fda4af;
-      font-weight: 600;
-    }
-    .btn-danger:hover {
-      background: rgba(244, 63, 94, 0.3);
-      border-color: #f43f5e;
-      color: #ffffff;
-    }
-    .modal-card-lg {
-      max-width: 680px;
-    }
     .form-row-2col {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 10px;
-    }
-    @media (max-width: 600px) {
-      .form-row-2col { grid-template-columns: 1fr; }
     }
 
-    /* Preset & Discovery Chips */
+    /* Modal Tabs (For New Content Generator) */
+    .modal-tabs-header {
+      display: flex;
+      gap: 6px;
+      background: rgba(7, 11, 20, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .modal-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .modal-tab-btn.active {
+      background: var(--card-bg);
+      color: var(--primary);
+      border: 1px solid var(--border-accent);
+      font-weight: 700;
+    }
+
+    /* Slide Deck Viewer in Content View Modal */
+    .slide-deck-viewer {
+      background: #070b14;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .slide-deck-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+
+    .slide-card-presentation {
+      background: linear-gradient(145deg, #0e1626, #121d33);
+      border: 1px solid var(--border-accent);
+      border-radius: 10px;
+      padding: 28px;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    .slide-number-pill {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .slide-headline-text {
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .slide-bullet-text {
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 28px;
+      background: #10b981;
+      color: #ffffff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+      z-index: 999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Presets Chips & Engine Radio */
     .preset-chips-wrap {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       margin-top: 6px;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
+
     .preset-chip {
-      background: rgba(56, 189, 248, 0.08);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      color: #7dd3fc;
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      color: #cbd5e1;
+      font-size: 11.5px;
       padding: 4px 10px;
       border-radius: 6px;
-      font-size: 11.5px;
       cursor: pointer;
-      font-weight: 600;
       transition: all 0.15s;
     }
+
     .preset-chip:hover {
-      background: rgba(56, 189, 248, 0.22);
-      border-color: #38bdf8;
+      border-color: var(--primary);
       color: #ffffff;
+      background: rgba(56, 189, 248, 0.12);
     }
+
     .engine-radio-group {
       display: flex;
-      gap: 8px;
-      margin-top: 5px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
+
     .engine-pill-label {
       flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      background: var(--bg);
+      min-width: 140px;
+      background: var(--card-bg);
       border: 1px solid var(--border);
-      border-radius: 7px;
+      border-radius: 8px;
       padding: 8px 12px;
       font-size: 12px;
-      cursor: pointer;
       color: var(--text-muted);
-      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
       transition: all 0.15s;
-      user-select: none;
     }
-    .engine-pill-label input { display: none; }
+
     .engine-pill-label.active {
       background: rgba(56, 189, 248, 0.15);
-      border-color: #38bdf8;
-      color: #38bdf8;
-      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+      border-color: var(--primary);
+      color: #ffffff;
+      font-weight: 600;
     }
+
     .spinner-box {
       display: none;
       text-align: center;
-      padding: 24px 10px;
-      color: #38bdf8;
-      font-size: 13.5px;
-      font-weight: 600;
+      padding: 24px;
+      background: rgba(7, 11, 20, 0.6);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin: 12px 0;
     }
+
     .spinner-icon {
-      display: inline-block;
-      animation: spin 1s linear infinite;
-      font-size: 24px;
+      font-size: 28px;
+      animation: spin 1.2s infinite linear;
       margin-bottom: 8px;
     }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
 
   <!-- Top Navigation Bar -->
   <header class="top-navbar">
-    <div class="brand-section">
+    <div class="brand-section" onclick="switchPipeline('media')">
       <div class="brand-logo">🎙️</div>
       <div>
         <div class="brand-title">
-          Media & Outreach
-          <span class="brand-badge">CRM</span>
+          Media & Outreach CRM
+          <span class="brand-badge">PRO</span>
         </div>
-        <div class="brand-sub">Executive Prospecting & Pipeline Intelligence</div>
+        <div class="brand-sub">Executive Prospecting & Content Studio</div>
       </div>
     </div>
 
-    <!-- Pipeline Switcher Tabs -->
+    <!-- 3 Central Tabs -->
     <div class="pipeline-switcher">
       <button class="pipeline-tab tab-media active" id="tab-pipeline-media" onclick="switchPipeline('media')">
-        <span>🎙️ Podcast & Media</span>
+        <span>🎙️ Podcasts & Media</span>
         <span class="tab-counter" id="badge-media-count">0</span>
       </button>
       <button class="pipeline-tab tab-exec" id="tab-pipeline-exec" onclick="switchPipeline('exec')">
-        <span>💼 Executive & Dealmakers</span>
+        <span>💼 Executive Leads</span>
         <span class="tab-counter" id="badge-exec-count">0</span>
+      </button>
+      <button class="pipeline-tab tab-content" id="tab-pipeline-content" onclick="switchPipeline('content')">
+        <span>📝 Content Engine</span>
+        <span class="tab-counter" id="badge-content-count">0</span>
       </button>
     </div>
 
-    <!-- Top Action Buttons -->
+    <!-- Cloud Status & Dynamic Top Action Buttons -->
     <div class="top-actions">
-      <div class="view-toggle-group">
-        <button class="view-btn active" id="view-cards-btn" onclick="setViewMode('cards')">🗂️ Cards</button>
-        <button class="view-btn" id="view-table-btn" onclick="setViewMode('table')">📋 Table</button>
+      <!-- Neon Cloud Status Pill -->
+      <div id="cloud-status-indicator" class="cloud-status-pill" title="Neon Postgres connection state">
+        <span class="cloud-pulse-dot"></span>
+        <span id="cloud-status-text">Neon Cloud Synced</span>
       </div>
 
-      <button class="btn btn-primary" id="btn-discover-top" onclick="openDiscoverModal()" style="background: linear-gradient(135deg, #0284c7, #38bdf8); color: #070b14; font-weight: 800; border-color: #38bdf8; box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);">
-        <span>🌐 Search Online Directories</span>
-      </button>
-
-      <a href="/api/export/excel" class="btn btn-success" title="Download Excel Progress Sheet matching your format">
-        <span>📥 Export Excel</span>
-      </a>
-
-      <button class="btn" onclick="openAddLeadModal()">
-        <span>➕ Add Lead</span>
-      </button>
+      <!-- Action buttons container (dynamically adjusted) -->
+      <div id="top-dynamic-actions" style="display: flex; align-items: center; gap: 8px;">
+        <!-- Injected via JavaScript -->
+      </div>
     </div>
   </header>
 
@@ -953,28 +1400,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       <!-- Injected via JavaScript -->
     </div>
 
+    <!-- Quick Status Filter Pills -->
+    <div class="quick-filters-row" id="quick-filters-row">
+      <!-- Injected via JavaScript -->
+    </div>
+
     <!-- Filter & Search Toolbar -->
     <div class="filter-toolbar">
       <div class="search-input-wrap">
         <span class="search-icon">🔍</span>
-        <input type="text" id="global-search-input" class="search-input" placeholder="Search existing CRM leads (by show, host, company, topic, hook, notes...)" oninput="handleSearchInput()">
-        <button id="search-clear-btn" class="search-clear-btn" onclick="clearSearchInput()" title="Clear search filter">✕</button>
+        <input type="text" id="global-search-input" class="search-input" placeholder="Search entries (by title, name, company, hook, topic...)" oninput="handleSearchInput()">
+        <button id="search-clear-btn" class="search-clear-btn" onclick="clearSearchInput()" title="Clear search">✕</button>
       </div>
 
       <div class="filter-controls">
         <select id="status-filter-select" class="select-filter" onchange="handleFilterChange()">
           <option value="ALL">All Statuses</option>
-          <!-- Injected dynamically based on active pipeline -->
         </select>
 
         <select id="category-filter-select" class="select-filter" onchange="handleFilterChange()">
           <option value="ALL">All Categories / Groups</option>
-          <!-- Injected dynamically based on active pipeline -->
         </select>
 
         <select id="sort-order-select" class="select-filter" onchange="handleSortChange()">
           <option value="default">Sort: Default Order</option>
-          <option value="alpha">Sort: Name (A-Z)</option>
+          <option value="alpha">Sort: Title / Name (A-Z)</option>
           <option value="status">Sort: Status Priority</option>
         </select>
       </div>
@@ -982,6 +1432,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Leads Display Container (Cards View) -->
     <div class="leads-grid" id="leads-cards-container">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <!-- Content Engine Display Container (Grid) -->
+    <div class="content-grid" id="content-cards-container" style="display: none;">
       <!-- Injected via JavaScript -->
     </div>
 
@@ -1078,7 +1533,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-overlay" id="edit-lead-modal">
     <div class="modal-card modal-card-lg">
       <div class="modal-header">
-        <div class="modal-title" id="edit-modal-title">✏️ Edit Lead</div>
+        <div class="modal-title" id="edit-modal-title">✏️ Edit Lead Details</div>
         <button class="close-btn" onclick="closeEditLeadModal()">&times;</button>
       </div>
 
@@ -1133,7 +1588,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <textarea id="edit-show-hook" class="form-input" rows="2"></textarea>
         </div>
         <div class="form-group" style="margin-bottom: 8px;">
-          <label class="form-label">Current Activity & Interaction Notes</label>
+          <label class="form-label">Current Pipeline Activity & Interaction Notes</label>
           <textarea id="edit-show-activity" class="form-input" rows="2"></textarea>
         </div>
       </div>
@@ -1228,7 +1683,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <button class="close-btn" onclick="closeDiscoverModal()">&times;</button>
       </div>
 
-      <!-- Quick Preset Topic Chips -->
       <div>
         <label class="form-label">Suggested Topic Angles (Click to auto-fill):</label>
         <div class="preset-chips-wrap">
@@ -1292,14 +1746,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </label>
       </div>
 
-      <!-- Spinner Box (Active during search) -->
       <div class="spinner-box" id="discover-spinner">
         <div class="spinner-icon">🔄</div>
         <div>Searching directories, extracting RSS feeds & generating outreach angles...</div>
         <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">This takes about 5 to 10 seconds.</div>
       </div>
 
-      <!-- Action Buttons -->
       <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px;" id="discover-actions">
         <button class="btn btn-success" onclick="autoDiscoverAllPresets()" title="Auto-crawl across core industry categories">
           <span>⚡ Auto-Discover 4 Core Niches</span>
@@ -1314,19 +1766,226 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 
+  <!-- Content View Modal (Slide Deck & Post Copy) -->
+  <div class="modal-overlay" id="content-view-modal">
+    <div class="modal-card modal-card-xl">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="view-content-tier-badge" class="tier-badge t1">Tier 1</span>
+          <div class="modal-title" id="view-content-title">Content Title</div>
+        </div>
+        <button class="close-btn" onclick="closeContentViewModal()">&times;</button>
+      </div>
+
+      <!-- Quick Action Copy Bar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+        <div style="font-size: 12px; color: var(--text-muted);">
+          Source: <span id="view-content-source-label" style="color: #ffffff; font-weight: 600;">Document</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-primary btn-xs" onclick="copyFullPost()">📋 Copy Full Post</button>
+          <button class="btn btn-xs" id="btn-copy-slide-script" onclick="copySlideScript()" style="display: none;">📑 Copy Slide Script</button>
+          <button class="btn btn-xs" onclick="copyLinkedInPost()">💼 Copy for LinkedIn</button>
+        </div>
+      </div>
+
+      <!-- Slide Deck Viewer (For Carousels) -->
+      <div class="slide-deck-viewer" id="slide-deck-container" style="display: none;">
+        <div class="slide-deck-nav">
+          <button class="btn btn-xs" onclick="navigateSlide(-1)">◀ Prev Slide</button>
+          <span id="slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 5</span>
+          <button class="btn btn-xs" onclick="navigateSlide(1)">Next Slide ▶</button>
+        </div>
+        <div class="slide-card-presentation">
+          <span class="slide-number-pill" id="slide-current-number">#1</span>
+          <div class="slide-headline-text" id="slide-current-headline">Headline</div>
+          <div class="slide-bullet-text" id="slide-current-bullet">Bullet text</div>
+        </div>
+      </div>
+
+      <!-- Content Markdown Reader -->
+      <div class="form-group">
+        <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Companion Social Copy / Long-Form Article:</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Ready to paste directly into LinkedIn</span>
+        </label>
+        <textarea id="view-content-markdown" class="form-input" style="height: 280px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px;">
+        <button class="btn" onclick="closeContentViewModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research Dossier Modal -->
+  <div class="modal-overlay" id="dossier-modal">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <div class="modal-title" id="dossier-modal-title">🔬 Verified Research Dossier</div>
+        <button class="close-btn" onclick="closeDossierModal()">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- Core Thesis & Tension -->
+        <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Core Thesis:</div>
+          <div id="dossier-thesis" style="font-size: 14px; font-weight: 600; color: #ffffff; margin-top: 4px;"></div>
+          <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; margin-top: 10px;">Unseen Tension:</div>
+          <div id="dossier-tension" style="font-size: 13px; color: #cbd5e1; margin-top: 3px;"></div>
+        </div>
+
+        <!-- Key Data Points & Statistics -->
+        <div>
+          <div class="form-label" style="margin-bottom: 8px;">📊 Verified Facts & Data Points:</div>
+          <div id="dossier-data-points" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <!-- Quotes -->
+        <div>
+          <div class="form-label" style="margin-bottom: 8px;">💬 Forensic Quotes & Mental Models:</div>
+          <div id="dossier-quotes" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+
+        <!-- Citations Index -->
+        <div>
+          <div class="form-label" style="margin-bottom: 8px;">🔗 Citations & Sources:</div>
+          <div id="dossier-citations" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 14px;">
+        <button class="btn" onclick="closeDossierModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Research & Generation Modal -->
+  <div class="modal-overlay" id="new-content-modal">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">✨ New Voice-Conditioned Content Studio</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+            Synthesize PDFs, web URLs, briefs, or CRM lead angles into ready-to-publish content conditioned on Rupert's voice.
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeNewContentModal()">&times;</button>
+      </div>
+
+      <!-- 4 Input Mode Tabs -->
+      <div>
+        <label class="form-label">Select Knowledge / Research Source:</label>
+        <div class="modal-tabs-header">
+          <button class="modal-tab-btn active" id="tab-src-pdf" onclick="switchContentSourceTab('pdf')">📄 Upload PDF</button>
+          <button class="modal-tab-btn" id="tab-src-url" onclick="switchContentSourceTab('url')">🌐 Web URL</button>
+          <button class="modal-tab-btn" id="tab-src-text" onclick="switchContentSourceTab('text')">✍️ Paste Text / .MD</button>
+          <button class="modal-tab-btn" id="tab-src-lead" onclick="switchContentSourceTab('lead')">🎯 From CRM Lead</button>
+        </div>
+      </div>
+
+      <!-- PDF Tab Panel -->
+      <div id="panel-src-pdf" style="display: block;">
+        <div class="form-group">
+          <label class="form-label">Upload PDF Document / Whitepaper</label>
+          <input type="file" id="gen-pdf-file" accept=".pdf" class="form-input" style="padding: 14px; background: rgba(7, 11, 20, 0.4); border: 2px dashed var(--border);">
+          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Supports industry reports, academic papers, regulatory guidance, and pitch decks.</div>
+        </div>
+      </div>
+
+      <!-- URL Tab Panel -->
+      <div id="panel-src-url" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Article, Report, or Substack URL *</label>
+          <input type="url" id="gen-url-input" class="form-input" placeholder="https://www.wsj.com/... or https://subdomain.substack.com/p/...">
+        </div>
+      </div>
+
+      <!-- Text Tab Panel -->
+      <div id="panel-src-text" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Executive Briefing, Speech Transcript, or Raw Markdown</label>
+          <textarea id="gen-text-input" class="form-input" rows="5" placeholder="Paste report excerpts, interview transcripts, or rough thesis bullets..."></textarea>
+        </div>
+      </div>
+
+      <!-- Lead Tab Panel -->
+      <div id="panel-src-lead" style="display: none;">
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Pipeline Source</label>
+            <select id="gen-lead-pipeline" class="form-input" onchange="populateLeadDropdown()">
+              <option value="media">🎙️ Podcast & Media Host</option>
+              <option value="exec">💼 Executive & Dealmaker</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select CRM Target Lead</label>
+            <select id="gen-lead-id" class="form-input"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generation Settings -->
+      <div class="form-row-2col">
+        <div class="form-group">
+          <label class="form-label">Content Tier Format *</label>
+          <select id="gen-tier-select" class="form-input">
+            <option value="Tier 1: Short-Form Carousel" selected>Tier 1: Swipeable Carousel & Companion Post</option>
+            <option value="Tier 2: In-Feed Long-Form Essay">Tier 2: In-Feed Long-Form Essay</option>
+            <option value="Tier 3: LinkedIn Article">Tier 3: Executive Newsletter / Article</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Author Voice Profile</label>
+          <select id="gen-voice-select" class="form-input">
+            <option value="forensic-operator">Rupert / Forensic Risk Operator (Contrarian, Zero Fluff)</option>
+            <option value="growth-dealmaker">Strategic Dealmaker & M&A Operator (Commercially Sharp)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Working Title / Core Topic Angle (Optional)</label>
+        <input type="text" id="gen-topic-input" class="form-input" placeholder="e.g. Why Traditional Compliance Creates Fraud Risk">
+      </div>
+
+      <div class="spinner-box" id="gen-spinner">
+        <div class="spinner-icon">⚡</div>
+        <div>Mining research facts, extracting quotes, and conditioning voice output...</div>
+        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Takes about 2 to 4 seconds.</div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px;" id="gen-actions">
+        <button class="btn" onclick="closeNewContentModal()">Cancel</button>
+        <button class="btn btn-emerald" onclick="generateContent()" style="padding: 9px 20px;">
+          <span>⚡ Generate Content & Dossier</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Element -->
   <div id="toast">Changes saved</div>
 
   <!-- Client JavaScript -->
   <script>
-    let activePipeline = 'media'; // 'media' or 'exec'
+    let activePipeline = 'media'; // 'media', 'exec', or 'content'
     let viewMode = 'cards'; // 'cards' or 'table'
     let mediaLeads = [];
     let execLeads = [];
+    let contentItems = [];
+    let voiceProfiles = [];
+    let neonConnected = true;
+
     let searchQuery = '';
     let statusFilter = 'ALL';
     let categoryFilter = 'ALL';
     let sortOrder = 'default';
+
+    let currentSlideIndex = 0;
+    let currentModalContentItem = null;
+    let currentSourceTab = 'pdf';
 
     const STATUS_OPTIONS_MEDIA = [
       'Identified',
@@ -1351,21 +2010,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       'Monitoring'
     ];
 
-    // Load initial data
+    // Load initial data from APIs
     async function loadAllData() {
       try {
-        const [resMedia, resExec] = await Promise.all([
+        const [resStatus, resMedia, resExec, resContent, resVoices] = await Promise.all([
+          fetch('/api/status'),
           fetch('/api/leads'),
-          fetch('/api/executives')
+          fetch('/api/executives'),
+          fetch('/api/content'),
+          fetch('/api/voices')
         ]);
+
+        const statusData = await resStatus.json();
+        neonConnected = Boolean(statusData.neon_connected);
+        updateCloudStatusIndicator(neonConnected);
+
         mediaLeads = await resMedia.json();
         execLeads = await resExec.json();
+        contentItems = await resContent.json();
+        voiceProfiles = await resVoices.json();
 
         document.getElementById('badge-media-count').innerText = mediaLeads.length;
         document.getElementById('badge-exec-count').innerText = execLeads.length;
+        document.getElementById('badge-content-count').innerText = contentItems.length;
 
+        updateTopActionButtons();
         updateFilterDropdowns();
         renderKPIs();
+        renderQuickFilterPills();
         renderLeads();
       } catch (err) {
         console.error('Error loading CRM leads:', err);
@@ -1373,27 +2045,157 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     }
 
+    function updateCloudStatusIndicator(connected) {
+      const el = document.getElementById('cloud-status-indicator');
+      const text = document.getElementById('cloud-status-text');
+      if (connected) {
+        el.className = 'cloud-status-pill';
+        text.innerText = '🟢 Neon Cloud Synced';
+      } else {
+        el.className = 'cloud-status-pill offline';
+        text.innerText = '💾 Local Mode';
+      }
+    }
+
     function switchPipeline(type) {
       activePipeline = type;
       document.querySelectorAll('.pipeline-tab').forEach(t => t.classList.remove('active'));
+
       if (type === 'media') {
         document.getElementById('tab-pipeline-media').classList.add('active');
-      } else {
+        document.getElementById('leads-cards-container').style.display = viewMode === 'cards' ? 'grid' : 'none';
+        document.getElementById('leads-table-container').style.display = viewMode === 'table' ? 'block' : 'none';
+        document.getElementById('content-cards-container').style.display = 'none';
+      } else if (type === 'exec') {
         document.getElementById('tab-pipeline-exec').classList.add('active');
+        document.getElementById('leads-cards-container').style.display = viewMode === 'cards' ? 'grid' : 'none';
+        document.getElementById('leads-table-container').style.display = viewMode === 'table' ? 'block' : 'none';
+        document.getElementById('content-cards-container').style.display = 'none';
+      } else {
+        document.getElementById('tab-pipeline-content').classList.add('active');
+        document.getElementById('leads-cards-container').style.display = 'none';
+        document.getElementById('leads-table-container').style.display = 'none';
+        document.getElementById('content-cards-container').style.display = 'grid';
       }
+
       statusFilter = 'ALL';
       categoryFilter = 'ALL';
+      searchQuery = '';
+      const sInput = document.getElementById('global-search-input');
+      if (sInput) sInput.value = '';
+
+      updateTopActionButtons();
       updateFilterDropdowns();
       renderKPIs();
+      renderQuickFilterPills();
       renderLeads();
+    }
+
+    function updateTopActionButtons() {
+      const container = document.getElementById('top-dynamic-actions');
+      if (activePipeline === 'media') {
+        container.innerHTML = `
+          <div class="view-toggle-group">
+            <button class="view-btn ${viewMode === 'cards' ? 'active' : ''}" onclick="setViewMode('cards')">🗂️ Cards</button>
+            <button class="view-btn ${viewMode === 'table' ? 'active' : ''}" onclick="setViewMode('table')">📋 Table</button>
+          </div>
+          <button class="btn btn-primary" onclick="openDiscoverModal()">
+            <span>🌐 Search Directories</span>
+          </button>
+          <a href="/api/export/excel" class="btn btn-success" title="Download dynamic 3-tab workbook">
+            <span>📥 Export Excel</span>
+          </a>
+          <button class="btn" onclick="openAddLeadModal()">
+            <span>➕ Add Lead</span>
+          </button>
+        `;
+      } else if (activePipeline === 'exec') {
+        container.innerHTML = `
+          <div class="view-toggle-group">
+            <button class="view-btn ${viewMode === 'cards' ? 'active' : ''}" onclick="setViewMode('cards')">🗂️ Cards</button>
+            <button class="view-btn ${viewMode === 'table' ? 'active' : ''}" onclick="setViewMode('table')">📋 Table</button>
+          </div>
+          <a href="/api/export/excel" class="btn btn-success" title="Download dynamic 3-tab workbook">
+            <span>📥 Export Excel</span>
+          </a>
+          <button class="btn" onclick="openAddLeadModal()">
+            <span>➕ Add Executive</span>
+          </button>
+        `;
+      } else {
+        // Content tab
+        container.innerHTML = `
+          <button class="btn btn-emerald" onclick="openNewContentModal()">
+            <span>✨ New Research & Content</span>
+          </button>
+          <a href="/api/export/excel" class="btn btn-success" title="Download dynamic 3-tab workbook">
+            <span>📥 Export Excel</span>
+          </a>
+        `;
+      }
     }
 
     function setViewMode(mode) {
       viewMode = mode;
-      document.getElementById('view-cards-btn').classList.toggle('active', mode === 'cards');
-      document.getElementById('view-table-btn').classList.toggle('active', mode === 'table');
-      document.getElementById('leads-cards-container').style.display = mode === 'cards' ? 'grid' : 'none';
-      document.getElementById('leads-table-container').style.display = mode === 'table' ? 'block' : 'none';
+      updateTopActionButtons();
+      if (activePipeline !== 'content') {
+        document.getElementById('leads-cards-container').style.display = mode === 'cards' ? 'grid' : 'none';
+        document.getElementById('leads-table-container').style.display = mode === 'table' ? 'block' : 'none';
+      }
+      renderLeads();
+    }
+
+    function renderQuickFilterPills() {
+      const row = document.getElementById('quick-filters-row');
+      if (activePipeline === 'media') {
+        const pills = [
+          { label: 'All Shows', val: 'ALL' },
+          { label: 'Identified', val: 'Identified' },
+          { label: 'Watch & Comment Active', val: 'Watch & Comment active' },
+          { label: 'Outreach Sent', val: 'Referral Outreach Sent' },
+          { label: 'In Conversation', val: 'In a conversation with him' },
+          { label: 'Confirmed Booked', val: 'Booked' }
+        ];
+        row.innerHTML = pills.map(p => `
+          <span class="quick-pill ${statusFilter === p.val ? 'active' : ''}" onclick="setQuickFilter('${escapeHtml(p.val)}')">
+            ${escapeHtml(p.label)}
+          </span>
+        `).join('');
+      } else if (activePipeline === 'exec') {
+        const pills = [
+          { label: 'All Executives', val: 'ALL' },
+          { label: 'Identified', val: 'Identified' },
+          { label: 'Connection Sent', val: 'Connection Sent' },
+          { label: 'Connected on LinkedIn', val: 'Connected on Linkedin' },
+          { label: 'Active Conversation', val: 'Active Conversation' }
+        ];
+        row.innerHTML = pills.map(p => `
+          <span class="quick-pill pill-purple ${statusFilter === p.val ? 'active pill-purple' : ''}" onclick="setQuickFilter('${escapeHtml(p.val)}')">
+            ${escapeHtml(p.label)}
+          </span>
+        `).join('');
+      } else {
+        // Content Engine quick pills
+        const pills = [
+          { label: 'All Content Pieces', val: 'ALL' },
+          { label: 'Tier 1: Carousels', val: 'Tier 1' },
+          { label: 'Tier 2: In-Feed Essays', val: 'Tier 2' },
+          { label: 'Tier 3: Articles', val: 'Tier 3' },
+          { label: 'Ready to Publish', val: 'Ready' }
+        ];
+        row.innerHTML = pills.map(p => `
+          <span class="quick-pill pill-emerald ${statusFilter === p.val ? 'active pill-emerald' : ''}" onclick="setQuickFilter('${escapeHtml(p.val)}')">
+            ${escapeHtml(p.label)}
+          </span>
+        `).join('');
+      }
+    }
+
+    function setQuickFilter(status) {
+      statusFilter = status;
+      const sSelect = document.getElementById('status-filter-select');
+      if (sSelect) sSelect.value = status;
+      renderQuickFilterPills();
       renderLeads();
     }
 
@@ -1401,11 +2203,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       const statusSelect = document.getElementById('status-filter-select');
       const catSelect = document.getElementById('category-filter-select');
 
-      const statuses = activePipeline === 'media' ? STATUS_OPTIONS_MEDIA : STATUS_OPTIONS_EXEC;
-      statusSelect.innerHTML = '<option value="ALL">All Statuses</option>' +
-        statuses.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
-
       if (activePipeline === 'media') {
+        statusSelect.innerHTML = '<option value="ALL">All Statuses</option>' +
+          STATUS_OPTIONS_MEDIA.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
         catSelect.innerHTML = `
           <option value="ALL">All Categories & Verticals</option>
           <option value="Operations">Operations & Productivity</option>
@@ -1414,13 +2214,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <option value="M&A">Private Equity & M&A Diligence</option>
           <option value="Governance">Governance, Risk & Strategy</option>
         `;
-      } else {
+      } else if (activePipeline === 'exec') {
+        statusSelect.innerHTML = '<option value="ALL">All Statuses</option>' +
+          STATUS_OPTIONS_EXEC.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
         catSelect.innerHTML = `
           <option value="ALL">All Strategic Groups</option>
           <option value="Group 1">Group 1: Co-investors (ARCH, AIIM, Leapfrog)</option>
           <option value="Group 2">Group 2: Operating Partners (Atradius, IFU, Norfund)</option>
           <option value="Group 3">Group 3: Family Offices</option>
           <option value="Group 4">Group 4: Founders & Portco Execs</option>
+        `;
+      } else {
+        statusSelect.innerHTML = `
+          <option value="ALL">All Statuses</option>
+          <option value="Draft">Draft</option>
+          <option value="Ready to Publish">Ready to Publish</option>
+          <option value="Published">Published</option>
+        `;
+        catSelect.innerHTML = `
+          <option value="ALL">All Content Tiers</option>
+          <option value="Tier 1">Tier 1: Short-Form Carousel</option>
+          <option value="Tier 2">Tier 2: In-Feed Long-Form Essay</option>
+          <option value="Tier 3">Tier 3: LinkedIn Article</option>
         `;
       }
     }
@@ -1456,7 +2271,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <span class="kpi-val sky">${verifiedEmails}</span>
           </div>
         `;
-      } else {
+      } else if (activePipeline === 'exec') {
         const total = execLeads.length;
         const p1Count = execLeads.filter(l => (l.priority || '').toUpperCase() === 'P1').length;
         const activeConversations = execLeads.filter(l => (l.status || '').toLowerCase().includes('conversation')).length;
@@ -1483,6 +2298,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <div class="kpi-card">
             <span class="kpi-label">Handshake / Pitch Sent</span>
             <span class="kpi-val amber">${sentOutreach}</span>
+          </div>
+        `;
+      } else {
+        // Content KPIs
+        const total = contentItems.length;
+        const t1 = contentItems.filter(c => (c.tier || '').includes('Tier 1')).length;
+        const t2 = contentItems.filter(c => (c.tier || '').includes('Tier 2')).length;
+        const t3 = contentItems.filter(c => (c.tier || '').includes('Tier 3')).length;
+        const totalFacts = contentItems.reduce((acc, c) => acc + (c.research_dossier?.data_points?.length || 0), 0);
+
+        ribbon.innerHTML = `
+          <div class="kpi-card">
+            <span class="kpi-label">Content Library Pieces</span>
+            <span class="kpi-val emerald">${total}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Swipeable Carousels</span>
+            <span class="kpi-val purple">${t1}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">In-Feed Long Essays</span>
+            <span class="kpi-val emerald">${t2}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">LinkedIn Articles</span>
+            <span class="kpi-val sky">${t3}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Verified Research Facts</span>
+            <span class="kpi-val amber">${totalFacts}</span>
           </div>
         `;
       }
@@ -1514,6 +2359,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     function handleFilterChange() {
       statusFilter = document.getElementById('status-filter-select').value;
       categoryFilter = document.getElementById('category-filter-select').value;
+      renderQuickFilterPills();
       renderLeads();
     }
 
@@ -1523,14 +2369,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
 
     function getFilteredLeads() {
+      if (activePipeline === 'content') {
+        return contentItems.filter(item => {
+          if (statusFilter !== 'ALL') {
+            const sLower = statusFilter.toLowerCase();
+            const tierLower = (item.tier || '').toLowerCase();
+            const statusLower = (item.status || '').toLowerCase();
+            if (!tierLower.includes(sLower) && !statusLower.includes(sLower)) return false;
+          }
+          if (categoryFilter !== 'ALL') {
+            if (!(item.tier || '').toLowerCase().includes(categoryFilter.toLowerCase())) return false;
+          }
+          if (searchQuery) {
+            const hay = (item.title + ' ' + item.topic + ' ' + (item.source_reference || '') + ' ' + (item.content_markdown || '')).toLowerCase();
+            if (!hay.includes(searchQuery)) return false;
+          }
+          return true;
+        });
+      }
+
       const rawLeads = activePipeline === 'media' ? mediaLeads : execLeads;
       return rawLeads.filter(lead => {
-        // Status filter
         if (statusFilter !== 'ALL') {
           if ((lead.status || '').toLowerCase() !== statusFilter.toLowerCase()) return false;
         }
-
-        // Category / Group filter
         if (categoryFilter !== 'ALL') {
           if (activePipeline === 'media') {
             const topicStr = ((lead.topic || '') + ' ' + (lead.genre || '') + ' ' + (lead.theme || '')).toLowerCase();
@@ -1540,27 +2402,31 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             if (!groupStr.includes(categoryFilter.toLowerCase())) return false;
           }
         }
-
-        // Search Query
         if (searchQuery) {
           const hay = Object.values(lead).map(v => typeof v === 'string' ? v : JSON.stringify(v)).join(' ').toLowerCase();
           if (!hay.includes(searchQuery)) return false;
         }
-
         return true;
-      }).sort((a, b) => {
-        if (sortOrder === 'alpha') {
-          return (a.name || '').localeCompare(b.name || '');
-        }
-        if (sortOrder === 'status') {
-          return (a.status || '').localeCompare(b.status || '');
-        }
-        return 0;
       });
     }
 
     function renderLeads() {
       const filtered = getFilteredLeads();
+
+      // Sorting
+      if (sortOrder === 'alpha') {
+        filtered.sort((a, b) => {
+          const nameA = (a.title || a.name || '').toLowerCase();
+          const nameB = (b.title || b.name || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+      }
+
+      if (activePipeline === 'content') {
+        renderContentCards(filtered);
+        return;
+      }
+
       if (viewMode === 'cards') {
         renderCardsView(filtered);
       } else {
@@ -1568,36 +2434,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     }
 
-    /* Cards View Rendering */
     function renderCardsView(leads) {
       const container = document.getElementById('leads-cards-container');
       if (leads.length === 0) {
-        if (searchQuery) {
-          container.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 45px 20px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">
-              <div style="font-size: 15px; font-weight: 600; color: #f1f5f9; margin-bottom: 6px;">
-                No existing ${activePipeline === 'media' ? 'podcasts' : 'executives'} match "${escapeHtml(searchQuery)}"
-              </div>
-              <div style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 16px;">
-                ${activePipeline === 'media' ? 'Looking for a show not yet in your CRM? You can search external podcast directories & YouTube.' : 'This contact is not in your CRM database.'}
-              </div>
-              <div style="display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <button class="btn btn-secondary" onclick="clearSearchInput()" style="padding: 7px 14px; font-size: 12px;">Clear Filter</button>
-                ${activePipeline === 'media' ? `
-                  <button class="btn btn-primary" onclick="openDiscoverModal('${escapeHtml(searchQuery)}')" style="padding: 7px 16px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #38bdf8); color: #070b14;">
-                    <span>🌐 Search Online Directories for "${escapeHtml(searchQuery)}"</span>
-                  </button>
-                ` : `
-                  <button class="btn btn-primary" onclick="openAddLeadModal()" style="padding: 7px 16px; font-size: 12px;">
-                    <span>➕ Add New Lead</span>
-                  </button>
-                `}
-              </div>
-            </div>
-          `;
-        } else {
-          container.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); background: var(--bg-surface); border-radius: 12px; border: 1px dashed var(--border);">No leads matching current filters.</div>`;
-        }
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+            <div style="font-size: 15px; font-weight: 700; color: #ffffff;">No leads match your filter</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Try clearing filters or search query.</div>
+          </div>
+        `;
         return;
       }
 
@@ -1608,6 +2454,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     }
 
+    /* Clean, Scannable Podcast Card */
     function renderPodcastCard(lead) {
       const hasMultipleHosts = lead.hosts && lead.hosts.length > 1;
       const statusClass = (lead.status || '').toLowerCase().includes('booked') ? 'status-booked' :
@@ -1618,18 +2465,20 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return `
         <div class="lead-card" id="card-${escapeHtml(lead.id)}">
           <div class="card-top">
-            <div class="card-title-group">
-              <div class="card-title" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" style="cursor: pointer;" title="Click to edit">${escapeHtml(lead.name || 'Untitled Show')}</div>
+            <div class="card-title-group" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')">
+              <div class="card-title" title="Click to view full lead profile">
+                <span>🎙️</span> ${escapeHtml(lead.name || 'Untitled Show')}
+              </div>
               <div class="card-subtitle">
                 <span class="pill-badge badge-media">${escapeHtml(lead.genre || lead.topic || 'Media')}</span>
                 ${lead.reach_metrics ? `<span style="font-size: 11px; color: var(--text-muted);">• ${escapeHtml(lead.reach_metrics)}</span>` : ''}
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
-              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" title="Edit show details">✏️ Edit</button>
               <select class="status-select ${statusClass}" onchange="updatePodcastStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_MEDIA.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
+              <button class="btn-xs" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" title="View and edit show details">✏️ Edit</button>
             </div>
           </div>
 
@@ -1641,8 +2490,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div class="host-subcard">
                   <div class="host-subcard-header">
                     <div>
-                      <div class="host-subcard-name">${escapeHtml(h.name)}</div>
-                      <div class="host-subcard-role">${escapeHtml(h.role || '')}</div>
+                      <span class="host-subcard-name">${escapeHtml(h.name)}</span>
+                      ${h.role ? `<span class="host-subcard-role"> • ${escapeHtml(h.role)}</span>` : ''}
                     </div>
                     <div style="display: flex; gap: 4px;">
                       ${h.email ? `<button class="btn-xs" onclick="copyText('${escapeHtml(h.email)}')">Copy Email</button>` : ''}
@@ -1657,23 +2506,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <div class="contact-box">
               <div class="contact-row">
                 <div class="contact-target">
-                  <span>🎙️ Host / Contact:</span>
-                  <span style="color: #ffffff;">${escapeHtml(lead.host || 'Host')}</span>
+                  <span>Host:</span>
+                  <span style="color: #ffffff;">${escapeHtml(lead.host || 'Show Host')}</span>
                 </div>
                 ${lead.contact_email ? `
                   <div style="display: flex; gap: 4px;">
-                    <button class="btn-xs" onclick="copyText('${escapeHtml(lead.contact_email)}')">Copy</button>
-                    <a href="mailto:${escapeHtml(lead.contact_email)}" class="btn-xs" style="text-decoration:none;">Email</a>
+                    <button class="btn-xs" onclick="copyText('${escapeHtml(lead.contact_email)}')">📋 Copy</button>
+                    <a href="mailto:${escapeHtml(lead.contact_email)}" class="btn-xs" style="text-decoration:none;">✉️ Email</a>
                   </div>
                 ` : ''}
               </div>
               <div class="contact-email-val">
-                ${lead.contact_email ? `✉️ ${escapeHtml(lead.contact_email)}` : `<span style="color: var(--text-muted); font-size: 11px;">⚠️ Direct email not publicly listed</span>`}
+                ${lead.contact_email ? `✉️ ${escapeHtml(lead.contact_email)}` : `<span style="color: var(--text-muted); font-size: 11px;">Direct email not publicly listed</span>`}
               </div>
             </div>
           `}
 
-          <!-- Video Watch & Comment Callout -->
+          <!-- Video Watch Callout -->
           ${lead.video_url ? `
             <div>
               <a href="${lead.video_url}" target="_blank" class="link-pill pill-video-comment">
@@ -1691,24 +2540,24 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             ${lead.spotify_url ? `<a href="${lead.spotify_url}" target="_blank" class="link-pill">🎧 Spotify</a>` : ''}
           </div>
 
-          <!-- Engagement Hook / Strategic Angle -->
-          <div class="hook-box">
+          <!-- Engagement Hook Quote Box -->
+          <div class="hook-box" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" style="cursor: pointer;">
             <div class="hook-label">🎙️ Engagement Hook / Topic:</div>
-            <div>${escapeHtml(lead.rupert_angle || lead.pitch_angle || lead.theme || 'Strategic discussion, executive insights, and industry leadership.')}</div>
+            <div>"${escapeHtml(lead.rupert_angle || lead.pitch_angle || lead.theme || 'Strategic discussion, executive insights, and industry leadership.')}"</div>
           </div>
 
-          <!-- Notes & Current Activity Field -->
-          <div class="notes-section">
-            <div class="notes-label">
-              <span>Activity / Notes:</span>
-              <button class="btn-xs" onclick="savePodcastNotes('${escapeHtml(lead.id)}')">Save Notes</button>
-            </div>
-            <textarea id="notes-${escapeHtml(lead.id)}" class="notes-input" placeholder="Add interaction notes, outreach history...">${escapeHtml(lead.current_activity || lead.notes || '')}</textarea>
+          <!-- Bottom Activity Strip -->
+          <div class="card-actions-bar">
+            <span class="activity-preview" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')">
+              📝 ${escapeHtml(lead.current_activity || lead.notes || 'Click to view & add notes')}
+            </span>
+            <button class="btn-xs" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')">View & Edit ➜</button>
           </div>
         </div>
       `;
     }
 
+    /* Clean, Scannable Executive Card */
     function renderExecutiveCard(lead) {
       const statusClass = (lead.status || '').toLowerCase().includes('conversation') ? 'status-active' :
                           (lead.status || '').toLowerCase().includes('connected') ? 'status-booked' :
@@ -1717,8 +2566,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return `
         <div class="lead-card" id="card-${escapeHtml(lead.id)}">
           <div class="card-top">
-            <div class="card-title-group">
-              <div class="card-title" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" style="cursor: pointer;" title="Click to edit">${escapeHtml(lead.name || 'Unnamed Contact')}</div>
+            <div class="card-title-group" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')">
+              <div class="card-title" title="Click to view full lead profile">
+                <span>💼</span> ${escapeHtml(lead.name || 'Unnamed Contact')}
+              </div>
               <div class="card-subtitle">
                 <span class="pill-badge badge-exec">${escapeHtml(lead.company || 'Enterprise')}</span>
                 ${lead.priority ? `<span class="pill-badge badge-p1">${escapeHtml(lead.priority)}</span>` : ''}
@@ -1726,38 +2577,98 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
-              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" title="Edit lead details">✏️ Edit</button>
               <select class="status-select ${statusClass}" onchange="updateExecutiveStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_EXEC.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
+              <button class="btn-xs" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" title="View and edit lead details">✏️ Edit</button>
             </div>
           </div>
 
-          <!-- Role / Title & Organization -->
+          <!-- Role / Title -->
           ${lead.title ? `<div style="font-size: 12px; color: #cbd5e1; font-weight: 500;">👔 ${escapeHtml(lead.title)}</div>` : ''}
 
           <!-- Contact Toolbar -->
           <div class="links-toolbar">
             ${lead.linkedin_url ? `<a href="${lead.linkedin_url}" target="_blank" class="link-pill pill-li">💼 View LinkedIn Profile</a>` : `<span style="font-size: 11px; color: var(--text-muted);">LinkedIn URL not mapped</span>`}
-            ${lead.email ? `<a href="mailto:${lead.email}" class="link-pill">✉️ ${escapeHtml(lead.email)}</a>` : ''}
+            ${lead.email ? `<button class="link-pill" onclick="copyText('${escapeHtml(lead.email)}')">✉️ Copy Email</button>` : ''}
+            ${lead.email ? `<a href="mailto:${lead.email}" class="link-pill">Send Email</a>` : ''}
           </div>
 
           <!-- Strategic Hook / Dealmaker Angle -->
-          <div class="hook-box hook-exec">
+          <div class="hook-box hook-exec" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" style="cursor: pointer;">
             <div class="hook-label label-exec">💼 Strategic Angle / Hook:</div>
-            <div>${escapeHtml(lead.hook || 'Pre-deal people risk, behavioral due diligence, and cultural integration.')}</div>
+            <div>"${escapeHtml(lead.hook || 'Pre-deal people risk, behavioral due diligence, and cultural integration.')}"</div>
           </div>
 
-          <!-- Current Activity & Next Move -->
-          <div class="notes-section">
-            <div class="notes-label">
-              <span>Pipeline Activity & Next Move:</span>
-              <button class="btn-xs" onclick="saveExecutiveNotes('${escapeHtml(lead.id)}')">Save Activity</button>
-            </div>
-            <textarea id="notes-${escapeHtml(lead.id)}" class="notes-input" placeholder="Current activity, curiosity follow-ups, next steps...">${escapeHtml(lead.current_activity || lead.next_move || lead.notes || '')}</textarea>
+          <!-- Bottom Activity Strip -->
+          <div class="card-actions-bar">
+            <span class="activity-preview" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')">
+              📝 ${escapeHtml(lead.current_activity || lead.next_move || lead.notes || 'Click to view & add notes')}
+            </span>
+            <button class="btn-xs" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')">View & Edit ➜</button>
           </div>
         </div>
       `;
+    }
+
+    /* Full Content Engine Grid */
+    function renderContentCards(items) {
+      const container = document.getElementById('content-cards-container');
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px;">
+            <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+            <div style="font-size: 15px; font-weight: 700; color: #ffffff;">No content pieces in this view</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Click "+ New Research & Content" to generate author-conditioned posts.</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = items.map(item => {
+        const isT1 = (item.tier || '').includes('Tier 1');
+        const isT2 = (item.tier || '').includes('Tier 2');
+        const tierClass = isT1 ? 't1' : (isT2 ? 't2' : 't3');
+        const factsCount = item.research_dossier?.data_points?.length || 0;
+        const citesCount = item.research_dossier?.citations?.length || 0;
+        const slidesCount = item.slides_outline?.length || 0;
+
+        return `
+          <div class="content-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <span class="tier-badge ${tierClass}">${escapeHtml(item.tier || 'Content')}</span>
+              <span class="pill-badge badge-media">${escapeHtml(item.topic || 'General')}</span>
+            </div>
+
+            <div class="content-card-title" onclick="openContentViewModal('${escapeHtml(item.id)}')">
+              ${escapeHtml(item.title || 'Untitled Post')}
+            </div>
+
+            <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+              <span>Source:</span>
+              <span style="color: #cbd5e1; font-weight: 600;">${escapeHtml(item.source_reference || item.source_type || 'Internal')}</span>
+              ${isT1 && slidesCount ? `<span>• 📑 ${slidesCount} Slides</span>` : ''}
+            </div>
+
+            <div class="content-card-excerpt">
+              ${escapeHtml(item.content_markdown || '')}
+            </div>
+
+            <div class="dossier-stats-strip">
+              <span>🔬 <strong>${factsCount}</strong> Research Facts</span>
+              <span>🔗 <strong>${citesCount}</strong> Citations</span>
+            </div>
+
+            <div class="content-actions-footer">
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-primary btn-xs" onclick="openContentViewModal('${escapeHtml(item.id)}')">👁️ View / Copy Post</button>
+                <button class="btn btn-xs" onclick="openDossierModal('${escapeHtml(item.id)}')">🔬 Dossier</button>
+              </div>
+              <button class="btn btn-danger btn-xs" onclick="deleteContentItem('${escapeHtml(item.id)}')">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     /* Table View Rendering */
@@ -1768,212 +2679,155 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (activePipeline === 'media') {
         thead.innerHTML = `
           <tr>
-            <th>Status</th>
             <th>Show Name</th>
-            <th>Contact / Host</th>
-            <th>Email</th>
-            <th>Links</th>
-            <th>Activity / Video</th>
+            <th>Host / Contact</th>
+            <th>Direct Email</th>
+            <th>Status</th>
+            <th>Category / Reach</th>
             <th>Engagement Hook</th>
-            <th style="text-align: center;">Action</th>
+            <th>Actions</th>
           </tr>
         `;
 
-        if (leads.length === 0) {
-          if (searchQuery) {
-            tbody.innerHTML = `
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                  <div style="font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 6px;">No existing podcasts match "${escapeHtml(searchQuery)}"</div>
-                  <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; align-items: center;">
-                    <button class="btn btn-secondary" onclick="clearSearchInput()" style="padding: 6px 12px; font-size: 12px;">Clear Filter</button>
-                    <button class="btn btn-primary" onclick="openDiscoverModal('${escapeHtml(searchQuery)}')" style="padding: 6px 14px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #0284c7, #38bdf8); color: #070b14;">
-                      <span>🌐 Search Online Directories for "${escapeHtml(searchQuery)}"</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          } else {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
-          }
-          return;
-        }
-
         tbody.innerHTML = leads.map(l => `
           <tr>
+            <td style="font-weight: 700; color: #ffffff; cursor: pointer;" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'media')">
+              🎙️ ${escapeHtml(l.name)}
+            </td>
+            <td>${escapeHtml(l.host || 'Host')}</td>
+            <td>
+              ${l.contact_email ? `
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="font-family: monospace; color: #38bdf8;">${escapeHtml(l.contact_email)}</span>
+                  <button class="btn-xs" onclick="copyText('${escapeHtml(l.contact_email)}')">Copy</button>
+                </div>
+              ` : '<span style="color: var(--text-muted);">Unlisted</span>'}
+            </td>
             <td>
               <select class="status-select" onchange="updatePodcastStatus('${escapeHtml(l.id)}', this.value)">
                 ${STATUS_OPTIONS_MEDIA.map(opt => `<option value="${escapeHtml(opt)}" ${l.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
             </td>
-            <td class="td-title">
-              <div onclick="openEditLeadModal('${escapeHtml(l.id)}', 'media')" style="cursor: pointer; text-decoration: underline dotted;" title="Click to edit">${escapeHtml(l.name)}</div>
-              <div style="font-size: 10px; color: var(--text-muted); font-weight: normal;">${escapeHtml(l.genre || l.topic || '')}</div>
-            </td>
-            <td>${escapeHtml(l.host || 'Host')}</td>
-            <td>
-              ${l.contact_email ? `
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="font-family: monospace; color: #38bdf8;">${escapeHtml(l.contact_email)}</span>
-                  <button class="btn-xs" onclick="copyText('${escapeHtml(l.contact_email)}')">Copy</button>
-                </div>
-              ` : '<span style="color: var(--text-muted);">-</span>'}
+            <td><span class="pill-badge badge-media">${escapeHtml(l.genre || l.topic || 'Media')}</span></td>
+            <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${escapeHtml(l.rupert_angle || l.pitch_angle || '')}
             </td>
             <td>
-              <div style="display: flex; gap: 4px;">
-                ${l.website ? `<a href="${l.website}" target="_blank" class="btn-xs">🌐</a>` : ''}
-                ${l.youtube_url ? `<a href="${l.youtube_url}" target="_blank" class="btn-xs" style="color: #f43f5e;">▶️</a>` : ''}
-                ${l.linkedin_url ? `<a href="${l.linkedin_url}" target="_blank" class="btn-xs" style="color: #38bdf8;">💼</a>` : ''}
-              </div>
-            </td>
-            <td>
-              ${l.video_url ? `<a href="${l.video_url}" target="_blank" class="btn-xs" style="color: #fda4af;">▶️ Watch Video</a>` : ''}
-              <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(l.current_activity || '')}</div>
-            </td>
-            <td style="max-width: 320px; font-size: 11.5px; line-height: 1.4;">${escapeHtml(l.rupert_angle || l.pitch_angle || '')}</td>
-            <td style="text-align: center;">
-              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'media')" title="Edit show details">✏️ Edit</button>
+              <button class="btn-xs" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'media')">✏️ Edit</button>
             </td>
           </tr>
         `).join('');
       } else {
         thead.innerHTML = `
           <tr>
-            <th>Status</th>
             <th>Executive Name</th>
-            <th>Entity / Company</th>
+            <th>Company / Entity</th>
+            <th>Title</th>
+            <th>Status</th>
             <th>Priority & Group</th>
-            <th>Activity</th>
             <th>Strategic Hook</th>
-            <th>LinkedIn</th>
-            <th style="text-align: center;">Action</th>
+            <th>Actions</th>
           </tr>
         `;
 
-        if (leads.length === 0) {
-          if (searchQuery) {
-            tbody.innerHTML = `
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                  <div style="font-size: 14px; font-weight: 600; color: #f1f5f9; margin-bottom: 6px;">No existing executives match "${escapeHtml(searchQuery)}"</div>
-                  <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: center; align-items: center;">
-                    <button class="btn btn-secondary" onclick="clearSearchInput()" style="padding: 6px 12px; font-size: 12px;">Clear Filter</button>
-                    <button class="btn btn-primary" onclick="openAddLeadModal()" style="padding: 6px 14px; font-size: 12px;">
-                      <span>➕ Add New Lead</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          } else {
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
-          }
-          return;
-        }
-
         tbody.innerHTML = leads.map(l => `
           <tr>
+            <td style="font-weight: 700; color: #ffffff; cursor: pointer;" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'exec')">
+              💼 ${escapeHtml(l.name)}
+            </td>
+            <td>${escapeHtml(l.company || 'Enterprise')}</td>
+            <td>${escapeHtml(l.title || '-')}</td>
             <td>
               <select class="status-select" onchange="updateExecutiveStatus('${escapeHtml(l.id)}', this.value)">
                 ${STATUS_OPTIONS_EXEC.map(opt => `<option value="${escapeHtml(opt)}" ${l.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
             </td>
-            <td class="td-title">
-              <span onclick="openEditLeadModal('${escapeHtml(l.id)}', 'exec')" style="cursor: pointer; text-decoration: underline dotted;" title="Click to edit">${escapeHtml(l.name)}</span>
+            <td>
+              <span class="pill-badge badge-p1">${escapeHtml(l.priority || 'P1')}</span>
+              <span class="pill-badge badge-group">${escapeHtml(l.group || '')}</span>
+            </td>
+            <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${escapeHtml(l.hook || '')}
             </td>
             <td>
-              <span class="pill-badge badge-exec">${escapeHtml(l.company)}</span>
-            </td>
-            <td>
-              ${l.priority ? `<span class="pill-badge badge-p1">${escapeHtml(l.priority)}</span> ` : ''}
-              <span style="font-size: 11px; color: var(--text-muted);">${escapeHtml(l.group || '')}</span>
-            </td>
-            <td style="font-size: 11px; max-width: 220px;">${escapeHtml(l.current_activity || '')}</td>
-            <td style="max-width: 300px; font-size: 11.5px; line-height: 1.4;">${escapeHtml(l.hook || '')}</td>
-            <td>
-              ${l.linkedin_url ? `<a href="${l.linkedin_url}" target="_blank" class="btn-xs" style="color: #38bdf8;">💼 Profile</a>` : '<span style="color: var(--text-muted);">-</span>'}
-            </td>
-            <td style="text-align: center;">
-              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'exec')" title="Edit lead details">✏️ Edit</button>
+              <button class="btn-xs" onclick="openEditLeadModal('${escapeHtml(l.id)}', 'exec')">✏️ Edit</button>
             </td>
           </tr>
         `).join('');
       }
     }
 
-    /* Inline Status Updates */
-    async function updatePodcastStatus(id, newStatus) {
-      const target = mediaLeads.find(l => l.id === id);
-      if (target) target.status = newStatus;
-      await fetch('/api/leads/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, status: newStatus })
-      });
-      renderKPIs();
-      showToast(`Status updated to: ${newStatus}`);
+    /* Fast Status Update Handlers */
+    async function updatePodcastStatus(leadId, newStatus) {
+      try {
+        await fetch('/api/leads/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: leadId, status: newStatus })
+        });
+        const lead = mediaLeads.find(l => l.id === leadId);
+        if (lead) lead.status = newStatus;
+        showToast(`Status updated to: ${newStatus}`);
+        renderKPIs();
+      } catch (err) {
+        showToast('Error updating status');
+      }
     }
 
-    async function updateExecutiveStatus(id, newStatus) {
-      const target = execLeads.find(l => l.id === id);
-      if (target) target.status = newStatus;
-      await fetch('/api/executives/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, updates: { status: newStatus } })
-      });
-      renderKPIs();
-      showToast(`Status updated to: ${newStatus}`);
-    }
-
-    /* Inline Notes Updates */
-    async function savePodcastNotes(id) {
-      const text = document.getElementById(`notes-${id}`)?.value || '';
-      const target = mediaLeads.find(l => l.id === id);
-      if (target) target.current_activity = text;
-      await fetch('/api/leads/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, notes: text, current_activity: text })
-      });
-      showToast('Activity notes saved');
-    }
-
-    async function saveExecutiveNotes(id) {
-      const text = document.getElementById(`notes-${id}`)?.value || '';
-      const target = execLeads.find(l => l.id === id);
-      if (target) target.current_activity = text;
-      await fetch('/api/executives/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id, updates: { current_activity: text } })
-      });
-      showToast('Executive activity saved');
+    async function updateExecutiveStatus(leadId, newStatus) {
+      try {
+        await fetch('/api/executives/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: leadId, updates: { status: newStatus } })
+        });
+        const lead = execLeads.find(l => l.id === leadId);
+        if (lead) lead.status = newStatus;
+        showToast(`Status updated to: ${newStatus}`);
+        renderKPIs();
+      } catch (err) {
+        showToast('Error updating status');
+      }
     }
 
     /* Add Lead Modal Logic */
     function openAddLeadModal() {
       document.getElementById('add-lead-modal').classList.add('active');
+      document.getElementById('new-lead-type').value = activePipeline === 'exec' ? 'exec' : 'media';
+      toggleModalFields();
     }
+
     function closeAddLeadModal() {
       document.getElementById('add-lead-modal').classList.remove('active');
     }
+
     function toggleModalFields() {
       const type = document.getElementById('new-lead-type').value;
-      document.getElementById('modal-media-fields').style.display = type === 'media' ? 'block' : 'none';
-      document.getElementById('modal-exec-fields').style.display = type === 'exec' ? 'block' : 'none';
+      const mediaFields = document.getElementById('modal-media-fields');
+      const execFields = document.getElementById('modal-exec-fields');
+      const title = document.getElementById('modal-title-text');
+
+      if (type === 'media') {
+        mediaFields.style.display = 'block';
+        execFields.style.display = 'none';
+        title.innerText = '➕ Add Podcast Show';
+      } else {
+        mediaFields.style.display = 'none';
+        execFields.style.display = 'block';
+        title.innerText = '➕ Add Executive Lead';
+      }
     }
 
     async function submitNewLead() {
       const type = document.getElementById('new-lead-type').value;
-      const hook = document.getElementById('new-lead-hook').value;
+      const hook = document.getElementById('new-lead-hook').value.trim();
 
       if (type === 'media') {
         const name = document.getElementById('new-show-name').value.trim();
-        if (!name) return alert('Podcast name is required');
         const host = document.getElementById('new-show-host').value.trim();
         const email = document.getElementById('new-show-email').value.trim();
+
+        if (!name) return alert('Podcast name is required');
 
         const newShow = {
           name: name,
@@ -1981,7 +2835,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           contact_email: email,
           rupert_angle: hook,
           status: 'Identified',
-          media_type: 'Audio Podcast'
+          genre: 'Media'
         };
 
         const res = await fetch('/api/leads/add', {
@@ -1991,14 +2845,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         });
         const created = await res.json();
         mediaLeads.unshift(created);
-        showToast('Podcast added to directory');
+        showToast('Podcast lead saved');
       } else {
         const name = document.getElementById('new-exec-name').value.trim();
         const company = document.getElementById('new-exec-company').value.trim();
-        if (!name || !company) return alert('Executive name and company are required');
         const priority = document.getElementById('new-exec-priority').value;
         const group = document.getElementById('new-exec-group').value;
         const li = document.getElementById('new-exec-linkedin').value.trim();
+
+        if (!name || !company) return alert('Executive name and company are required');
 
         const newExec = {
           name: name,
@@ -2033,7 +2888,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
     function openEditLeadModal(id, type) {
       editingLeadId = id;
-      editingPipelineType = type || activePipeline;
+      editingPipelineType = type || (activePipeline === 'exec' ? 'exec' : 'media');
 
       const modal = document.getElementById('edit-lead-modal');
       const titleEl = document.getElementById('edit-modal-title');
@@ -2191,6 +3046,299 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       renderLeads();
     }
 
+    /* Content View Modal Logic */
+    function openContentViewModal(itemId) {
+      const item = contentItems.find(c => c.id === itemId);
+      if (!item) return;
+      currentModalContentItem = item;
+
+      document.getElementById('view-content-title').innerText = item.title || 'Untitled Post';
+      const badge = document.getElementById('view-content-tier-badge');
+      const isT1 = (item.tier || '').includes('Tier 1');
+      const isT2 = (item.tier || '').includes('Tier 2');
+      badge.className = `tier-badge ${isT1 ? 't1' : (isT2 ? 't2' : 't3')}`;
+      badge.innerText = item.tier || 'Content';
+
+      document.getElementById('view-content-source-label').innerText = `${item.source_reference || item.source_type} (${item.topic})`;
+      document.getElementById('view-content-markdown').value = item.content_markdown || '';
+
+      const slideContainer = document.getElementById('slide-deck-container');
+      const copyScriptBtn = document.getElementById('btn-copy-slide-script');
+
+      if (isT1 && item.slides_outline && item.slides_outline.length > 0) {
+        slideContainer.style.display = 'flex';
+        copyScriptBtn.style.display = 'inline-flex';
+        currentSlideIndex = 0;
+        updateSlideView();
+      } else {
+        slideContainer.style.display = 'none';
+        copyScriptBtn.style.display = 'none';
+      }
+
+      document.getElementById('content-view-modal').classList.add('active');
+    }
+
+    function closeContentViewModal() {
+      document.getElementById('content-view-modal').classList.remove('active');
+      currentModalContentItem = null;
+    }
+
+    function navigateSlide(delta) {
+      if (!currentModalContentItem || !currentModalContentItem.slides_outline) return;
+      const slides = currentModalContentItem.slides_outline;
+      currentSlideIndex = Math.max(0, Math.min(slides.length - 1, currentSlideIndex + delta));
+      updateSlideView();
+    }
+
+    function updateSlideView() {
+      if (!currentModalContentItem || !currentModalContentItem.slides_outline) return;
+      const slides = currentModalContentItem.slides_outline;
+      const slide = slides[currentSlideIndex];
+      if (!slide) return;
+
+      document.getElementById('slide-counter-text').innerText = `Slide ${currentSlideIndex + 1} of ${slides.length}`;
+      document.getElementById('slide-current-number').innerText = `#${slide.slide || (currentSlideIndex + 1)}`;
+      document.getElementById('slide-current-headline').innerText = slide.headline || '';
+      document.getElementById('slide-current-bullet').innerText = slide.bullet || '';
+    }
+
+    function copyFullPost() {
+      if (!currentModalContentItem) return;
+      copyText(currentModalContentItem.content_markdown || '');
+    }
+
+    function copySlideScript() {
+      if (!currentModalContentItem || !currentModalContentItem.slides_outline) return;
+      const script = currentModalContentItem.slides_outline.map(s => `[Slide ${s.slide}]\n${s.headline}\n${s.bullet}\n`).join('\n');
+      copyText(script);
+    }
+
+    function copyLinkedInPost() {
+      if (!currentModalContentItem) return;
+      let text = currentModalContentItem.content_markdown || '';
+      copyText(text);
+    }
+
+    /* Research Dossier Modal Logic */
+    function openDossierModal(itemId) {
+      const item = contentItems.find(c => c.id === itemId);
+      if (!item) return;
+
+      const d = item.research_dossier || {};
+      document.getElementById('dossier-modal-title').innerText = `🔬 Verified Dossier: ${item.title}`;
+      document.getElementById('dossier-thesis').innerText = d.thesis || item.title || 'Core investigative thesis.';
+      document.getElementById('dossier-tension').innerText = d.unseen_tension || 'Frontline operational workarounds bypass formal controls.';
+
+      // Data points
+      const dpContainer = document.getElementById('dossier-data-points');
+      if (d.data_points && d.data_points.length > 0) {
+        dpContainer.innerHTML = d.data_points.map(dp => `
+          <div style="background: rgba(7, 11, 20, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;">
+            <div style="font-size: 13px; color: #ffffff; font-weight: 500;">📌 ${escapeHtml(dp.fact)}</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+              Source: <span style="color: #38bdf8;">${escapeHtml(dp.source)}</span>
+              ${dp.url ? ` • <a href="${escapeHtml(dp.url)}" target="_blank" style="color: #38bdf8; text-decoration: underline;">View Citation ↗</a>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } else {
+        dpContainer.innerHTML = `<div style="font-size: 12px; color: var(--text-muted);">No structured facts extracted.</div>`;
+      }
+
+      // Quotes
+      const qContainer = document.getElementById('dossier-quotes');
+      if (d.quotes && d.quotes.length > 0) {
+        qContainer.innerHTML = d.quotes.map(q => `
+          <div class="hook-box" style="border-left-color: #a855f7;">
+            "${escapeHtml(q)}"
+          </div>
+        `).join('');
+      } else {
+        qContainer.innerHTML = `<div style="font-size: 12px; color: var(--text-muted);">No direct quotes extracted.</div>`;
+      }
+
+      // Citations
+      const cContainer = document.getElementById('dossier-citations');
+      if (d.citations && d.citations.length > 0) {
+        cContainer.innerHTML = d.citations.map(c => `
+          <div style="font-size: 12px; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
+            <span>🔗</span>
+            ${c.url ? `<a href="${escapeHtml(c.url)}" target="_blank" style="color: #38bdf8; text-decoration: underline;">${escapeHtml(c.title || c.url)}</a>` : `<span>${escapeHtml(c.title)}</span>`}
+          </div>
+        `).join('');
+      } else {
+        cContainer.innerHTML = `<div style="font-size: 12px; color: var(--text-muted);">No citation links indexed.</div>`;
+      }
+
+      document.getElementById('dossier-modal').classList.add('active');
+    }
+
+    function closeDossierModal() {
+      document.getElementById('dossier-modal').classList.remove('active');
+    }
+
+    /* New Research & Content Generation Modal Logic */
+    function openNewContentModal() {
+      document.getElementById('new-content-modal').classList.add('active');
+      switchContentSourceTab('pdf');
+      populateLeadDropdown();
+    }
+
+    function closeNewContentModal() {
+      document.getElementById('new-content-modal').classList.remove('active');
+      document.getElementById('gen-spinner').style.display = 'none';
+      document.getElementById('gen-actions').style.display = 'flex';
+    }
+
+    function switchContentSourceTab(tab) {
+      currentSourceTab = tab;
+      document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`tab-src-${tab}`).classList.add('active');
+
+      document.getElementById('panel-src-pdf').style.display = tab === 'pdf' ? 'block' : 'none';
+      document.getElementById('panel-src-url').style.display = tab === 'url' ? 'block' : 'none';
+      document.getElementById('panel-src-text').style.display = tab === 'text' ? 'block' : 'none';
+      document.getElementById('panel-src-lead').style.display = tab === 'lead' ? 'block' : 'none';
+    }
+
+    function populateLeadDropdown() {
+      const pipe = document.getElementById('gen-lead-pipeline').value;
+      const select = document.getElementById('gen-lead-id');
+      const list = pipe === 'media' ? mediaLeads : execLeads;
+
+      select.innerHTML = list.map(l => `
+        <option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${escapeHtml(l.company || l.genre || 'Lead')})</option>
+      `).join('');
+    }
+
+    async function generateContent() {
+      const tier = document.getElementById('gen-tier-select').value;
+      const voiceId = document.getElementById('gen-voice-select').value;
+      const topic = document.getElementById('gen-topic-input').value.trim();
+
+      const spinner = document.getElementById('gen-spinner');
+      const actions = document.getElementById('gen-actions');
+      spinner.style.display = 'block';
+      actions.style.display = 'none';
+
+      try {
+        let res;
+        if (currentSourceTab === 'pdf') {
+          const fileInput = document.getElementById('gen-pdf-file');
+          if (!fileInput.files || fileInput.files.length === 0) {
+            alert('Please select a PDF file to upload.');
+            spinner.style.display = 'none';
+            actions.style.display = 'flex';
+            return;
+          }
+          const formData = new FormData();
+          formData.append('file', fileInput.files[0]);
+          formData.append('source_type', 'pdf');
+          formData.append('tier', tier);
+          formData.append('voice_id', voiceId);
+          if (topic) formData.append('topic', topic);
+
+          res = await fetch('/api/content/generate', {
+            method: 'POST',
+            body: formData
+          });
+        } else if (currentSourceTab === 'url') {
+          const url = document.getElementById('gen-url-input').value.trim();
+          if (!url) {
+            alert('Please enter a web URL.');
+            spinner.style.display = 'none';
+            actions.style.display = 'flex';
+            return;
+          }
+          res = await fetch('/api/content/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source_type: 'url',
+              url: url,
+              tier: tier,
+              voice_id: voiceId,
+              topic: topic
+            })
+          });
+        } else if (currentSourceTab === 'text') {
+          const text = document.getElementById('gen-text-input').value.trim();
+          if (!text) {
+            alert('Please paste source text or briefing notes.');
+            spinner.style.display = 'none';
+            actions.style.display = 'flex';
+            return;
+          }
+          res = await fetch('/api/content/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source_type: 'text',
+              text: text,
+              tier: tier,
+              voice_id: voiceId,
+              topic: topic || 'Strategic Leadership'
+            })
+          });
+        } else {
+          // lead
+          const leadId = document.getElementById('gen-lead-id').value;
+          const leadType = document.getElementById('gen-lead-pipeline').value;
+          res = await fetch('/api/content/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              source_type: 'lead',
+              lead_id: leadId,
+              lead_type: leadType,
+              tier: tier,
+              voice_id: voiceId,
+              topic: topic
+            })
+          });
+        }
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.error || 'Failed to generate content');
+        }
+
+        const createdItem = await res.json();
+        contentItems.unshift(createdItem);
+        document.getElementById('badge-content-count').innerText = contentItems.length;
+
+        closeNewContentModal();
+        switchPipeline('content');
+        showToast('✨ Voice-conditioned content generated successfully!');
+        openContentViewModal(createdItem.id);
+      } catch (err) {
+        console.error('Error generating content:', err);
+        alert(`Generation failed: ${err.message}`);
+        spinner.style.display = 'none';
+        actions.style.display = 'flex';
+      }
+    }
+
+    async function deleteContentItem(itemId) {
+      if (!confirm('Are you sure you want to permanently delete this content piece?')) return;
+      try {
+        const res = await fetch('/api/content/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: itemId })
+        });
+        if (res.ok) {
+          contentItems = contentItems.filter(c => c.id !== itemId);
+          document.getElementById('badge-content-count').innerText = contentItems.length;
+          renderKPIs();
+          renderLeads();
+          showToast('Content piece deleted');
+        }
+      } catch (err) {
+        showToast('Error deleting content piece');
+      }
+    }
+
     /* Podcast Discovery Modal Logic */
     function openDiscoverModal(prefillQuery = '') {
       const modal = document.getElementById('discover-modal');
@@ -2296,9 +3444,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     function copyText(str) {
       if (!str) return;
       navigator.clipboard.writeText(str).then(() => {
-        showToast(`Copied to clipboard: ${str}`);
+        showToast(`Copied to clipboard!`);
       }).catch(() => {
-        showToast(`Copied: ${str}`);
+        showToast(`Copied!`);
       });
     }
 
@@ -2318,7 +3466,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // Initialize
+    // Initialize on page load
     loadAllData();
   </script>
 </body>
@@ -2331,8 +3479,25 @@ def index():
     return render_template_string(HTML_TEMPLATE)
 
 
+@app.route("/api/status")
+def api_status():
+    media_leads = (db.get_all_media_leads() if db.is_connected else None) or tracker.get_leads()
+    exec_leads = (db.get_all_executive_leads() if db.is_connected else None) or exec_tracker.get_leads()
+    content_items = (db.get_content_items() if db.is_connected else None) or load_local_content()
+    return jsonify({
+        "neon_connected": bool(db.is_connected),
+        "media_count": len(media_leads),
+        "exec_count": len(exec_leads),
+        "content_count": len(content_items)
+    })
+
+
 @app.route("/api/leads")
 def get_leads():
+    if db.is_connected:
+        leads = db.get_all_media_leads()
+        if leads is not None:
+            return jsonify(leads)
     return jsonify(tracker.get_leads())
 
 
@@ -2342,8 +3507,11 @@ def update_lead():
     lead_id = data.get("id")
     updates = data.get("updates")
     if updates and isinstance(updates, dict):
-        success = tracker.update_lead(lead_id, updates)
-        return jsonify({"success": success})
+        tracker.update_lead(lead_id, updates)
+        updated_lead = tracker.leads.get(lead_id)
+        if db.is_connected and updated_lead:
+            db.upsert_media_lead(updated_lead)
+        return jsonify({"success": True})
     
     status = data.get("status")
     notes = data.get("notes", "")
@@ -2355,8 +3523,11 @@ def update_lead():
     if notes: up["notes"] = notes
     if angle: up["rupert_angle"] = angle
     if current_activity: up["current_activity"] = current_activity
-    success = tracker.update_lead(lead_id, up)
-    return jsonify({"success": success})
+    tracker.update_lead(lead_id, up)
+    updated_lead = tracker.leads.get(lead_id)
+    if db.is_connected and updated_lead:
+        db.upsert_media_lead(updated_lead)
+    return jsonify({"success": True})
 
 
 @app.route("/api/leads/delete", methods=["POST"])
@@ -2364,14 +3535,8 @@ def delete_lead():
     data = request.get_json() or {}
     lead_id = data.get("id")
     success = tracker.delete_lead(lead_id)
-    return jsonify({"success": success})
-
-
-@app.route("/api/executives/delete", methods=["POST"])
-def delete_executive():
-    data = request.get_json() or {}
-    lead_id = data.get("id")
-    success = exec_tracker.delete_lead(lead_id)
+    if db.is_connected and lead_id:
+        db.delete_media_lead(lead_id)
     return jsonify({"success": success})
 
 
@@ -2379,14 +3544,22 @@ def delete_executive():
 def add_lead():
     data = request.get_json() or {}
     lead_id = re.sub(r'[\W_]+', '_', data.get("name", "show").lower()).strip('_')
+    if not lead_id:
+        lead_id = f"lead_{int(datetime.now().timestamp())}"
     data["id"] = lead_id
     tracker.add_or_update_lead(data)
     tracker.save()
+    if db.is_connected:
+        db.upsert_media_lead(tracker.leads[lead_id])
     return jsonify(tracker.leads[lead_id])
 
 
 @app.route("/api/executives")
 def get_executives():
+    if db.is_connected:
+        leads = db.get_all_executive_leads()
+        if leads is not None:
+            return jsonify(leads)
     return jsonify(exec_tracker.get_leads())
 
 
@@ -2396,6 +3569,19 @@ def update_executive():
     lead_id = data.get("id")
     updates = data.get("updates", {})
     success = exec_tracker.update_lead(lead_id, updates)
+    updated_lead = exec_tracker.leads.get(lead_id)
+    if db.is_connected and updated_lead:
+        db.upsert_executive_lead(updated_lead)
+    return jsonify({"success": success})
+
+
+@app.route("/api/executives/delete", methods=["POST"])
+def delete_executive():
+    data = request.get_json() or {}
+    lead_id = data.get("id")
+    success = exec_tracker.delete_lead(lead_id)
+    if db.is_connected and lead_id:
+        db.delete_executive_lead(lead_id)
     return jsonify({"success": success})
 
 
@@ -2403,14 +3589,176 @@ def update_executive():
 def add_executive():
     data = request.get_json() or {}
     lead_id = exec_tracker.add_lead(data)
+    if db.is_connected:
+        db.upsert_executive_lead(exec_tracker.leads[lead_id])
     return jsonify(exec_tracker.leads[lead_id])
+
+
+@app.route("/api/content")
+def get_content():
+    if db.is_connected:
+        items = db.get_content_items()
+        if items:
+            return jsonify(items)
+    return jsonify(load_local_content())
+
+
+@app.route("/api/content/generate", methods=["POST"])
+def generate_content_item():
+    is_form = request.content_type and "multipart/form-data" in request.content_type
+    
+    if is_form:
+        source_type = request.form.get("source_type", "text")
+        tier = request.form.get("tier", "Tier 1: Short-Form Carousel")
+        topic = request.form.get("topic", "").strip()
+        voice_id = request.form.get("voice_id", "forensic-operator")
+        raw_text = ""
+        source_ref = ""
+        
+        if "file" in request.files and request.files["file"].filename:
+            f = request.files["file"]
+            source_type = "pdf"
+            source_ref = f.filename
+            raw_text = extract_text_from_pdf(f.stream)
+            if not topic:
+                topic = os.path.splitext(f.filename)[0].replace("_", " ").title()
+        elif source_type == "url":
+            url = request.form.get("url", "").strip()
+            source_ref = url
+            if url:
+                scraped = extract_text_from_url(url)
+                raw_text = scraped.get("text", "")
+                if not topic and scraped.get("title") and scraped.get("title") != url:
+                    topic = scraped["title"]
+        elif source_type == "lead":
+            lead_id = request.form.get("lead_id", "")
+            lead_pipe = request.form.get("lead_type", "media")
+            lead = None
+            if lead_pipe == "media":
+                lead = (db.is_connected and next((x for x in (db.get_all_media_leads() or []) if x.get("id") == lead_id), None)) or tracker.leads.get(lead_id)
+            else:
+                lead = (db.is_connected and next((x for x in (db.get_all_executive_leads() or []) if x.get("id") == lead_id), None)) or exec_tracker.leads.get(lead_id)
+            if lead:
+                lead_name = lead.get("name") or lead.get("company") or "Target Lead"
+                source_ref = f"{lead_name} ({lead_pipe.capitalize()} Lead)"
+                hook = lead.get("rupert_angle") or lead.get("pitch_angle") or lead.get("hook") or ""
+                notes = lead.get("current_activity") or lead.get("notes") or ""
+                raw_text = f"Subject: {lead_name}\nStrategic Hook: {hook}\nInteraction Context: {notes}\nCategory: {lead.get('genre') or lead.get('topic') or lead.get('company') or 'Leadership'}"
+                if not topic:
+                    topic = f"Executive Angle: {lead_name}"
+        else:
+            raw_text = request.form.get("text", "").strip()
+            source_ref = request.form.get("source_reference", "Executive Briefing")
+    else:
+        data = request.get_json() or {}
+        source_type = data.get("source_type", "text")
+        tier = data.get("tier", "Tier 1: Short-Form Carousel")
+        topic = data.get("topic", "").strip()
+        voice_id = data.get("voice_id", "forensic-operator")
+        raw_text = data.get("text", "").strip()
+        source_ref = data.get("source_reference", "Executive Briefing")
+        
+        if source_type == "url":
+            url = data.get("url", "").strip()
+            source_ref = url
+            if url:
+                scraped = extract_text_from_url(url)
+                raw_text = scraped.get("text", "")
+                if not topic and scraped.get("title") and scraped.get("title") != url:
+                    topic = scraped["title"]
+        elif source_type == "lead":
+            lead_id = data.get("lead_id", "")
+            lead_pipe = data.get("lead_type", "media")
+            lead = None
+            if lead_pipe == "media":
+                lead = (db.is_connected and next((x for x in (db.get_all_media_leads() or []) if x.get("id") == lead_id), None)) or tracker.leads.get(lead_id)
+            else:
+                lead = (db.is_connected and next((x for x in (db.get_all_executive_leads() or []) if x.get("id") == lead_id), None)) or exec_tracker.leads.get(lead_id)
+            if lead:
+                lead_name = lead.get("name") or lead.get("company") or "Target Lead"
+                source_ref = f"{lead_name} ({lead_pipe.capitalize()} Lead)"
+                hook = lead.get("rupert_angle") or lead.get("pitch_angle") or lead.get("hook") or ""
+                notes = lead.get("current_activity") or lead.get("notes") or ""
+                raw_text = f"Subject: {lead_name}\nStrategic Hook: {hook}\nInteraction Context: {notes}\nCategory: {lead.get('genre') or lead.get('topic') or lead.get('company') or 'Leadership'}"
+                if not topic:
+                    topic = f"Executive Angle: {lead_name}"
+
+    if not topic:
+        topic = "Corporate Governance & Integrity"
+
+    if not raw_text.strip():
+        return jsonify({"error": "No content could be extracted or provided."}), 400
+
+    voice_profile = get_voice_profile_by_id(voice_id)
+    generated = synthesizer.generate_content(raw_text, voice_profile, source_title=topic, tier=tier)
+
+    item_id = f"item_{int(datetime.now().timestamp())}_{os.urandom(2).hex()}"
+    new_item = {
+        "id": item_id,
+        "title": generated.get("title", f"{tier}: {topic}"),
+        "tier": tier,
+        "topic": topic,
+        "voice_profile_id": voice_id,
+        "source_type": source_type,
+        "source_reference": source_ref,
+        "content_markdown": generated.get("content_markdown", ""),
+        "slides_outline": generated.get("slides_outline", []),
+        "research_dossier": generated.get("research_dossier", {}),
+        "status": "Ready to Publish",
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat()
+    }
+
+    if db.is_connected:
+        db.save_content_item(new_item)
+    save_local_content_item(new_item)
+
+    return jsonify(new_item)
+
+
+@app.route("/api/content/delete", methods=["POST"])
+def delete_content_item():
+    data = request.get_json() or {}
+    item_id = data.get("id")
+    if not item_id:
+        return jsonify({"error": "Missing item id"}), 400
+    if db.is_connected:
+        db.delete_content_item(item_id)
+    delete_local_content_item(item_id)
+    return jsonify({"success": True})
+
+
+@app.route("/api/voices", methods=["GET", "POST"])
+def handle_voices():
+    if request.method == "POST":
+        data = request.get_json() or {}
+        if not data.get("id"):
+            data["id"] = f"voice_{int(datetime.now().timestamp())}"
+        if db.is_connected:
+            db.upsert_voice_profile(data)
+        profiles = get_default_voice_profiles()
+        idx = next((i for i, x in enumerate(profiles) if x.get("id") == data["id"]), None)
+        if idx is not None:
+            profiles[idx] = data
+        else:
+            profiles.append(data)
+        try:
+            with open(VOICES_JSON_PATH, "w", encoding="utf-8") as f:
+                json.dump(profiles, f, indent=2, default=str)
+        except Exception:
+            pass
+        return jsonify(data)
+    else:
+        profiles = (db.get_voice_profiles() if db.is_connected else None) or get_default_voice_profiles()
+        return jsonify(profiles)
 
 
 @app.route("/api/export/excel")
 def export_excel():
-    """Generates a dynamic multi-tab Excel workbook matching the Progress Sheet structure."""
-    podcasts = tracker.get_leads()
-    execs = exec_tracker.get_leads()
+    """Generates a dynamic multi-tab Excel workbook: P4 Podcasts, Master Leads & Outreach, Content Calendar."""
+    podcasts = (db.get_all_media_leads() if db.is_connected else None) or tracker.get_leads()
+    execs = (db.get_all_executive_leads() if db.is_connected else None) or exec_tracker.get_leads()
+    content_items = (db.get_content_items() if db.is_connected else None) or load_local_content()
 
     wb = openpyxl.Workbook()
 
@@ -2471,11 +3819,47 @@ def export_excel():
             e.get("linkedin_url", "")
         ])
 
+    # Tab 3: Content Calendar & Dossiers
+    ws_content = wb.create_sheet("Content Calendar & Dossiers")
+    ws_content.append([
+        "Title",
+        "Tier",
+        "Topic",
+        "Status",
+        "Source Type",
+        "Source Reference",
+        "Core Thesis",
+        "Key Stats / Data Points",
+        "Slide Count",
+        "Created At"
+    ])
+
+    for item in content_items:
+        dossier = item.get("research_dossier") or {}
+        thesis = dossier.get("thesis", "")
+        data_points = dossier.get("data_points") or []
+        dp_str = " | ".join([dp.get("fact", "") for dp in data_points[:3]]) if isinstance(data_points, list) else ""
+        slides = item.get("slides_outline") or []
+        slide_count = len(slides) if isinstance(slides, list) else 0
+
+        ws_content.append([
+            item.get("title", ""),
+            item.get("tier", ""),
+            item.get("topic", ""),
+            item.get("status", "Draft"),
+            item.get("source_type", ""),
+            item.get("source_reference", ""),
+            thesis,
+            dp_str,
+            slide_count,
+            str(item.get("created_at", ""))[:19]
+        ])
+
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
 
-    filename = f"Media_Executive_Progress_Sheet_{datetime.now().strftime('%Y%m%d')}.xlsx"
+    filename = f"Media_Executive_Content_Studio_{datetime.now().strftime('%Y%m%d')}.xlsx"
     return send_file(
         buf,
         as_attachment=True,
@@ -2487,7 +3871,7 @@ def export_excel():
 @app.route("/api/export/tsv")
 def export_tsv():
     """Returns tab-separated values ready for instant pasting into Google Sheets (12 columns)."""
-    leads = tracker.get_leads()
+    leads = (db.get_all_media_leads() if db.is_connected else None) or tracker.get_leads()
     output = io.StringIO()
     writer = csv.writer(output, delimiter="\t")
     
@@ -2530,14 +3914,10 @@ def search():
     enrich = bool(data.get("enrich", True))
 
     query_parts = []
-    if name:
-        query_parts.append(name)
-    if host:
-        query_parts.append(host)
-    if role:
-        query_parts.append(role)
-    if topic:
-        query_parts.append(topic)
+    if name: query_parts.append(name)
+    if host: query_parts.append(host)
+    if role: query_parts.append(role)
+    if topic: query_parts.append(topic)
 
     query = " ".join(query_parts) if query_parts else data.get("query", "compliance risk")
     discovered = []
@@ -2546,9 +3926,12 @@ def search():
         podcast_results = search_podcasts(query=query, limit=limit)
         for show in podcast_results:
             show["media_type"] = "Audio Podcast"
-            if enrich:
-                rss_info = enrich_from_rss(show["feed_url"])
-                show.update(rss_info)
+            if enrich and show.get("feed_url"):
+                try:
+                    rss_info = enrich_from_rss(show["feed_url"])
+                    show.update(rss_info)
+                except Exception:
+                    pass
             discovered.append(show)
 
     if engine in ["youtube", "all"] and search_youtube:
@@ -2557,8 +3940,14 @@ def search():
 
     for show in discovered:
         tracker.add_or_update_lead(show)
+        if db.is_connected:
+            db.upsert_media_lead(show)
 
     tracker.save()
+    if db.is_connected:
+        leads = db.get_all_media_leads()
+        if leads:
+            return jsonify(leads)
     return jsonify(tracker.get_leads())
 
 
@@ -2574,12 +3963,19 @@ def search_presets():
             except Exception:
                 pass
         tracker.add_or_update_lead(show)
+        if db.is_connected:
+            db.upsert_media_lead(show)
+
     tracker.save()
+    if db.is_connected:
+        leads = db.get_all_media_leads()
+        if leads:
+            return jsonify(leads)
     return jsonify(tracker.get_leads())
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5050))
     host = os.environ.get("HOST", "0.0.0.0")
-    print(f"[*] Starting Media & Executive Dashboard on http://{host}:{port}")
+    print(f"[*] Starting Media, Executive & Content Dashboard on http://{host}:{port}")
     app.run(host=host, port=port, debug=False)
