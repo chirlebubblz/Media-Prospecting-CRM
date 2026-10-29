@@ -42,12 +42,16 @@ class DatabaseManager:
     def get_connection(self):
         if not PSYCOPG2_AVAILABLE or not self.db_url:
             return None
-        return psycopg2.connect(self.db_url)
+        return psycopg2.connect(self.db_url, connect_timeout=3)
 
     def _init_schema(self):
         """Initializes tables in Neon Postgres if they do not exist."""
         try:
-            with self.get_connection() as conn:
+            conn = self.get_connection()
+            if not conn:
+                self.is_connected = False
+                return
+            with conn:
                 with conn.cursor() as cur:
                     # Media Leads table
                     cur.execute("""
