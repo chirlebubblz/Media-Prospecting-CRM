@@ -3591,8 +3591,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       const script = currentModalContentItem.slides_outline.map(s => `[Slide ${s.slide}]
 ${s.headline}
 ${s.bullet}
-`).join('
-');
+`).join('\n');
       copyText(script);
     }
 
@@ -3612,11 +3611,7 @@ Tension: ${d.unseen_tension || ''}
 
 `;
       if (d.data_points) {
-        text += "Key Facts:
-" + d.data_points.map(dp => `- ${dp.fact} (${dp.source})`).join("
-") + "
-
-";
+        text += `Key Facts:\n` + d.data_points.map(dp => `- ${dp.fact} (${dp.source})`).join('\n') + `\n\n`;
       }
       text += currentModalContentItem.content_markdown || '';
       copyText(text);
