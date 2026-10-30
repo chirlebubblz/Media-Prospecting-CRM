@@ -3239,10 +3239,14 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Right Controls -->
     <div style="display: flex; align-items: center; gap: 10px;">
-      <select id="studio-voice-select" class="select-filter" style="font-weight: 700; background: var(--bg-surface); border-color: var(--border-accent); color: #fff;">
-        <option value="forensic-operator">🎙️ Forensic Risk Operator (Rupert Evill)</option>
+      <select id="voice-select-header" class="select-filter" onchange="onVoiceSelectHeaderChange(this.value)" style="font-weight: 700; background: var(--bg-surface); border-color: var(--border-accent); color: #fff; max-width: 320px;">
+        <option value="forensic-operator">🎙️ Rupert Evill / Forensic Risk Operator</option>
+        <option value="christian-hunt">🎙️ Christian Hunt / Human Risk</option>
+        <option value="jordan-sabalo">🎙️ Jordan Sabalo / Contrarian Tech</option>
         <option value="growth-dealmaker">🎙️ Strategic Dealmaker (PE & M&A)</option>
+        <option value="__NEW__">➕ Add / Clone Custom Voice...</option>
       </select>
+      <button type="button" class="btn btn-xs" onclick="openVoiceModal()" style="background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #c4b5fd; font-weight: 700; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;" title="Create or Clone Custom Author Voice"><span>➕ Clone / Custom Voice</span></button>
       <a href="/" class="btn" style="text-decoration:none;"><span>⬅️ Back to CRM Leads</span></a>
     </div>
   </header>
@@ -3611,6 +3615,99 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     </div>
   </div>
 
+  <!-- Author Voice Studio & Style Cloner Modal -->
+  <div class="modal-overlay" id="voice-modal" style="display: none;">
+    <div class="modal-card modal-card-xl" style="max-width: 800px;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" style="font-size: 18px; display: flex; align-items: center; gap: 8px;">
+            <span>🎙️ Author Voice Studio & Style Cloner</span>
+          </div>
+          <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 4px;">
+            Train the AI on any executive, partner, or personal writing style. Paste past posts or articles to clone syntax, vocabulary, and cadence.
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeVoiceModal()">&times;</button>
+      </div>
+
+      <!-- Preset Quick-Select Buttons -->
+      <div style="background: rgba(7, 11, 20, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 18px;">
+        <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+          ⚡ Load Preset or Clone From Scratch:
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-xs" onclick="applyVoicePreset('forensic-operator')" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #7dd3fc; font-weight: 600;">
+            ⚡ Rupert Evill
+          </button>
+          <button type="button" class="btn btn-xs" onclick="applyVoicePreset('christian-hunt')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #6ee7b7; font-weight: 600;">
+            ⚡ Christian Hunt
+          </button>
+          <button type="button" class="btn btn-xs" onclick="applyVoicePreset('jordan-sabalo')" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fcd34d; font-weight: 600;">
+            ⚡ Jordan Sabalo
+          </button>
+          <button type="button" class="btn btn-xs" onclick="applyVoicePreset('growth-dealmaker')" style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.35); color: #c4b5fd; font-weight: 600;">
+            ⚡ PE Dealmaker
+          </button>
+          <button type="button" class="btn btn-xs" onclick="applyVoicePreset('blank')" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); color: #f1f5f9; font-weight: 600;">
+            ✍️ Blank Slate
+          </button>
+        </div>
+      </div>
+
+      <!-- Form Grid -->
+      <form id="voice-studio-form" onsubmit="event.preventDefault(); submitCustomVoice();">
+        <input type="hidden" id="voice-id-input" value="">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div>
+            <label class="form-label" for="voice-name-input">Voice Name / Display Title *</label>
+            <input type="text" id="voice-name-input" class="form-input" placeholder="e.g. Jordan Sabalo, Alex Vance / PE Operating Partner" required>
+          </div>
+          <div>
+            <label class="form-label" for="voice-role-input">Professional Role / Title</label>
+            <input type="text" id="voice-role-input" class="form-input" placeholder="e.g. Crisis Investigator, Tech Due Diligence Writer">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div>
+            <label class="form-label" for="voice-tone-input">Tone & Attitude</label>
+            <input type="text" id="voice-tone-input" class="form-input" placeholder="e.g. Direct, contrarian, cynical operator, zero fluff">
+          </div>
+          <div>
+            <label class="form-label" for="voice-cadence-input">Sentence Cadence & Formatting</label>
+            <input type="text" id="voice-cadence-input" class="form-input" placeholder="e.g. Short punchy 1-2 sentence lines, double spacing">
+          </div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label class="form-label" for="voice-philosophy-input">Core Worldview & Philosophy</label>
+          <textarea id="voice-philosophy-input" class="form-input" style="height: 75px; line-height: 1.4;" placeholder="What is their contrarian thesis? How do they view corporate reality vs conventional compliance or PR?"></textarea>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+            <label class="form-label" for="voice-samples-input" style="margin-bottom: 0;">Writing Sample / Style Reference (The Cloner Textarea) 🧬</label>
+            <span style="font-size: 11px; color: #a855f7; font-weight: 600;">AI analyzes grammar, rhythm, & mental models</span>
+          </div>
+          <textarea id="voice-samples-input" class="form-input" style="height: 140px; line-height: 1.5; font-family: inherit;" placeholder="Paste 1 to 3 previous LinkedIn posts, newsletters, or emails here to clone their exact voice..."></textarea>
+        </div>
+
+        <div style="margin-bottom: 18px;">
+          <label class="form-label" for="voice-banned-input">Banned Words List (comma separated)</label>
+          <input type="text" id="voice-banned-input" class="form-input" placeholder="delve, synergy, game-changer, seamless, exciting journey, holistic">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-top: 1px solid var(--border); padding-top: 14px;">
+          <button type="button" class="btn" onclick="closeVoiceModal()">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="submitCustomVoice()" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); border-color: #8b5cf6; font-weight: 700; padding: 8px 18px;">
+            <span>🎙️ Save & Activate Voice</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast">Copied to clipboard!</div>
 
@@ -3618,6 +3715,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
   <script>
     let contentItems = [];
     let voiceProfiles = [];
+    let activeVoiceId = 'forensic-operator';
     let mediaLeads = [];
     let execLeads = [];
     let tierFilter = 'ALL';
@@ -3691,6 +3789,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         execLeads = Array.isArray(resExec) ? resExec : [];
         researchedLinks = Array.isArray(resLinks) ? resLinks : [];
 
+        renderVoiceDropdowns();
         updateCountersAndPills();
         renderQuickResearchedLinks();
         renderSourcesList();
@@ -3725,6 +3824,229 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       document.getElementById('pill-t1-count').innerText = `(${t1})`;
       document.getElementById('pill-t2-count').innerText = `(${t2})`;
       document.getElementById('pill-t3-count').innerText = `(${t3})`;
+    }
+
+    // ==========================================================
+    // Author Voice Studio & Style Cloner
+    // ==========================================================
+    const VOICE_PRESETS = {
+      'forensic-operator': {
+        id: 'forensic-operator',
+        name: 'Rupert Evill / Forensic Risk & Governance Operator',
+        role: 'Crisis Investigator & Board Risk Advisor',
+        philosophy: 'Corporate failures, corruption, and operational breakdowns are driven by human behaviour under pressure, never a lack of paperwork. Traditional compliance creates an illusion of security through 300-page codes and annual check-the-box training. Real ethics is enlightened self-interest and capital protection.',
+        tone: 'Authoritative, analytical, contrarian yet constructive, grounded, zero corporate fluff, forensic insider.',
+        cadence: 'Short 1-2 sentence lines with double spacing. Punchy, memorable mental models. Clear intention vs reality contrasts.',
+        banned_words: 'delve, game-changer, holistic journey, agree?, synergy, paradigm shift, thought leadership, exciting times',
+        sample_texts: [
+          "The most dangerous thing a founder-led business can have isn't a scandal. It's a story that's too smooth.",
+          "Fast decisions and a founder who 'reviews everything' can look like strength. Sometimes it is. Sometimes it's concentration risk wearing a good suit."
+        ]
+      },
+      'christian-hunt': {
+        id: 'christian-hunt',
+        name: 'Christian Hunt / Human Risk & Behavioral Science',
+        role: 'Author of Humanize Rules & Host of The Human Risk Podcast',
+        philosophy: 'Human beings do not make decisions in sterile vacuums. Distance, digital screens, and cognitive friction change how people act. Compliance must be designed with human psychology in mind, not legal idealism.',
+        tone: 'Witty, thoughtful, conversational, deeply psychological, behavioral-first.',
+        cadence: 'Conversational storytelling, relatable analogies, sharp behavioral observations.',
+        banned_words: 'delve, synergy, game-changer, seamless, exciting journey',
+        sample_texts: [
+          "If you design a process that requires saints to succeed under stress, your process is already broken.",
+          "Distance turns theft into a one-click admin task."
+        ]
+      },
+      'jordan-sabalo': {
+        id: 'jordan-sabalo',
+        name: 'Jordan Sabalo / Contrarian Tech & Growth Investigator',
+        role: 'Tech Due Diligence & Economic Investigative Writer',
+        philosophy: 'Corporate narratives in tech and remote work look pristine on LinkedIn while frontline reality is filled with unmeasured friction, wage arbitrage, and informal workarounds.',
+        tone: 'Gritty, investigative, contrarian, empirical, narrative-driven.',
+        cadence: 'Visceral micro-narratives (what happens at 2:15 AM), stark before-and-after contrasts, hard data.',
+        banned_words: 'delve, tapestry, beacon, testament, holistic, revolutionize',
+        sample_texts: [
+          "'We're not just a company, we're a family' is the #1 warning sign that your invoice isn't getting paid.",
+          "When an offshore worker is just a tiny Slack circle, the brain stops seeing a real person."
+        ]
+      },
+      'growth-dealmaker': {
+        id: 'growth-dealmaker',
+        name: 'Strategic Dealmaker & M&A Operator',
+        role: 'Private Equity Partner & Strategic Acquirer',
+        philosophy: 'Value creation in M&A happens through operational discipline and cultural integration, not financial engineering. Pre-deal due diligence must price human risk and key-person dependencies before signing.',
+        tone: 'Pragmatic, commercially sharp, direct, experienced, metric-informed.',
+        cadence: 'Concise bullets, clear investment theses, stark risk-reward comparisons.',
+        banned_words: 'revolutionary, disruptive, silver bullet, no-brainer, unicorn vibes',
+        sample_texts: [
+          "EBITDA multiples don't protect you when the head of supply chain walks out 30 days post-close.",
+          "If your diligence team spent 40 hours auditing leases and 2 hours auditing management integrity, you didn't do diligence—you did paperwork."
+        ]
+      }
+    };
+
+    function renderVoiceDropdowns() {
+      const headerSelect = document.getElementById('voice-select-header') || document.getElementById('studio-voice-select');
+      const filterSelect = document.getElementById('voice-filter-select');
+
+      if (headerSelect) {
+        const curVal = activeVoiceId || headerSelect.value || 'forensic-operator';
+        let optionsHtml = '';
+        voiceProfiles.forEach(v => {
+          const selected = (v.id === curVal) ? 'selected' : '';
+          optionsHtml += `<option value="${escapeHtml(v.id)}" ${selected}>🎙️ ${escapeHtml(v.name)}</option>`;
+        });
+        optionsHtml += `<option value="__NEW__" style="color: #c4b5fd; font-weight: 700;">➕ Add / Clone Custom Voice...</option>`;
+        headerSelect.innerHTML = optionsHtml;
+        if (voiceProfiles.some(v => v.id === curVal)) {
+          headerSelect.value = curVal;
+        }
+      }
+
+      if (filterSelect) {
+        const curFilter = voiceFilter || 'ALL';
+        let filterHtml = `<option value="ALL">All Voices</option>`;
+        voiceProfiles.forEach(v => {
+          const selected = (v.id === curFilter) ? 'selected' : '';
+          filterHtml += `<option value="${escapeHtml(v.id)}" ${selected}>${escapeHtml(v.name)}</option>`;
+        });
+        filterSelect.innerHTML = filterHtml;
+      }
+    }
+
+    function onVoiceSelectHeaderChange(val) {
+      if (val === '__NEW__') {
+        openVoiceModal();
+        const headerSelect = document.getElementById('voice-select-header') || document.getElementById('studio-voice-select');
+        if (headerSelect && activeVoiceId) {
+          headerSelect.value = activeVoiceId;
+        }
+        return;
+      }
+      activeVoiceId = val;
+    }
+
+    function openVoiceModal(editVoiceId = null) {
+      const modal = document.getElementById('voice-modal');
+      if (!modal) return;
+      if (editVoiceId) {
+        applyVoicePreset(editVoiceId);
+      } else {
+        if (!document.getElementById('voice-name-input').value) {
+          applyVoicePreset('blank');
+        }
+      }
+      modal.style.display = 'flex';
+    }
+
+    function closeVoiceModal() {
+      const modal = document.getElementById('voice-modal');
+      if (modal) modal.style.display = 'none';
+      const headerSelect = document.getElementById('voice-select-header') || document.getElementById('studio-voice-select');
+      if (headerSelect && headerSelect.value === '__NEW__') {
+        headerSelect.value = activeVoiceId || 'forensic-operator';
+      }
+    }
+
+    function applyVoicePreset(presetKey) {
+      if (presetKey === 'blank') {
+        document.getElementById('voice-id-input').value = '';
+        document.getElementById('voice-name-input').value = '';
+        document.getElementById('voice-role-input').value = '';
+        document.getElementById('voice-tone-input').value = '';
+        document.getElementById('voice-cadence-input').value = '';
+        document.getElementById('voice-philosophy-input').value = '';
+        document.getElementById('voice-samples-input').value = '';
+        document.getElementById('voice-banned-input').value = '';
+        document.getElementById('voice-name-input').focus();
+        return;
+      }
+
+      const preset = VOICE_PRESETS[presetKey] || voiceProfiles.find(v => v.id === presetKey);
+      if (!preset) return;
+
+      document.getElementById('voice-id-input').value = preset.id || '';
+      document.getElementById('voice-name-input').value = preset.name || '';
+      document.getElementById('voice-role-input').value = preset.role || '';
+      document.getElementById('voice-tone-input').value = preset.tone || '';
+      document.getElementById('voice-cadence-input').value = preset.cadence || '';
+      document.getElementById('voice-philosophy-input').value = preset.philosophy || '';
+      
+      const sampleText = Array.isArray(preset.sample_texts) 
+        ? preset.sample_texts.join('\n\n') 
+        : (preset.sample_writing || preset.sample_texts || '');
+      document.getElementById('voice-samples-input').value = sampleText;
+      document.getElementById('voice-banned-input').value = preset.banned_words || '';
+    }
+
+    async function submitCustomVoice() {
+      const name = document.getElementById('voice-name-input').value.trim();
+      if (!name) {
+        alert('Please provide a Voice Name / Display Title.');
+        document.getElementById('voice-name-input').focus();
+        return;
+      }
+
+      let voiceId = document.getElementById('voice-id-input').value.trim();
+      if (!voiceId) {
+        voiceId = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        if (!voiceId) voiceId = 'voice-' + Date.now();
+      }
+
+      const role = document.getElementById('voice-role-input').value.trim();
+      const tone = document.getElementById('voice-tone-input').value.trim();
+      const cadence = document.getElementById('voice-cadence-input').value.trim();
+      const philosophy = document.getElementById('voice-philosophy-input').value.trim();
+      const samplesRaw = document.getElementById('voice-samples-input').value.trim();
+      const bannedWords = document.getElementById('voice-banned-input').value.trim();
+
+      const sampleTexts = samplesRaw ? samplesRaw.split('\n\n').map(s => s.trim()).filter(Boolean) : [];
+
+      const payload = {
+        id: voiceId,
+        name: name,
+        role: role,
+        tone: tone,
+        cadence: cadence,
+        philosophy: philosophy,
+        sample_texts: sampleTexts,
+        sample_writing: samplesRaw,
+        banned_words: bannedWords
+      };
+
+      try {
+        const res = await fetch('/api/voices', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          throw new Error('Server returned status ' + res.status);
+        }
+
+        const saved = await res.json();
+        
+        const existingIdx = voiceProfiles.findIndex(v => v.id === saved.id);
+        if (existingIdx >= 0) {
+          voiceProfiles[existingIdx] = saved;
+        } else {
+          voiceProfiles.push(saved);
+        }
+
+        activeVoiceId = saved.id;
+        renderVoiceDropdowns();
+
+        const headerSelect = document.getElementById('voice-select-header') || document.getElementById('studio-voice-select');
+        if (headerSelect) {
+          headerSelect.value = saved.id;
+        }
+
+        closeVoiceModal();
+        showToast(`🎙️ Voice "${saved.name}" saved & activated!`);
+      } catch (err) {
+        console.error('Error saving custom voice:', err);
+        alert('Failed to save custom voice: ' + err.message);
+      }
     }
 
     // ==========================================================
@@ -4162,7 +4484,8 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       isChatStreaming = true;
 
       // 3. API Call
-      const selectedVoice = document.getElementById('studio-voice-select').value;
+      const headerSelect = document.getElementById('voice-select-header') || document.getElementById('studio-voice-select');
+      const selectedVoice = headerSelect ? headerSelect.value : activeVoiceId;
       const activeSources = notebookSources.filter(s => s.active !== false);
 
       try {
@@ -4229,7 +4552,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
           `;
         }
 
-        const voiceSelect = document.getElementById('studio-voice-select');
+        const voiceSelect = document.getElementById('voice-select-header') || document.getElementById('studio-voice-select');
         const voiceName = voiceSelect ? voiceSelect.options[voiceSelect.selectedIndex].text : 'Forensic Risk Operator';
 
         let dossierHtml = '';
@@ -4562,7 +4885,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
             <div style="font-size: 14.5px; font-weight: 700; color: #ffffff; line-height: 1.4;">${escapeHtml(item.title || item.topic || 'Untitled Piece')}</div>
             <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5; max-height: 54px; overflow: hidden;">${escapeHtml((item.content_markdown || item.article || '').substring(0, 140))}…</div>
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 10px; margin-top: auto;">
-              <span style="font-size: 11.5px; color: #38bdf8; font-weight: 600;">${item.voice_profile_id === 'growth-dealmaker' ? 'Strategic Dealmaker' : 'Forensic Risk Operator'}</span>
+              <span style="font-size: 11.5px; color: #38bdf8; font-weight: 600;">${escapeHtml((voiceProfiles.find(v => v.id === item.voice_profile_id)?.name) || (item.voice_profile_id === 'growth-dealmaker' ? 'Strategic Dealmaker' : 'Forensic Risk Operator'))}</span>
               <button class="btn btn-xs" onclick="event.stopPropagation(); deleteContentItem('${item.id}')" style="color: #f43f5e;" title="Delete">🗑️</button>
             </div>
           </div>
@@ -4910,21 +5233,55 @@ def get_default_voice_profiles():
     return [
         {
             "id": "forensic-operator",
-            "name": "Rupert / Forensic Risk Operator",
+            "name": "Rupert Evill / Forensic Risk & Governance Operator",
             "role": "Crisis Investigator & Board Risk Advisor",
-            "philosophy": "Corporate failures and breakdowns are driven by human behaviour under pressure, not lack of paperwork. Traditional compliance creates an illusion of security.",
+            "philosophy": "Corporate failures, corruption, and operational breakdowns are driven by human behaviour under pressure, never a lack of paperwork. Traditional compliance creates an illusion of security through 300-page codes and annual check-the-box training. Real ethics is enlightened self-interest and capital protection.",
             "tone": "Authoritative, analytical, contrarian yet constructive, grounded, zero corporate fluff, forensic insider.",
-            "cadence": "Short 1-2 sentence lines with double spacing. Punchy, memorable mental models.",
-            "banned_words": "delve, game-changer, holistic journey, agree?, synergy, paradigm shift"
+            "cadence": "Short 1-2 sentence lines with double spacing. Punchy, memorable mental models. Clear intention vs reality contrasts.",
+            "banned_words": "delve, game-changer, holistic journey, agree?, synergy, paradigm shift, thought leadership, exciting times",
+            "sample_texts": [
+                "The most dangerous thing a founder-led business can have isn't a scandal. It's a story that's too smooth.",
+                "Fast decisions and a founder who 'reviews everything' can look like strength. Sometimes it is. Sometimes it's concentration risk wearing a good suit."
+            ]
+        },
+        {
+            "id": "christian-hunt",
+            "name": "Christian Hunt / Human Risk & Behavioral Science",
+            "role": "Author of Humanize Rules & Host of The Human Risk Podcast",
+            "philosophy": "Human beings do not make decisions in sterile vacuums. Distance, digital screens, and cognitive friction change how people act. Compliance must be designed with human psychology in mind, not legal idealism.",
+            "tone": "Witty, thoughtful, conversational, deeply psychological, behavioral-first.",
+            "cadence": "Conversational storytelling, relatable analogies, sharp behavioral observations.",
+            "banned_words": "delve, synergy, game-changer, seamless, exciting journey",
+            "sample_texts": [
+                "If you design a process that requires saints to succeed under stress, your process is already broken.",
+                "Distance turns theft into a one-click admin task."
+            ]
+        },
+        {
+            "id": "jordan-sabalo",
+            "name": "Jordan Sabalo / Contrarian Tech & Growth Investigator",
+            "role": "Tech Due Diligence & Economic Investigative Writer",
+            "philosophy": "Corporate narratives in tech and remote work look pristine on LinkedIn while frontline reality is filled with unmeasured friction, wage arbitrage, and informal workarounds.",
+            "tone": "Gritty, investigative, contrarian, empirical, narrative-driven.",
+            "cadence": "Visceral micro-narratives (what happens at 2:15 AM), stark before-and-after contrasts, hard data.",
+            "banned_words": "delve, tapestry, beacon, testament, holistic, revolutionize",
+            "sample_texts": [
+                "'We're not just a company, we're a family' is the #1 warning sign that your invoice isn't getting paid.",
+                "When an offshore worker is just a tiny Slack circle, the brain stops seeing a real person."
+            ]
         },
         {
             "id": "growth-dealmaker",
             "name": "Strategic Dealmaker & M&A Operator",
             "role": "Private Equity Partner & Strategic Acquirer",
-            "philosophy": "Value creation in M&A happens through operational discipline and cultural integration, not financial engineering.",
+            "philosophy": "Value creation in M&A happens through operational discipline and cultural integration, not financial engineering. Pre-deal due diligence must price human risk and key-person dependencies before signing.",
             "tone": "Pragmatic, commercially sharp, direct, experienced, metric-informed.",
             "cadence": "Concise bullets, clear investment theses, stark risk-reward comparisons.",
-            "banned_words": "revolutionary, disruptive, silver bullet, no-brainer, unicorn vibes"
+            "banned_words": "revolutionary, disruptive, silver bullet, no-brainer, unicorn vibes",
+            "sample_texts": [
+                "EBITDA multiples don't protect you when the head of supply chain walks out 30 days post-close.",
+                "If your diligence team spent 40 hours auditing leases and 2 hours auditing management integrity, you didn't do diligence—you did paperwork."
+            ]
         }
     ]
 
@@ -5837,7 +6194,16 @@ def handle_voices():
     if request.method == "POST":
         data = request.get_json() or {}
         if not data.get("id"):
-            data["id"] = f"voice_{int(datetime.now().timestamp())}"
+            name_slug = re.sub(r'[^a-zA-Z0-9]+', '-', data.get("name", "").lower()).strip('-')
+            data["id"] = f"{name_slug}-{int(datetime.now().timestamp())}" if name_slug else f"voice_{int(datetime.now().timestamp())}"
+        data["updated_at"] = datetime.now().isoformat()
+        if isinstance(data.get("sample_texts"), str):
+            raw_samples = data["sample_texts"].strip()
+            if raw_samples:
+                parts = [p.strip() for p in raw_samples.split("\n\n") if p.strip()]
+                data["sample_texts"] = parts if parts else [raw_samples]
+            else:
+                data["sample_texts"] = []
         if db.is_connected:
             db.upsert_voice_profile(data)
         profiles = get_default_voice_profiles()
@@ -5849,12 +6215,23 @@ def handle_voices():
         try:
             with open(VOICES_JSON_PATH, "w", encoding="utf-8") as f:
                 json.dump(profiles, f, indent=2, default=str)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[!] Error saving voice profile to JSON: {e}")
         return jsonify(data)
     else:
-        profiles = (db.get_voice_profiles() if db.is_connected else None) or get_default_voice_profiles()
-        return jsonify(profiles)
+        default_profiles = get_default_voice_profiles()
+        if db.is_connected:
+            db_profiles = db.get_voice_profiles()
+            db_ids = {p.get("id") for p in db_profiles}
+            synced = False
+            for dp in default_profiles:
+                if dp.get("id") not in db_ids:
+                    db.upsert_voice_profile(dp)
+                    synced = True
+            if synced:
+                db_profiles = db.get_voice_profiles()
+            return jsonify(db_profiles if db_profiles else default_profiles)
+        return jsonify(default_profiles)
 
 
 if __name__ == "__main__":
