@@ -2609,6 +2609,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     .tier-badge.t1 { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
     .tier-badge.t2 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
     .tier-badge.t3 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .tier-badge.research { 
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(14, 165, 233, 0.25)); 
+      color: #38bdf8; 
+      border: 1px solid rgba(56, 189, 248, 0.5); 
+    }
     .tier-badge.campaign { 
       background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(168, 85, 247, 0.25)); 
       color: #fb7185; 
@@ -2618,6 +2623,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       background: rgba(244, 63, 94, 0.25);
       border-color: #f43f5e;
       color: #fda4af;
+    }
+    .quick-pill.pill-cyan.active {
+      background: rgba(14, 165, 233, 0.25);
+      border-color: #0ea5e9;
+      color: #7dd3fc;
     }
 
     /* Campaign Tabbed Navigation */
@@ -3002,6 +3012,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     <div style="display: flex; align-items: center; gap: 10px;">
       <a href="/" class="btn" style="text-decoration:none;"><span>⬅️ Back to CRM Leads</span></a>
+      <button class="btn btn-secondary" onclick="openDeepResearchModal()" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);"><span>🔬 Deep Research Studio</span></button>
       <button class="btn btn-primary" onclick="openCreateModal()"><span>✨ Synthesize New Content</span></button>
     </div>
   </header>
@@ -3015,6 +3026,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         <div class="kpi-label">Total Content Pieces</div>
         <div class="kpi-value" id="kpi-total-content" style="color: #c084fc;">0</div>
         <div class="kpi-sub">Synthesized pieces</div>
+      </div>
+      <div class="kpi-card" onclick="setQuickTierFilter('Research')">
+        <div class="kpi-label">🔬 Research Notebooks</div>
+        <div class="kpi-value" id="kpi-research-count" style="color: #38bdf8;">0</div>
+        <div class="kpi-sub">NotebookLM Dossiers</div>
       </div>
       <div class="kpi-card" onclick="setQuickTierFilter('Tier 1')">
         <div class="kpi-label">Tier 1: Carousels</div>
@@ -3054,6 +3070,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       <div class="filter-controls">
         <select id="tier-filter-select" class="select-filter" onchange="handleFilterChange()">
           <option value="ALL">All Formats</option>
+          <option value="Research">🔬 Research Notebooks (Dossiers)</option>
           <option value="Campaign">📦 Full Authority Campaign Packs</option>
           <option value="Tier 1">Tier 1: Swipeable Carousel</option>
           <option value="Tier 2">Tier 2: In-Feed Essay</option>
@@ -3078,6 +3095,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     <!-- Quick Filter Pills -->
     <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;" id="quick-filter-pills">
       <span class="quick-pill active" id="qp-all" onclick="setQuickTierFilter('ALL')">All Formats <span id="pill-all-count">(0)</span></span>
+      <span class="quick-pill pill-cyan" id="qp-research" onclick="setQuickTierFilter('Research')">🔬 Research Notebooks <span id="pill-research-count">(0)</span></span>
       <span class="quick-pill pill-pink" id="qp-campaign" onclick="setQuickTierFilter('Campaign')">📦 Campaign Packs <span id="pill-campaign-count">(0)</span></span>
       <span class="quick-pill pill-purple" id="qp-t1" onclick="setQuickTierFilter('Tier 1')">Tier 1: Carousels <span id="pill-t1-count">(0)</span></span>
       <span class="quick-pill pill-emerald" id="qp-t2" onclick="setQuickTierFilter('Tier 2')">Tier 2: Essays <span id="pill-t2-count">(0)</span></span>
@@ -3280,6 +3298,180 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
           ✨ Synthesize New Post from These Links
         </button>
         <button class="btn" onclick="closeDossierModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deep Research Studio Modal (NotebookLM Mode) -->
+  <div class="modal-overlay" id="deep-research-modal">
+    <div class="modal-card modal-card-lg" style="max-width: 800px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 26px;">🔬</span>
+          <div>
+            <div class="modal-title" style="color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+              <span>Deep Research Studio</span>
+              <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4);">NotebookLM Mode</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+              Enter any single sentence, question, or hypothesis. Gemini investigates empirical studies, whistleblower/risk data points, and builds a comprehensive research notebook.
+            </div>
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeDeepResearchModal()">&times;</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- Research Inquiry Input -->
+        <div class="form-group">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Research Question, Premise, or Hypothesis *</span>
+            <span style="font-size: 11px; color: #38bdf8;">A single sentence or inquiry is all that is needed</span>
+          </label>
+          <textarea id="deep-research-prompt" class="form-input" rows="3" placeholder="e.g. How do corporate whistleblower programs fail employees, and what is the real retaliation rate under operational pressure?" style="font-size: 13.5px; line-height: 1.5;"></textarea>
+        </div>
+
+        <!-- Quick Focus Angle Pills -->
+        <div class="form-group">
+          <label class="form-label" style="font-size: 11.5px; color: #94a3b8; margin-bottom: 6px;">
+            Quick-Add Focus Angles (Click to append to prompt):
+          </label>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="focus-angle-pills">
+            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Retaliation Rates')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Retaliation Rates</button>
+            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Hotline Failures')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Hotline Failures</button>
+            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Behavioral Human Risk')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Behavioral Human Risk</button>
+            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ PE & M&A Diligence')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ PE & M&A Diligence</button>
+            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Cross-Border Supply Chains')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Cross-Border Supply Chains</button>
+          </div>
+        </div>
+
+        <!-- Optional Seed URLs -->
+        <div class="form-group">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Optional Seed URLs or Empirical Study Links:</span>
+            <span style="font-size: 11px; color: var(--text-muted);">Leave empty to let Gemini research open benchmarks</span>
+          </label>
+          <textarea id="deep-research-urls" class="form-input" rows="2" placeholder="https://... (Optional: paste one or more URLs to ingest as ground-truth context)"></textarea>
+        </div>
+
+        <!-- Author Voice Selector -->
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label class="form-label">Author Voice Profile:</label>
+            <select id="deep-research-voice-select" class="form-input">
+              <option value="forensic-operator">Forensic Risk Operator (Rupert Evill - The Integrity Gap)</option>
+              <option value="growth-dealmaker">Strategic Dealmaker (M&A / Capital Risk)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Investigation Depth:</label>
+            <div style="font-size: 12px; color: #34d399; padding: 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px;">
+              ⚡ <strong>NotebookLM Deep Fact Mining</strong>: Extracts 5-7 verified statistics, unseen frontline tension, thesis, expert quotes, & citations.
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Spinner -->
+        <div id="deep-research-spinner" style="display: none; padding: 24px; text-align: center; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px;">
+          <div class="spinner" style="border-top-color: #38bdf8; margin: 0 auto 12px auto;"></div>
+          <div id="deep-research-status-text" style="font-size: 13.5px; font-weight: 700; color: #38bdf8;">
+            🔬 Investigating empirical benchmarks & whistleblower studies...
+          </div>
+          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">
+            Mining data points (ECI, SEC, ACFE, HBR), resolving unseen behavioral tensions, and compiling your research notebook...
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Action Buttons -->
+      <div id="deep-research-actions" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; flex-wrap: wrap; gap: 8px;">
+        <button class="btn" onclick="closeDeepResearchModal()">Cancel</button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-secondary" onclick="submitDeepResearch(false)" style="background: rgba(14, 165, 233, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: 700;">
+            <span>🔬 Build Research Notebook Only</span>
+          </button>
+          <button class="btn btn-primary" onclick="submitDeepResearch(true)" style="background: linear-gradient(135deg, #0284c7, #8b5cf6); border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);">
+            <span>⚡ Research + Auto-Generate Full Campaign Pack</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research Notebook Viewer Modal -->
+  <div class="modal-overlay" id="research-notebook-modal">
+    <div class="modal-card modal-card-xl" style="max-width: 900px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span class="tier-badge research">🔬 Research Notebook Dossier</span>
+          <div class="modal-title" id="rnb-modal-title" style="color: #ffffff;">Research Dossier</div>
+        </div>
+        <button class="close-btn" onclick="closeResearchNotebookModal()">&times;</button>
+      </div>
+
+      <!-- Action Top Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(7, 11, 20, 0.6); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+        <div style="font-size: 12px; color: var(--text-muted);">
+          Status: <span style="color: #38bdf8; font-weight: 600;">🔬 Researched (NotebookLM Mode)</span>
+          <span id="rnb-topic-label" style="margin-left: 8px; color: #94a3b8;"></span>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn btn-primary btn-xs" id="rnb-generate-campaign-btn" onclick="triggerCampaignFromCurrentNotebook()" style="background: linear-gradient(135deg, #f43f5e, #a855f7); border-color: #fb7185; font-weight: 700; box-shadow: 0 0 12px rgba(244, 63, 94, 0.3);">
+            ⚡ Generate Campaign from this Notebook
+          </button>
+          <button class="btn btn-xs" onclick="copyNotebookExecutiveBriefing()">📋 Copy Briefing</button>
+          <button class="btn btn-xs" onclick="copyNotebookFullDossier()">⬇️ Copy Full Dossier</button>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px; max-height: 65vh; overflow-y: auto; padding-right: 4px;">
+        <!-- Core Thesis & Unseen Tension Card -->
+        <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(56, 189, 248, 0.05)); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 14px;">
+          <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em;">Core Investigative Thesis</div>
+          <div id="rnb-thesis" style="font-size: 14px; font-weight: 600; color: #ffffff; margin-top: 5px; line-height: 1.5;"></div>
+          <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 12px;">Unseen Frontline Tension</div>
+          <div id="rnb-tension" style="font-size: 13px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;"></div>
+        </div>
+
+        <!-- 400-Word Synthesized Executive Summary -->
+        <div>
+          <div class="form-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; font-weight: 700; color: #ffffff;">📖 Synthesized Executive Research Briefing:</span>
+            <span id="rnb-word-count-badge" style="font-size: 11px; color: #38bdf8; font-weight: 600;">~400 Words</span>
+          </div>
+          <div id="rnb-executive-summary" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap;"></div>
+        </div>
+
+        <!-- Verified Facts & Empirical Proof Points -->
+        <div>
+          <div class="form-label" style="margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #ffffff;">
+            📊 Verified Empirical Facts & Benchmarks (ECI, SEC, ACFE, HBR):
+          </div>
+          <div id="rnb-data-points" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <!-- Forensic Quotes & Operator Mental Models -->
+        <div>
+          <div class="form-label" style="margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #ffffff;">
+            💬 Forensic Quotes & Mental Models:
+          </div>
+          <div id="rnb-quotes" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <!-- Citations -->
+        <div>
+          <div class="form-label" style="margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #ffffff;">
+            🔗 Source Citations & References:
+          </div>
+          <div id="rnb-citations" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px;">
+        <button class="btn btn-primary" onclick="triggerCampaignFromCurrentNotebook()" style="background: linear-gradient(135deg, #0284c7, #8b5cf6); border-color: #38bdf8; font-weight: 700;">
+          ⚡ Transform into Full Campaign Pack
+        </button>
+        <button class="btn" onclick="closeResearchNotebookModal()">Close</button>
       </div>
     </div>
   </div>
@@ -3511,13 +3703,16 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     function updateCountersAndPills() {
       const total = contentItems.length;
-      const tCamp = contentItems.filter(c => (c.tier || '').toLowerCase().includes('campaign') || !!c.campaign_pack).length;
-      const t1 = contentItems.filter(c => (c.tier || '').includes('Tier 1')).length;
-      const t2 = contentItems.filter(c => (c.tier || '').includes('Tier 2')).length;
-      const t3 = contentItems.filter(c => ((c.tier || '').includes('Tier 3') || (c.tier || '').toLowerCase().includes('article')) && !(c.tier || '').toLowerCase().includes('campaign')).length;
+      const tResearch = contentItems.filter(c => (c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')).length;
+      const tCamp = contentItems.filter(c => ((c.tier || '').toLowerCase().includes('campaign') || !!c.campaign_pack) && !(c.tier || '').toLowerCase().includes('research') && !(c.tier || '').includes('🔬')).length;
+      const t1 = contentItems.filter(c => !((c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')) && (c.tier || '').includes('Tier 1')).length;
+      const t2 = contentItems.filter(c => !((c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')) && (c.tier || '').includes('Tier 2')).length;
+      const t3 = contentItems.filter(c => !((c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')) && ((c.tier || '').includes('Tier 3') || (c.tier || '').toLowerCase().includes('article')) && !(c.tier || '').toLowerCase().includes('campaign')).length;
       const facts = contentItems.reduce((acc, c) => acc + ((c.research_dossier && c.research_dossier.data_points) ? c.research_dossier.data_points.length : 0), 0);
 
       document.getElementById('kpi-total-content').innerText = total;
+      const kpiResearch = document.getElementById('kpi-research-count');
+      if (kpiResearch) kpiResearch.innerText = tResearch;
       const kpiCamp = document.getElementById('kpi-campaign-count');
       if (kpiCamp) kpiCamp.innerText = tCamp;
       document.getElementById('kpi-t1-count').innerText = t1;
@@ -3526,6 +3721,8 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       document.getElementById('kpi-facts-count').innerText = facts;
 
       document.getElementById('pill-all-count').innerText = `(${total})`;
+      const pillResearch = document.getElementById('pill-research-count');
+      if (pillResearch) pillResearch.innerText = `(${tResearch})`;
       const pillCamp = document.getElementById('pill-campaign-count');
       if (pillCamp) pillCamp.innerText = `(${tCamp})`;
       document.getElementById('pill-t1-count').innerText = `(${t1})`;
@@ -3539,7 +3736,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
       // Tier filter
       if (tierFilter !== 'ALL') {
-        filtered = filtered.filter(c => (c.tier || '').toLowerCase().includes(tierFilter.toLowerCase()));
+        if (tierFilter.toLowerCase().includes('research')) {
+          filtered = filtered.filter(c => (c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬'));
+        } else {
+          filtered = filtered.filter(c => (c.tier || '').toLowerCase().includes(tierFilter.toLowerCase()));
+        }
       }
 
       // Voice filter
@@ -3569,26 +3770,61 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       }
 
       if (filtered.length === 0) {
-        container.innerHTML = `
-          <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px;">
-            <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
-            <div style="font-size: 15px; font-weight: 700; color: #ffffff;">No content pieces match this filter</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Click "✨ Synthesize New Content" to create research-backed copy.</div>
-          </div>
-        `;
+        if (searchQuery.trim()) {
+          const qEsc = escapeHtml(searchQuery.trim());
+          container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: rgba(14, 165, 233, 0.05); border: 1px dashed rgba(56, 189, 248, 0.4); border-radius: 12px;">
+              <div style="font-size: 34px; margin-bottom: 10px;">🔬</div>
+              <div style="font-size: 16px; font-weight: 700; color: #ffffff;">No saved content matches "${qEsc}"</div>
+              <div style="font-size: 13px; color: var(--text-muted); margin: 6px 0 16px 0;">Turn this query into a NotebookLM-style investigative intelligence dossier.</div>
+              <button class="btn btn-primary" onclick="launchResearchFromSearch('${qEsc}')" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);">
+                <span>🔬 Run Deep Research on "${qEsc}"</span>
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px;">
+              <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+              <div style="font-size: 15px; font-weight: 700; color: #ffffff;">No content pieces match this filter</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Click "🔬 Deep Research Studio" or "✨ Synthesize New Content" to create research-backed copy.</div>
+            </div>
+          `;
+        }
         return;
       }
 
       container.innerHTML = filtered.map(item => {
-        const isCamp = (item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack;
-        const isT1 = !isCamp && (item.tier || '').includes('Tier 1');
-        const isT2 = !isCamp && (item.tier || '').includes('Tier 2');
-        const tierClass = isCamp ? 'campaign' : (isT1 ? 't1' : (isT2 ? 't2' : 't3'));
-        const tierLabel = isCamp ? '📦 Campaign Pack' : (item.tier || 'Content');
+        const isResearch = (item.tier || '').toLowerCase().includes('research') || (item.tier || '').includes('🔬');
+        const isCamp = !isResearch && ((item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack);
+        const isT1 = !isResearch && !isCamp && (item.tier || '').includes('Tier 1');
+        const isT2 = !isResearch && !isCamp && (item.tier || '').includes('Tier 2');
+        const tierClass = isResearch ? 'research' : (isCamp ? 'campaign' : (isT1 ? 't1' : (isT2 ? 't2' : 't3')));
+        const tierLabel = isResearch ? '🔬 Research Notebook' : (isCamp ? '📦 Campaign Pack' : (item.tier || 'Content'));
         const factsCount = (item.research_dossier && item.research_dossier.data_points) ? item.research_dossier.data_points.length : 0;
         const citesCount = (item.research_dossier && item.research_dossier.citations) ? item.research_dossier.citations.length : 0;
+        const quotesCount = (item.research_dossier && item.research_dossier.quotes) ? item.research_dossier.quotes.length : 0;
         const slidesCount = Array.isArray(item.slides_outline) ? item.slides_outline.length : 0;
         const wordCount = (item.article || item.content_markdown || '').trim().split(/\s+/).filter(Boolean).length;
+
+        let actionsHtml = '';
+        if (isResearch) {
+          actionsHtml = `
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="btn btn-secondary btn-xs" onclick="openResearchNotebookModal('${escapeHtml(item.id)}')" style="background: rgba(14, 165, 233, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: 600;">📖 Open Research Notebook</button>
+              <button class="btn btn-primary btn-xs" onclick="generateCampaignFromNotebook('${escapeHtml(item.id)}')" style="background: linear-gradient(135deg, #f43f5e, #a855f7); border-color: #fb7185; font-weight: 600;">⚡ Generate Campaign</button>
+            </div>
+            <button class="btn btn-danger btn-xs" onclick="deleteContentItem('${escapeHtml(item.id)}')">🗑️</button>
+          `;
+        } else {
+          actionsHtml = `
+            <div style="display: flex; gap: 6px;">
+              <button class="btn btn-primary btn-xs" onclick="openContentViewModal('${escapeHtml(item.id)}')">👁️ View / Copy</button>
+              <button class="btn btn-xs" onclick="openDossierModal('${escapeHtml(item.id)}')">🔬 Dossier</button>
+            </div>
+            <button class="btn btn-danger btn-xs" onclick="deleteContentItem('${escapeHtml(item.id)}')">🗑️</button>
+          `;
+        }
 
         return `
           <div class="content-card">
@@ -3597,7 +3833,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
               <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: var(--tag-bg); color: #94a3b8; border: 1px solid var(--border);">${escapeHtml(item.topic || 'General')}</span>
             </div>
 
-            <div class="content-card-title" onclick="openContentViewModal('${escapeHtml(item.id)}')">
+            <div class="content-card-title" onclick="${isResearch ? `openResearchNotebookModal('${escapeHtml(item.id)}')` : `openContentViewModal('${escapeHtml(item.id)}')`}">
               ${escapeHtml(item.title || 'Untitled Post')}
             </div>
 
@@ -3614,14 +3850,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
             <div class="dossier-stats-strip">
               <span>🔬 <strong>${factsCount}</strong> Research Facts</span>
               <span>🔗 <strong>${citesCount}</strong> Citations</span>
+              ${quotesCount ? `<span>💬 <strong>${quotesCount}</strong> Quotes</span>` : ''}
             </div>
 
             <div class="content-actions-footer">
-              <div style="display: flex; gap: 6px;">
-                <button class="btn btn-primary btn-xs" onclick="openContentViewModal('${escapeHtml(item.id)}')">👁️ View / Copy</button>
-                <button class="btn btn-xs" onclick="openDossierModal('${escapeHtml(item.id)}')">🔬 Dossier</button>
-              </div>
-              <button class="btn btn-danger btn-xs" onclick="deleteContentItem('${escapeHtml(item.id)}')">🗑️</button>
+              ${actionsHtml}
             </div>
           </div>
         `;
@@ -3663,6 +3896,10 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     function updatePillsState() {
       document.querySelectorAll('#quick-filter-pills .quick-pill').forEach(p => p.classList.remove('active'));
       if (tierFilter === 'ALL') document.getElementById('qp-all').classList.add('active');
+      else if (tierFilter.toLowerCase().includes('research')) {
+        const p = document.getElementById('qp-research');
+        if (p) p.classList.add('active');
+      }
       else if (tierFilter.toLowerCase().includes('campaign')) {
         const p = document.getElementById('qp-campaign');
         if (p) p.classList.add('active');
@@ -3670,6 +3907,266 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       else if (tierFilter.includes('Tier 1')) document.getElementById('qp-t1').classList.add('active');
       else if (tierFilter.includes('Tier 2')) document.getElementById('qp-t2').classList.add('active');
       else if (tierFilter.includes('Tier 3')) document.getElementById('qp-t3').classList.add('active');
+    }
+
+    /* Deep Research Studio Modal Open / Close */
+    function openDeepResearchModal() {
+      document.getElementById('deep-research-modal').classList.add('active');
+      document.getElementById('deep-research-spinner').style.display = 'none';
+      document.getElementById('deep-research-actions').style.display = 'flex';
+      setTimeout(() => {
+        const p = document.getElementById('deep-research-prompt');
+        if (p) p.focus();
+      }, 100);
+    }
+
+    function closeDeepResearchModal() {
+      document.getElementById('deep-research-modal').classList.remove('active');
+      document.getElementById('deep-research-spinner').style.display = 'none';
+      document.getElementById('deep-research-actions').style.display = 'flex';
+    }
+
+    function appendFocusAngle(angle) {
+      const p = document.getElementById('deep-research-prompt');
+      if (!p) return;
+      const cleanAngle = angle.replace(/^\+\s*/, '');
+      const current = p.value.trim();
+      if (!current) {
+        p.value = cleanAngle;
+      } else if (!current.toLowerCase().includes(cleanAngle.toLowerCase())) {
+        p.value = current + ' -- Focus: ' + cleanAngle;
+      }
+      p.focus();
+    }
+
+    function launchResearchFromSearch(query) {
+      openDeepResearchModal();
+      const p = document.getElementById('deep-research-prompt');
+      if (p) {
+        p.value = query;
+        p.focus();
+      }
+    }
+
+    async function submitDeepResearch(autoGenerateCampaign) {
+      const promptInput = document.getElementById('deep-research-prompt');
+      const prompt = promptInput.value.trim();
+      if (!prompt) {
+        alert('Please enter a research question, premise, or hypothesis.');
+        promptInput.focus();
+        return;
+      }
+
+      const urls = document.getElementById('deep-research-urls').value.trim();
+      const voiceId = document.getElementById('deep-research-voice-select').value;
+
+      const spinner = document.getElementById('deep-research-spinner');
+      const actions = document.getElementById('deep-research-actions');
+      const statusText = document.getElementById('deep-research-status-text');
+
+      spinner.style.display = 'block';
+      actions.style.display = 'none';
+
+      if (autoGenerateCampaign) {
+        statusText.innerHTML = '⚡ Step 1/2: Running NotebookLM Deep Research... Step 2/2: Synthesizing Full Authority Campaign Pack (1 Article + 5 Posts + 2 Decks)...';
+      } else {
+        statusText.innerHTML = '🔬 Investigating empirical benchmarks (ECI, SEC, ACFE, HBR) & compiling research notebook...';
+      }
+
+      try {
+        const res = await fetch('/api/content/research', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: prompt,
+            optional_urls: urls,
+            voice_id: voiceId,
+            auto_generate_campaign: autoGenerateCampaign
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server responded with ${res.status}`);
+        }
+
+        const newItem = await res.json();
+        contentItems.unshift(newItem);
+        updateCountersAndPills();
+        renderContentGrid();
+        closeDeepResearchModal();
+
+        if (autoGenerateCampaign) {
+          openContentViewModal(newItem.id);
+        } else {
+          openResearchNotebookModal(newItem.id);
+        }
+      } catch (err) {
+        alert('Research failed: ' + err.message);
+        spinner.style.display = 'none';
+        actions.style.display = 'flex';
+      }
+    }
+
+    /* Research Notebook Viewer */
+    let currentNotebookItem = null;
+
+    function openResearchNotebookModal(itemId) {
+      const item = contentItems.find(c => c.id === itemId);
+      if (!item) return;
+      currentNotebookItem = item;
+
+      document.getElementById('rnb-modal-title').innerText = item.title || 'Research Dossier';
+      document.getElementById('rnb-topic-label').innerText = item.topic ? `• Topic: ${item.topic}` : '';
+
+      const d = item.research_dossier || {};
+      document.getElementById('rnb-thesis').innerText = d.thesis || item.title || 'Core premise under operational investigation.';
+      document.getElementById('rnb-tension').innerText = d.unseen_tension || 'Frontline commercial pressure creates informal workarounds that bypass formal reporting.';
+
+      const execSum = item.content_markdown || d.executive_summary || item.article || 'No executive briefing generated.';
+      document.getElementById('rnb-executive-summary').innerText = execSum;
+      const words = execSum.trim().split(/\s+/).filter(Boolean).length;
+      document.getElementById('rnb-word-count-badge').innerText = `📖 ${words.toLocaleString()} words`;
+
+      // Data Points
+      const dpContainer = document.getElementById('rnb-data-points');
+      const dps = d.data_points || [];
+      if (dps.length > 0) {
+        dpContainer.innerHTML = dps.map(p => {
+          const fact = typeof p === 'string' ? p : (p.fact || '');
+          const source = typeof p === 'object' ? (p.source || 'Empirical Benchmark') : 'Empirical Benchmark';
+          const url = typeof p === 'object' ? (p.url || '') : '';
+          return `
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-left: 3px solid #38bdf8; border-radius: 6px; padding: 10px 14px;">
+              <div style="font-size: 13px; color: #ffffff; line-height: 1.5;">📌 ${escapeHtml(fact)}</div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+                <span>Source: <strong style="color: #38bdf8;">${escapeHtml(source)}</strong></span>
+                ${url ? `<a href="${escapeHtml(url)}" target="_blank" style="color: #7dd3fc; text-decoration: underline;">Link ↗</a>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else {
+        dpContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">No data points recorded.</div>';
+      }
+
+      // Quotes
+      const qContainer = document.getElementById('rnb-quotes');
+      const quotes = d.quotes || [];
+      if (quotes.length > 0) {
+        qContainer.innerHTML = quotes.map(q => `
+          <div style="background: rgba(168, 85, 247, 0.08); border-left: 3px solid #a855f7; border-radius: 4px; padding: 10px 14px; font-size: 13px; color: #e2e8f0; font-style: italic; line-height: 1.5;">
+            "${escapeHtml(q)}"
+          </div>
+        `).join('');
+      } else {
+        qContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">No quotes extracted.</div>';
+      }
+
+      // Citations
+      const cContainer = document.getElementById('rnb-citations');
+      const cites = d.citations || [];
+      if (cites.length > 0) {
+        cContainer.innerHTML = cites.map(c => {
+          const title = typeof c === 'string' ? c : (c.title || c.url || 'Citation');
+          const url = typeof c === 'object' ? (c.url || '') : (c.startsWith('http') ? c : '');
+          return `
+            <span style="font-size: 11.5px; background: rgba(7, 11, 20, 0.7); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;">
+              <span>🔗 ${escapeHtml(title)}</span>
+              ${url ? `<a href="${escapeHtml(url)}" target="_blank" style="color: #38bdf8; font-weight: 700;">↗</a>` : ''}
+            </span>
+          `;
+        }).join('');
+      } else {
+        cContainer.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">No formal citations listed.</span>';
+      }
+
+      document.getElementById('research-notebook-modal').classList.add('active');
+    }
+
+    function closeResearchNotebookModal() {
+      document.getElementById('research-notebook-modal').classList.remove('active');
+      currentNotebookItem = null;
+    }
+
+    async function generateCampaignFromNotebook(itemId) {
+      const item = contentItems.find(c => c.id === itemId);
+      if (!item) return;
+
+      const confirmed = confirm(`Transform this research notebook into a Full Authority Campaign Pack (1 Article + 5 Posts + 2 Carousels)?\n\nTitle: ${item.title}`);
+      if (!confirmed) return;
+
+      const btn = document.getElementById('rnb-generate-campaign-btn');
+      if (btn) {
+        btn.innerText = '⚡ Generating 1 Article + 5 Posts + 2 Decks...';
+        btn.disabled = true;
+      }
+
+      try {
+        const res = await fetch('/api/content/research', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            notebook_id: item.id,
+            prompt: item.title,
+            voice_id: item.voice_profile_id || 'forensic-operator',
+            auto_generate_campaign: true
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Failed with status ${res.status}`);
+        }
+
+        const newCampaign = await res.json();
+        contentItems.unshift(newCampaign);
+        updateCountersAndPills();
+        renderContentGrid();
+
+        closeResearchNotebookModal();
+        openContentViewModal(newCampaign.id);
+      } catch (err) {
+        alert('Campaign generation failed: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.innerText = '⚡ Generate Campaign from this Notebook';
+          btn.disabled = false;
+        }
+      }
+    }
+
+    function triggerCampaignFromCurrentNotebook() {
+      if (!currentNotebookItem) return;
+      generateCampaignFromNotebook(currentNotebookItem.id);
+    }
+
+    function copyNotebookExecutiveBriefing() {
+      if (!currentNotebookItem) return;
+      const text = currentNotebookItem.content_markdown || (currentNotebookItem.research_dossier && currentNotebookItem.research_dossier.executive_summary) || '';
+      navigator.clipboard.writeText(text).then(() => {
+        alert('📋 Executive Briefing copied to clipboard!');
+      });
+    }
+
+    function copyNotebookFullDossier() {
+      if (!currentNotebookItem) return;
+      const d = currentNotebookItem.research_dossier || {};
+      const dpText = (d.data_points || []).map(p => `- ${p.fact} (${p.source})`).join('\n');
+      const qText = (d.quotes || []).map(q => `> "${q}"`).join('\n\n');
+      const cText = (d.citations || []).map(c => `- [${c.title}](${c.url || ''})`).join('\n');
+
+      const md = `# RESEARCH DOSSIER: ${currentNotebookItem.title}\n\n` +
+        `**Core Thesis:** ${d.thesis || ''}\n\n` +
+        `**Unseen Tension:** ${d.unseen_tension || ''}\n\n` +
+        `## Executive Summary\n${currentNotebookItem.content_markdown || d.executive_summary || ''}\n\n` +
+        `## Empirical Proof Points\n${dpText}\n\n` +
+        `## Forensic Quotes & Mental Models\n${qText}\n\n` +
+        `## Citations\n${cText}\n`;
+
+      navigator.clipboard.writeText(md).then(() => {
+        alert('📋 Full Research Notebook Dossier copied to clipboard!');
+      });
     }
 
     /* Modal Open / Close */
@@ -5061,6 +5558,146 @@ def delete_content_item():
         db.delete_content_item(item_id)
     delete_local_content_item(item_id)
     return jsonify({"success": True})
+
+
+@app.route("/api/content/research", methods=["POST"])
+def conduct_research():
+    """
+    NotebookLM-style Deep Research Studio Endpoint.
+    Accepts: { prompt, focus_angles, optional_urls, voice_id, auto_generate_campaign, notebook_id }
+    Conducts deep empirical fact-mining, produces a dedicated Research Notebook Dossier,
+    and optionally synthesizes an immediate Full Authority Campaign Pack (1 Article + 5 Posts + 2 Decks).
+    """
+    data = request.get_json() or {}
+    prompt = (data.get("prompt") or "").strip()
+    notebook_id = data.get("notebook_id") or data.get("id")
+
+    existing_notebook = None
+    if notebook_id:
+        items = (db.get_content_items() if db.is_connected else None) or load_local_content()
+        existing_notebook = next((x for x in items if x.get("id") == notebook_id), None)
+        if existing_notebook and not prompt:
+            prompt = existing_notebook.get("title") or existing_notebook.get("topic") or "Investigative Research"
+
+    if not prompt:
+        return jsonify({"error": "A research prompt, sentence, or question is required."}), 400
+
+    focus_angles = data.get("focus_angles") or []
+    if isinstance(focus_angles, str):
+        focus_angles = [a.strip() for a in focus_angles.split(",") if a.strip()]
+
+    optional_urls = (data.get("optional_urls") or "").strip()
+    voice_id = data.get("voice_id", "forensic-operator")
+    auto_generate_campaign = bool(data.get("auto_generate_campaign", False))
+    voice_profile = get_voice_profile_by_id(voice_id)
+
+    # 1. If transforming an existing saved notebook
+    if existing_notebook and existing_notebook.get("research_dossier"):
+        researched = {
+            "tier": "🔬 Research Notebook",
+            "title": existing_notebook.get("title") or prompt,
+            "topic": existing_notebook.get("topic") or prompt,
+            "executive_summary": existing_notebook.get("content_markdown") or existing_notebook.get("article") or "",
+            "research_dossier": existing_notebook.get("research_dossier"),
+            "status": "Researched",
+            "source_type": "deep_research",
+            "source_reference": existing_notebook.get("source_reference") or "🔬 Deep Research Studio (NotebookLM Mode)"
+        }
+    else:
+        researched = synthesizer.conduct_deep_research(
+            research_prompt=prompt,
+            focus_angles=focus_angles,
+            optional_urls=optional_urls,
+            voice_profile=voice_profile
+        )
+
+    # 2. If auto_generate_campaign is true, synthesize full campaign pack immediately!
+    if auto_generate_campaign:
+        research_dossier = researched.get("research_dossier", {})
+        data_points_text = "\n".join([f"- {dp.get('fact')} ({dp.get('source')})" for dp in research_dossier.get("data_points", []) if isinstance(dp, dict)])
+        quotes_text = "\n".join([f'- "{q}"' for q in research_dossier.get("quotes", [])])
+
+        raw_material = f"""RESEARCH INQUIRY / TITLE: {researched.get('title')}
+THESIS: {research_dossier.get('thesis', '')}
+UNSEEN TENSION: {research_dossier.get('unseen_tension', '')}
+
+EXECUTIVE RESEARCH BRIEF:
+{researched.get('executive_summary', '')}
+
+EMPIRICAL DATA POINTS:
+{data_points_text}
+
+OPERATOR QUOTES & MENTAL MODELS:
+{quotes_text}
+"""
+        citations_urls = [c.get("url") for c in research_dossier.get("citations", []) if isinstance(c, dict) and c.get("url")]
+        if optional_urls:
+            found_u = re.findall(r'https?://[^\s,]+', optional_urls)
+            for u in found_u:
+                if u not in citations_urls:
+                    citations_urls.append(u)
+
+        campaign = synthesizer.generate_full_campaign_pack(
+            raw_text=raw_material,
+            voice_profile=voice_profile,
+            source_title=researched.get("title", prompt),
+            source_urls=citations_urls,
+            existing_dossier=research_dossier
+        )
+
+        item_id = f"item_{int(datetime.now().timestamp())}_{os.urandom(2).hex()}"
+        new_item = {
+            "id": item_id,
+            "title": campaign.get("title", f"Campaign Pack: {researched.get('title')}"),
+            "tier": "Full Campaign Distribution Pack",
+            "topic": researched.get("title", prompt),
+            "voice_profile_id": voice_id,
+            "source_type": "deep_research",
+            "source_reference": "🔬 Deep Research Studio (NotebookLM Mode)",
+            "content_markdown": campaign.get("content_markdown") or campaign.get("article", ""),
+            "slides_outline": campaign.get("slides_outline", []),
+            "research_dossier": campaign.get("research_dossier") or research_dossier,
+            "campaign_pack": campaign.get("campaign_pack", {}),
+            "weekly_posts": campaign.get("weekly_posts", []),
+            "carousel_1": campaign.get("carousel_1", {}),
+            "carousel_2": campaign.get("carousel_2", {}),
+            "article": campaign.get("article", ""),
+            "status": "Ready to Publish",
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        if not isinstance(new_item["research_dossier"], dict):
+            new_item["research_dossier"] = {}
+        new_item["research_dossier"]["campaign_pack"] = {
+            "weekly_posts": new_item["weekly_posts"],
+            "carousel_1": new_item["carousel_1"],
+            "carousel_2": new_item["carousel_2"],
+            "article": new_item["article"]
+        }
+    else:
+        # Save as dedicated Research Notebook item
+        item_id = f"item_{int(datetime.now().timestamp())}_{os.urandom(2).hex()}"
+        new_item = {
+            "id": item_id,
+            "title": researched.get("title", f"Research: {prompt}"),
+            "tier": "🔬 Research Notebook",
+            "topic": prompt,
+            "voice_profile_id": voice_id,
+            "source_type": "deep_research",
+            "source_reference": "🔬 Deep Research Studio (NotebookLM Mode)",
+            "content_markdown": researched.get("executive_summary") or researched.get("content_markdown", ""),
+            "slides_outline": [],
+            "research_dossier": researched.get("research_dossier", {}),
+            "status": "Researched",
+            "created_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.utcnow().isoformat()
+        }
+
+    if db.is_connected:
+        db.save_content_item(new_item)
+    save_local_content_item(new_item)
+
+    return jsonify(new_item)
 
 
 @app.route("/api/voices", methods=["GET", "POST"])
