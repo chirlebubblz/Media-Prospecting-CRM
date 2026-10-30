@@ -379,15 +379,16 @@ CRM_TEMPLATE = """<!DOCTYPE html>
     }
     .card-title-group {
       flex: 1;
-      min-width: 0;
+      min-width: 55%;
     }
     .card-title {
       font-size: 16px;
       font-weight: 700;
       color: #ffffff;
-      line-height: 1.3;
+      line-height: 1.35;
       margin-bottom: 4px;
-      word-break: break-word;
+      overflow-wrap: break-word;
+      word-break: normal;
     }
     .card-subtitle {
       font-size: 12px;
@@ -1575,12 +1576,11 @@ CRM_TEMPLATE = """<!DOCTYPE html>
                 ${lead.reach_metrics ? `<span style="font-size: 11px; color: var(--text-muted);">• ${escapeHtml(lead.reach_metrics)}</span>` : ''}
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <a href="/content?source_lead=${encodeURIComponent(lead.id)}&pipeline=media" class="btn-xs" style="text-decoration:none; color:#38bdf8; border:1px solid rgba(56,189,248,0.4); display:inline-flex; align-items:center; gap:3px;" title="Synthesize Content with Gemini">📝 Synthesize Content</a>
-              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" title="Edit show details">✏️ Edit</button>
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
               <select class="status-select ${statusClass}" onchange="updatePodcastStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_MEDIA.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
+              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" title="Edit show details">✏️ Edit</button>
             </div>
           </div>
 
@@ -1677,12 +1677,11 @@ CRM_TEMPLATE = """<!DOCTYPE html>
                 ${lead.group ? `<span class="pill-badge badge-group">${escapeHtml(lead.group)}</span>` : ''}
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <a href="/content?source_lead=${encodeURIComponent(lead.id)}&pipeline=exec" class="btn-xs" style="text-decoration:none; color:#38bdf8; border:1px solid rgba(56,189,248,0.4); display:inline-flex; align-items:center; gap:3px;" title="Synthesize Content with Gemini">📝 Synthesize Content</a>
-              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" title="Edit lead details">✏️ Edit</button>
+            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
               <select class="status-select ${statusClass}" onchange="updateExecutiveStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_EXEC.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
               </select>
+              <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" title="Edit lead details">✏️ Edit</button>
             </div>
           </div>
 
