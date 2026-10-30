@@ -1038,11 +1038,15 @@ Requirements:
                 tier_instructions = ""
                 if "Tier 1" in tier:
                     tier_instructions = (
-                        "Generate a 6-8 slide swipeable carousel outline (Slide number, Headline, Bullet) "
-                        "and a punchy LinkedIn companion hook post. "
+                        "Generate a 6-8 slide swipeable carousel outline and a punchy LinkedIn companion hook post. "
                         "The companion post MUST feature human cadence (short 1-2 sentence lines, double spacing, "
                         "skeptical real-world insight, concrete citation/fact from the dossier, and 3 sharp hashtags). "
-                        "In 'slides_outline', provide the 6-8 slides where Headline is max 7-9 words and Bullet is an operational takeaway."
+                        "In 'visual_style_guide', define an overall art direction (mood, palette, typography_vibe, aspect_ratio). "
+                        "In 'slides_outline', provide the 6-8 slides where: "
+                        "Headline is max 7-9 words, Bullet is an operational takeaway, "
+                        "visual_concept is specific art direction describing the scene/metaphor, "
+                        "image_prompt is a production-grade Midjourney/DALL-E prompt with 35mm film grain, moody lighting, and '--ar 4:5 --style raw', "
+                        "and color_mood is hex palette accent (e.g. 'Deep obsidian #070b14 with hazard amber #f59e0b')."
                     )
                 elif "Tier 2" in tier:
                     tier_instructions = (
@@ -1093,11 +1097,20 @@ Return strict JSON matching:
 {{
   "title": "Clear, contrarian, non-cliché title",
   "content_markdown": "Full markdown content according to the requested tier specifications",
+  "visual_style_guide": {{
+    "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+    "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+    "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+    "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)"
+  }},
   "slides_outline": [
     {{
       "slide": 1,
       "headline": "Punchy slide headline",
-      "bullet": "Concrete tension or takeaway"
+      "bullet": "Concrete tension or takeaway",
+      "visual_concept": "Visceral scene concept explaining what image fits the slide angle",
+      "image_prompt": "Cinematic editorial photograph of..., 35mm film grain, moody shadows, minimalist aesthetic --ar 4:5 --style raw",
+      "color_mood": "Deep obsidian #070b14 with hazard amber #f59e0b accent"
     }}
   ]
 }}
@@ -1120,6 +1133,12 @@ Return strict JSON matching:
 
                     content_md = parsed.get("content_markdown", "")
                     slides = parsed.get("slides_outline", [])
+                    style_guide = parsed.get("visual_style_guide") or {
+                        "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+                        "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+                        "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+                        "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)"
+                    }
                     title = parsed.get("title") or f"{tier}: {source_title}"
 
                     if content_md:
@@ -1128,6 +1147,7 @@ Return strict JSON matching:
                             "tier": tier,
                             "content_markdown": content_md,
                             "slides_outline": slides if "Tier 1" in tier else [],
+                            "visual_style_guide": style_guide if "Tier 1" in tier else {},
                             "research_dossier": dossier,
                             "author_voice": author_name
                         }
@@ -1159,35 +1179,67 @@ Return strict JSON matching:
             slides = [
                 {
                     "slide": 1,
+                    "type": "Cover / Hook",
                     "headline": f"Why Most Leaders Get {source_title[:35]} Backwards",
-                    "bullet": "The dangerous corporate illusion everyone takes for granted."
+                    "bullet": "The dangerous corporate illusion everyone takes for granted.",
+                    "visual_concept": "Split-screen high contrast: A pristine glass corporate boardroom overlooking a skyline on the left vs. an unread 2:15 AM urgent Slack notification on a cracked laptop screen on the right.",
+                    "image_prompt": "Cinematic editorial photograph, split-screen composition: left side shows a pristine dark corporate boardroom with ambient blue glass reflections, right side shows a single dim desk lamp illuminating an unread urgent incident log on a laptop screen, 35mm film grain, moody shadows, minimalist corporate thriller aesthetic, photorealistic, 8k --ar 4:5 --style raw",
+                    "color_mood": "Deep obsidian #070b14 with hazard amber #f59e0b spotlight"
                 },
                 {
                     "slide": 2,
+                    "type": "The Safety Mirage",
                     "headline": "The Safety Mirage",
-                    "bullet": tension
+                    "bullet": tension,
+                    "visual_concept": "A pristine, polished 140-page corporate binder encased inside a cracked display glass case, glowing faintly under cold museum spotlight.",
+                    "image_prompt": "Cinematic macro shot of an immaculate leather-bound corporate compliance handbook sitting beneath cracked museum vitrine glass, harsh spotlight beam cutting through volumetric dust, cold corporate atmosphere, high resolution, minimalist editorial style --ar 4:5 --style raw",
+                    "color_mood": "Cold slate blue #1e293b with stark white directional lighting"
                 },
                 {
                     "slide": 3,
+                    "type": "The Hard Number",
                     "headline": "The Hard Number",
-                    "bullet": proof_stat
+                    "bullet": proof_stat,
+                    "visual_concept": "Abstract forensic balance sheet with glowing crimson fracture lines slicing through audited KPI charts and quarterly targets.",
+                    "image_prompt": "Editorial forensic illustration of a high-stakes corporate dashboard and audit graph with dramatic red stress fractures running diagonally across glowing financial numbers, dark data visualization aesthetic, photorealistic lighting, cinematic shadows --ar 4:5 --style raw",
+                    "color_mood": "Charcoal black #0f172a with crimson alert #ef4444"
                 },
                 {
                     "slide": 4,
+                    "type": "The Operational Reframe",
                     "headline": "The Operational Reframe",
-                    "bullet": "Shift from paper compliance to frontline human behavior under pressure."
+                    "bullet": "Shift from paper compliance to frontline human behavior under pressure.",
+                    "visual_concept": "An office desk at night: dual monitors displaying glowing approval buttons, an analogue wall clock frozen at 4:45 PM, and coffee cups reflecting harsh fluorescent tubes.",
+                    "image_prompt": "Atmospheric moody interior photography of an empty corporate trading desk at night, dual glowing monitors showing compliance override prompts, vintage wall clock reading exactly 4:45 PM, cinematic depth of field, neon amber accents, 35mm film still --ar 4:5 --style raw",
+                    "color_mood": "Midnight navy #0a0f1d with emergency amber #f59e0b"
                 },
                 {
                     "slide": 5,
+                    "type": "Board Questions",
                     "headline": "3 Questions for the Board",
-                    "bullet": "1. What does it look like without the founder?\n2. Where do people rationalise?\n3. Are controls real or theatre?"
+                    "bullet": "1. What does it look like without the founder?\n2. Where do people rationalise?\n3. Are controls real or theatre?",
+                    "visual_concept": "An empty institutional boardroom table with twelve pristine microphones, but all mute indicators are permanently glowing red in complete silence.",
+                    "image_prompt": "Cinematic photograph looking down a long reflective mahogany boardroom conference table, twelve empty ergonomic chairs, each desk microphone displaying a solitary glowing red mute indicator in a shadowy cavernous room, architectural photography, eerie stillness --ar 4:5 --style raw",
+                    "color_mood": "Dark obsidian #090d16 with muted red #dc2626 glow"
                 },
                 {
                     "slide": 6,
+                    "type": "Resolution & CTA",
                     "headline": "Close the Gap",
-                    "bullet": "Save this if it lands. Full intelligence briefing in comments."
+                    "bullet": "Save this if it lands. Full intelligence briefing in comments.",
+                    "visual_concept": "A minimalist architectural doorway opening into bright daylight, with forensic field notes and a tactile dossier in hand.",
+                    "image_prompt": "Cinematic low-angle editorial photograph of an executive walking towards an illuminated architectural glass doorway, carrying a closed leather investigative dossier, sharp morning sunlight casting long dramatic shadows, minimalist luxury aesthetic --ar 4:5 --style raw",
+                    "color_mood": "Deep charcoal #111827 with crisp daylight ivory #f8fafc"
                 }
             ]
+
+            style_guide = {
+                "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+                "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+                "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+                "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)",
+                "aesthetic_archetype": "Investigative Case File / Dark Boardroom Forensic"
+            }
 
             companion_post = f"""The most dangerous thing in business isn't an outright crisis.
 
@@ -1219,6 +1271,7 @@ Save this if it lands.
                 "tier": "Tier 1: Short-Form Carousel",
                 "content_markdown": companion_post,
                 "slides_outline": slides,
+                "visual_style_guide": style_guide,
                 "research_dossier": dossier,
                 "author_voice": author_name
             }
@@ -1449,27 +1502,39 @@ MANDATORY DELIVERABLES IN RETURNED JSON:
   "carousel_1": {{
     "title": "Problem Deconstruction Deck",
     "description": "7-8 slide high-dwell deck deconstructing why most leaders get this issue backwards.",
+    "visual_style_guide": {{
+      "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+      "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+      "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+      "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)"
+    }},
     "slides": [
-      {{ "slide": 1, "type": "Hook", "headline": "Why Most Leaders Get [Topic] Backwards", "bullet": "The dangerous corporate illusion everyone takes for granted." }},
-      {{ "slide": 2, "type": "The Safety Mirage", "headline": "The Safety Mirage", "bullet": "Why paper policies create a false sense of security." }},
-      {{ "slide": 3, "type": "The Hard Number", "headline": "The Hard Number", "bullet": "The empirical data point exposing the breakdown." }},
-      {{ "slide": 4, "type": "The Operational Break", "headline": "Where It Fails: 4:45 PM on a Friday", "bullet": "How operational stress forces informal workarounds." }},
-      {{ "slide": 5, "type": "The Systemic Blindspot", "headline": "The Signal of Silence", "bullet": "Why zero complaints is fear, not harmony." }},
-      {{ "slide": 6, "type": "Board Questions", "headline": "3 Questions for the Board", "bullet": "1. What does it look like without the founder?\\n2. Where are the unlogged workarounds?\\n3. Are controls real or theatre?" }},
-      {{ "slide": 7, "type": "The Resolution & CTA", "headline": "The Operator Reframe", "bullet": "How to replace paper theatre with decision hygiene. Read the full investigation." }}
+      {{ "slide": 1, "type": "Hook", "headline": "Why Most Leaders Get [Topic] Backwards", "bullet": "The dangerous corporate illusion everyone takes for granted.", "visual_concept": "Visceral scene concept explaining what image fits the slide angle", "image_prompt": "Cinematic editorial photograph of..., 35mm film grain, moody shadows, minimalist aesthetic --ar 4:5 --style raw", "color_mood": "Deep obsidian with amber accent" }},
+      {{ "slide": 2, "type": "The Safety Mirage", "headline": "The Safety Mirage", "bullet": "Why paper policies create a false sense of security.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 3, "type": "The Hard Number", "headline": "The Hard Number", "bullet": "The empirical data point exposing the breakdown.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 4, "type": "The Operational Break", "headline": "Where It Fails: 4:45 PM on a Friday", "bullet": "How operational stress forces informal workarounds.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 5, "type": "The Systemic Blindspot", "headline": "The Signal of Silence", "bullet": "Why zero complaints is fear, not harmony.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 6, "type": "Board Questions", "headline": "3 Questions for the Board", "bullet": "1. What does it look like without the founder?\\n2. Where are the unlogged workarounds?\\n3. Are controls real or theatre?", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 7, "type": "The Resolution & CTA", "headline": "The Operator Reframe", "bullet": "How to replace paper theatre with decision hygiene. Read the full investigation.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }}
     ]
   }},
   "carousel_2": {{
     "title": "Tactical Operator Framework Deck",
     "description": "7-8 slide high-dwell deck detailing the step-by-step diagnostic framework.",
+    "visual_style_guide": {{
+      "mood": "Tactical, architectural, operational clarity and precision",
+      "palette": "Slate Black (#090d16), Signal Emerald (#10b981), Electric Cyan (#38bdf8)",
+      "typography_vibe": "Structured tabular headers, precise operational numbered markers",
+      "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)"
+    }},
     "slides": [
-      {{ "slide": 1, "type": "Hook", "headline": "The [Topic] Operator Framework", "bullet": "4 steps to de-risk frontline decisions before capital is lost." }},
-      {{ "slide": 2, "type": "Step 1", "headline": "Step 1: Audit the Ground Truth", "bullet": "Stop auditing what policies exist. Audit the informal workarounds on the floor." }},
-      {{ "slide": 3, "type": "Step 2", "headline": "Step 2: Price the Friction Pre-Commitment", "bullet": "Measure human fatigue and key-person dependencies before signing." }},
-      {{ "slide": 4, "type": "Step 3", "headline": "Step 3: Remove Key-Person Bottlenecks", "bullet": "If everything routes through one charismatic leader, it's concentration risk." }},
-      {{ "slide": 5, "type": "Step 4", "headline": "Step 4: Continuous Verification Over Paper Policies", "bullet": "Replace annual sign-offs with live operational receipts." }},
-      {{ "slide": 6, "type": "Diagnostic Checklist", "headline": "The Frontline Diagnostic", "bullet": "Key questions to test your organization's resilience today." }},
-      {{ "slide": 7, "type": "Summary & Link", "headline": "Enlightened Self-Interest", "bullet": "Integrity is capital protection. Full guide and case study linked in bio." }}
+      {{ "slide": 1, "type": "Hook", "headline": "The [Topic] Operator Framework", "bullet": "4 steps to de-risk frontline decisions before capital is lost.", "visual_concept": "Visceral scene concept explaining what image fits the slide angle", "image_prompt": "Architectural blueprint photograph of..., cold spotlight, cinematic depth of field --ar 4:5 --style raw", "color_mood": "Dark slate with cyan accent" }},
+      {{ "slide": 2, "type": "Step 1", "headline": "Step 1: Audit the Ground Truth", "bullet": "Stop auditing what policies exist. Audit the informal workarounds on the floor.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 3, "type": "Step 2", "headline": "Step 2: Price the Friction Pre-Commitment", "bullet": "Measure human fatigue and key-person dependencies before signing.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 4, "type": "Step 3", "headline": "Step 3: Remove Key-Person Bottlenecks", "bullet": "If everything routes through one charismatic leader, it's concentration risk.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 5, "type": "Step 4", "headline": "Step 4: Continuous Verification Over Paper Policies", "bullet": "Replace annual sign-offs with live operational receipts.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 6, "type": "Diagnostic Checklist", "headline": "The Frontline Diagnostic", "bullet": "Key questions to test your organization's resilience today.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }},
+      {{ "slide": 7, "type": "Summary & Link", "headline": "Enlightened Self-Interest", "bullet": "Integrity is capital protection. Full guide and case study linked in bio.", "visual_concept": "...", "image_prompt": "... --ar 4:5 --style raw", "color_mood": "..." }}
     ]
   }},
   "research_dossier": {{
@@ -1518,6 +1583,20 @@ MANDATORY DELIVERABLES IN RETURNED JSON:
                                 cits.append(c)
 
                     if article_md and weekly_posts:
+                        if isinstance(c1, dict) and "visual_style_guide" not in c1:
+                            c1["visual_style_guide"] = {
+                                "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+                                "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+                                "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+                                "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)"
+                            }
+                        if isinstance(c2, dict) and "visual_style_guide" not in c2:
+                            c2["visual_style_guide"] = {
+                                "mood": "Tactical, architectural, operational clarity and precision",
+                                "palette": "Slate Black (#090d16), Signal Emerald (#10b981), Electric Cyan (#38bdf8)",
+                                "typography_vibe": "Structured tabular headers, precise operational numbered markers",
+                                "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)"
+                            }
                         slides_outline = c1.get("slides") or []
                         result = {
                             "title": f"Campaign Pack: {source_title}",
@@ -1867,48 +1946,76 @@ Read the full long-form investigative analysis:
         carousel_1 = {
             "title": "Problem Deconstruction Deck",
             "description": "7-slide high-dwell deck deconstructing why most leaders get this issue backwards.",
+            "visual_style_guide": {
+                "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+                "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+                "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+                "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)",
+                "aesthetic_archetype": "Investigative Case File / Dark Boardroom Forensic"
+            },
             "slides": [
                 {
                     "slide": 1,
                     "type": "Hook",
                     "headline": f"Why Most Leaders Get {source_title[:32]} Backwards",
-                    "bullet": "The dangerous corporate illusion everyone takes for granted."
+                    "bullet": "The dangerous corporate illusion everyone takes for granted.",
+                    "visual_concept": "Split-screen high contrast: A pristine glass corporate boardroom overlooking a skyline on the left vs. an unread 2:15 AM urgent Slack notification on a cracked laptop screen on the right.",
+                    "image_prompt": "Cinematic editorial photograph, split-screen composition: left side shows a pristine dark corporate boardroom with ambient blue glass reflections, right side shows a single dim desk lamp illuminating an unread urgent incident log on a laptop screen, 35mm film grain, moody shadows, minimalist corporate thriller aesthetic, photorealistic, 8k --ar 4:5 --style raw",
+                    "color_mood": "Deep obsidian #070b14 with hazard amber #f59e0b spotlight"
                 },
                 {
                     "slide": 2,
                     "type": "The Safety Mirage",
                     "headline": "The Safety Mirage",
-                    "bullet": "Thick policy binders create a false sense of security while frontline reality breaks."
+                    "bullet": "Thick policy binders create a false sense of security while frontline reality breaks.",
+                    "visual_concept": "A pristine, polished 140-page corporate binder encased inside a cracked display glass case, glowing faintly under cold museum spotlight.",
+                    "image_prompt": "Cinematic macro shot of an immaculate leather-bound corporate compliance handbook sitting beneath cracked museum vitrine glass, harsh spotlight beam cutting through volumetric dust, cold corporate atmosphere, high resolution, minimalist editorial style --ar 4:5 --style raw",
+                    "color_mood": "Cold slate blue #1e293b with stark white directional lighting"
                 },
                 {
                     "slide": 3,
                     "type": "The Hard Number",
                     "headline": "The Hard Number",
-                    "bullet": proof_stat
+                    "bullet": proof_stat,
+                    "visual_concept": "Abstract forensic balance sheet with glowing crimson fracture lines slicing through audited KPI charts and quarterly targets.",
+                    "image_prompt": "Editorial forensic illustration of a high-stakes corporate dashboard and audit graph with dramatic red stress fractures running diagonally across glowing financial numbers, dark data visualization aesthetic, photorealistic lighting, cinematic shadows --ar 4:5 --style raw",
+                    "color_mood": "Charcoal black #0f172a with crimson alert #ef4444"
                 },
                 {
                     "slide": 4,
                     "type": "The Operational Break",
                     "headline": "Where It Breaks: 4:45 PM on a Friday",
-                    "bullet": "When deadlines collide with static controls, operators engineer informal workarounds."
+                    "bullet": "When deadlines collide with static controls, operators engineer informal workarounds.",
+                    "visual_concept": "An office desk at night: dual monitors displaying glowing approval buttons, an analogue wall clock frozen at 4:45 PM, and coffee cups reflecting harsh fluorescent tubes.",
+                    "image_prompt": "Atmospheric moody interior photography of an empty corporate trading desk at night, dual glowing monitors showing compliance override prompts, vintage wall clock reading exactly 4:45 PM, cinematic depth of field, neon amber accents, 35mm film still --ar 4:5 --style raw",
+                    "color_mood": "Midnight navy #0a0f1d with emergency amber #f59e0b"
                 },
                 {
                     "slide": 5,
                     "type": "The Systemic Blindspot",
                     "headline": "The Signal of Silence",
-                    "bullet": "Zero recorded complaints is not evidence of harmony—it is empirical proof of fear."
+                    "bullet": "Zero recorded complaints is not evidence of harmony—it is empirical proof of fear.",
+                    "visual_concept": "An empty institutional boardroom table with twelve pristine microphones, but all mute indicators are permanently glowing red in complete silence.",
+                    "image_prompt": "Cinematic photograph looking down a long reflective mahogany boardroom conference table, twelve empty ergonomic chairs, each desk microphone displaying a solitary glowing red mute indicator in a shadowy cavernous room, architectural photography, eerie stillness --ar 4:5 --style raw",
+                    "color_mood": "Dark obsidian #090d16 with muted red #dc2626 glow"
                 },
                 {
                     "slide": 6,
                     "type": "Board Questions",
                     "headline": "3 Questions for the Board",
-                    "bullet": "1. What happens without the founder?\n2. Where are the unlogged workarounds?\n3. Are controls real or theatre?"
+                    "bullet": "1. What happens without the founder?\n2. Where are the unlogged workarounds?\n3. Are controls real or theatre?",
+                    "visual_concept": "Three diagnostic interrogation spotlight beams cutting through atmospheric boardroom shadows onto three stark executive dossiers.",
+                    "image_prompt": "Cinematic editorial composition of three harsh overhead spotlights illuminating three white institutional folders on a dark slate table, deep moody shadows, minimalist corporate thriller atmosphere, 35mm film grain --ar 4:5 --style raw",
+                    "color_mood": "Shadow slate #090d16 with focused white light"
                 },
                 {
                     "slide": 7,
                     "type": "The Resolution & CTA",
                     "headline": "The Operator Reframe",
-                    "bullet": "Replace policy theatre with decision hygiene. Read the full investigation linked in post."
+                    "bullet": "Replace policy theatre with decision hygiene. Read the full investigation linked in post.",
+                    "visual_concept": "A minimalist architectural doorway opening into bright daylight, with forensic field notes and a tactile dossier in hand.",
+                    "image_prompt": "Cinematic low-angle editorial photograph of an executive walking towards an illuminated architectural glass doorway, carrying a closed leather investigative dossier, sharp morning sunlight casting long dramatic shadows, minimalist luxury aesthetic --ar 4:5 --style raw",
+                    "color_mood": "Deep charcoal #111827 with crisp daylight ivory #f8fafc"
                 }
             ]
         }
@@ -1917,48 +2024,76 @@ Read the full long-form investigative analysis:
         carousel_2 = {
             "title": "Tactical Operator Framework Deck",
             "description": "7-slide high-dwell deck detailing the step-by-step diagnostic framework.",
+            "visual_style_guide": {
+                "mood": "Tactical, architectural, operational clarity and precision",
+                "palette": "Slate Black (#090d16), Signal Emerald (#10b981), Electric Cyan (#38bdf8)",
+                "typography_vibe": "Structured tabular headers, precise operational numbered markers",
+                "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)",
+                "aesthetic_archetype": "Engineering Systems Blueprint / Defense Architecture"
+            },
             "slides": [
                 {
                     "slide": 1,
                     "type": "Hook",
                     "headline": f"The {source_title[:30]} Operator Framework",
-                    "bullet": "4 steps to de-risk frontline decisions before capital and credibility are lost."
+                    "bullet": "4 steps to de-risk frontline decisions before capital and credibility are lost.",
+                    "visual_concept": "High-angle architectural blueprint layout of operational workflows with illuminated decision junctions and green risk-control checkpoints.",
+                    "image_prompt": "Cinematic top-down architectural blueprint photograph of enterprise workflows and network trees, glowing cyan and emerald lines against a matte dark graphite background, crisp lines, precision engineering aesthetic --ar 4:5 --style raw",
+                    "color_mood": "Graphite #0f172a with electric cyan #38bdf8"
                 },
                 {
                     "slide": 2,
                     "type": "Step 1",
                     "headline": "Step 1: Audit the Ground Truth",
-                    "bullet": "Stop auditing what policies exist on paper. Audit the informal workarounds on the floor."
+                    "bullet": "Stop auditing what policies exist on paper. Audit the informal workarounds on the floor.",
+                    "visual_concept": "Macro photograph of a clipboard with handwritten frontline shift handover notes contrasting against a sterile cleanroom or logistics floor in the background.",
+                    "image_prompt": "Documentary-style macro photograph of worn tactical clipboard with handwritten operational field notes, shallow depth of field, industrial background with subtle emerald safety lighting, photorealistic --ar 4:5 --style raw",
+                    "color_mood": "Industrial charcoal #1e293b with safety green #10b981"
                 },
                 {
                     "slide": 3,
                     "type": "Step 2",
                     "headline": "Step 2: Price Friction Pre-Commitment",
-                    "bullet": "Measure human fatigue and key-person dependencies before signing vendor contracts."
+                    "bullet": "Measure human fatigue and key-person dependencies before signing vendor contracts.",
+                    "visual_concept": "Precision balance scales weighing an executive fountain pen and contract agreement against a glowing digital network of vendor nodes.",
+                    "image_prompt": "Cinematic still life of modern brass mechanical scales weighing a signing pen against illuminated microchip and logistics supply nodes, dark atmospheric lighting, sharp reflections, editorial still --ar 4:5 --style raw",
+                    "color_mood": "Obsidian slate #0b0f19 with subtle brass and emerald"
                 },
                 {
                     "slide": 4,
                     "type": "Step 3",
                     "headline": "Step 3: Remove Key-Person Bottlenecks",
-                    "bullet": "If all approvals route through one charismatic founder, governance is an illusion."
+                    "bullet": "If all approvals route through one charismatic founder, governance is an illusion.",
+                    "visual_concept": "Visual bottleneck network diagram where dozens of flowlines funnel into a single red glowing padlock node before branching out again.",
+                    "image_prompt": "Minimalist dark 3D visualization of an enterprise data flow bottleneck, luminous cyan conduits severely constricting into a single amber-red choke point, clean dark tech aesthetic, cinematic depth --ar 4:5 --style raw",
+                    "color_mood": "Deep slate #0b1120 with amber warning accent"
                 },
                 {
                     "slide": 5,
                     "type": "Step 4",
                     "headline": "Step 4: Continuous Verification Over Paper",
-                    "bullet": "Replace annual check-the-box sign-offs with live operational receipts and escrow rails."
+                    "bullet": "Replace annual check-the-box sign-offs with live operational receipts and escrow rails.",
+                    "visual_concept": "Automated verification scanner: digital laser line sweeping across verified operational receipts and escrow transaction ledgers.",
+                    "image_prompt": "Close-up photograph of an emerald laser scan line passing over verified paper audit logs and digital ledger receipts, modern financial forensics laboratory, high tech realism, moody ambient lighting --ar 4:5 --style raw",
+                    "color_mood": "Dark matte slate with bright emerald scan line #10b981"
                 },
                 {
                     "slide": 6,
                     "type": "Diagnostic Checklist",
                     "headline": "The Frontline Diagnostic",
-                    "bullet": "Can bad news travel upward rapidly in your firm without fear of commercial retribution?"
+                    "bullet": "Can bad news travel upward rapidly in your firm without fear of commercial retribution?",
+                    "visual_concept": "Diagnostic checklist HUD overlaid on a calm, focused executive review meeting in an illuminated modern studio.",
+                    "image_prompt": "Cinematic editorial scene of two calm senior advisors reviewing tablet data in a modern minimalist architectural office, subtle holographic diagnostic checklist overlay, soft directional light, clean lines --ar 4:5 --style raw",
+                    "color_mood": "Cool slate #1e293b with cyan HUD highlights #38bdf8"
                 },
                 {
                     "slide": 7,
                     "type": "Summary & Link",
                     "headline": "Enlightened Self-Interest",
-                    "bullet": "Real ethics is capital protection. Full guide and case study linked in bio."
+                    "bullet": "Real ethics is capital protection. Full guide and case study linked in bio.",
+                    "visual_concept": "A solid titanium vault door slightly ajar, revealing orderly glowing server racks and clean capital reserves.",
+                    "image_prompt": "Cinematic photograph of a heavy minimalist architectural vault door open, cool white and emerald light spilling onto polished dark concrete, symbolizing downside capital protection, 8k resolution, cinematic lighting --ar 4:5 --style raw",
+                    "color_mood": "Charcoal #0f172a with protective emerald #10b981"
                 }
             ]
         }
@@ -2094,7 +2229,7 @@ You MUST respond with a strictly valid JSON object matching this schema:
 }}
 
 If requested_format is provided:
-- 'carousel': Set 'generated_asset' to {{ "type": "carousel", "title": "...", "slides": [{{"slide": 1, "type": "Cover / Hook", "headline": "...", "bullet": "..."}}, ... (7-8 slides)], "copy_script": "Full companion post copy script ready to copy" }}
+- 'carousel': Set 'generated_asset' to {{ "type": "carousel", "title": "...", "visual_style_guide": {{ "mood": "Forensic, cinematic, high-stakes institutional minimalism", "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)", "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents", "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)" }}, "slides": [{{"slide": 1, "type": "Cover / Hook", "headline": "...", "bullet": "...", "visual_concept": "Visceral scene concept explaining what image fits the slide angle", "image_prompt": "Cinematic editorial photograph of..., 35mm film grain, moody shadows, minimalist aesthetic --ar 4:5 --style raw", "color_mood": "Deep obsidian #070b14 with hazard amber #f59e0b accent"}}, ... (7-8 slides)], "copy_script": "Full companion post copy script ready to copy" }}
 - 'essay': Set 'generated_asset' to {{ "type": "essay", "title": "...", "markdown": "Full 600-900 word LinkedIn in-feed essay with punchy spacing, hook, mental models, and diagnostic", "reading_time": "3 min" }}
 - 'article': Set 'generated_asset' to {{ "type": "article", "title": "...", "markdown": "Full 2,000+ word investigative perspective article with sections (TL;DR, Ground Truth, Behavioral Risk, Policy Wall Problem, Signal of Silence, Frontline Audit, Boardroom Diagnostic), citations, and case studies", "word_count": 2150 }}
 - 'weekly_posts': Set 'generated_asset' to {{ "type": "weekly_posts", "title": "...", "posts": [{{"day": "Monday", "theme": "The Counter-Intuitive Truth", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Tuesday", "theme": "The Operational War Story", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Wednesday", "theme": "The Forensic Diagnostic", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Thursday", "theme": "The Mental Model", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Friday", "theme": "The Strategic Playbook", "headline": "...", "body": "...", "hook": "..."}}] }}
@@ -2150,6 +2285,18 @@ Synthesize a comprehensive, forensic, voice-conditioned NotebookLM response matc
                                 asset["markdown"] = det_result["generated_asset"]["markdown"]
                                 asset["reading_time"] = "3 min"
                                 data["generated_asset"] = asset
+
+                        # Ensure visual style guide for carousel
+                        if fmt == "carousel":
+                            asset = data.get("generated_asset") or {}
+                            if "visual_style_guide" not in asset:
+                                asset["visual_style_guide"] = {
+                                    "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+                                    "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+                                    "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+                                    "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)"
+                                }
+                            data["generated_asset"] = asset
 
                         # Ensure 2,000+ word depth for investigative article and campaign pack
                         if fmt in ("article", "campaign_pack"):
@@ -2383,17 +2530,80 @@ Swipe through for the 7-step frontline diagnostic on why paper compliance fails�
 #RiskManagement #CorporateGovernance #CrisisManagement #EthicsInsight"""
 
             slides = [
-                {"slide": 1, "type": "Cover / Hook", "headline": topic_title, "bullet": "Why boardroom compliance collapses at 4:45 PM on Friday—and how elite operators build real decision hygiene."},
-                {"slide": 2, "type": "The Unseen Break", "headline": "The Illusion of Safety", "bullet": "A 140-page policy binder does not stop crisis decisions. When deadlines compress, frontline operators rely on informal workarounds to survive."},
-                {"slide": 3, "type": "The Hard Number", "headline": "67% of Controls Fail Under Stress", "bullet": "Empirical field data reveals over two-thirds of governance breakdowns stem from informal rationalizations under commercial targets, not missing rules."},
-                {"slide": 4, "type": "The Behavioral Reality", "headline": "Distance Erases Empathy", "bullet": "When contractors and suppliers exist solely as Slack handles 8,000 miles away, ethical friction evaporates into administrative keystrokes."},
-                {"slide": 5, "type": "The Signal of Silence", "headline": "Zero Reports Is Fear, Not Harmony", "bullet": "If your frontline desk reports zero complaints or grievances, you don't have a spotless culture; you have an environment where speaking up is career suicide."},
-                {"slide": 6, "type": "The Operator Diagnostic", "headline": "The 4:45 PM Friday Test", "bullet": "Measure what your teams do when doing the right thing means missing a quarterly target. If adherence brings punishment, your policy is corporate theatre."},
-                {"slide": 7, "type": "Strategic Playbook", "headline": "Integrity Is Capital Preservation", "bullet": "True governance is cold downside protection and balance sheet defense. Full case study and operational blueprint linked in bio."}
+                {
+                    "slide": 1,
+                    "type": "Cover / Hook",
+                    "headline": topic_title,
+                    "bullet": "Why boardroom compliance collapses at 4:45 PM on Friday—and how elite operators build real decision hygiene.",
+                    "visual_concept": "Split-screen high contrast: A pristine glass corporate boardroom overlooking a skyline on the left vs. an unread 2:15 AM urgent Slack notification on a cracked laptop screen on the right.",
+                    "image_prompt": "Cinematic editorial photograph, split-screen composition: left side shows a pristine dark corporate boardroom with ambient blue glass reflections, right side shows a single dim desk lamp illuminating an unread urgent incident log on a laptop screen, 35mm film grain, moody shadows, minimalist corporate thriller aesthetic, photorealistic, 8k --ar 4:5 --style raw",
+                    "color_mood": "Deep obsidian #070b14 with hazard amber #f59e0b spotlight"
+                },
+                {
+                    "slide": 2,
+                    "type": "The Unseen Break",
+                    "headline": "The Illusion of Safety",
+                    "bullet": "A 140-page policy binder does not stop crisis decisions. When deadlines compress, frontline operators rely on informal workarounds to survive.",
+                    "visual_concept": "A pristine, polished 140-page corporate binder encased inside a cracked display glass case, glowing faintly under cold museum spotlight.",
+                    "image_prompt": "Cinematic macro shot of an immaculate leather-bound corporate compliance handbook sitting beneath cracked museum vitrine glass, harsh spotlight beam cutting through volumetric dust, cold corporate atmosphere, high resolution, minimalist editorial style --ar 4:5 --style raw",
+                    "color_mood": "Cold slate blue #1e293b with stark white directional lighting"
+                },
+                {
+                    "slide": 3,
+                    "type": "The Hard Number",
+                    "headline": "67% of Controls Fail Under Stress",
+                    "bullet": "Empirical field data reveals over two-thirds of governance breakdowns stem from informal rationalizations under commercial targets, not missing rules.",
+                    "visual_concept": "Abstract forensic balance sheet with glowing crimson fracture lines slicing through audited KPI charts and quarterly targets.",
+                    "image_prompt": "Editorial forensic illustration of a high-stakes corporate dashboard and audit graph with dramatic red stress fractures running diagonally across glowing financial numbers, dark data visualization aesthetic, photorealistic lighting, cinematic shadows --ar 4:5 --style raw",
+                    "color_mood": "Charcoal black #0f172a with crimson alert #ef4444"
+                },
+                {
+                    "slide": 4,
+                    "type": "The Behavioral Reality",
+                    "headline": "Distance Erases Empathy",
+                    "bullet": "When contractors and suppliers exist solely as Slack handles 8,000 miles away, ethical friction evaporates into administrative keystrokes.",
+                    "visual_concept": "An office desk at night: dual monitors displaying glowing approval buttons, an analogue wall clock frozen at 4:45 PM, and coffee cups reflecting harsh fluorescent tubes.",
+                    "image_prompt": "Atmospheric moody interior photography of an empty corporate trading desk at night, dual glowing monitors showing compliance override prompts, vintage wall clock reading exactly 4:45 PM, cinematic depth of field, neon amber accents, 35mm film still --ar 4:5 --style raw",
+                    "color_mood": "Midnight navy #0a0f1d with emergency amber #f59e0b"
+                },
+                {
+                    "slide": 5,
+                    "type": "The Signal of Silence",
+                    "headline": "Zero Reports Is Fear, Not Harmony",
+                    "bullet": "If your frontline desk reports zero complaints or grievances, you don't have a spotless culture; you have an environment where speaking up is career suicide.",
+                    "visual_concept": "An empty institutional boardroom table with twelve pristine microphones, but all mute indicators are permanently glowing red in complete silence.",
+                    "image_prompt": "Cinematic photograph looking down a long reflective mahogany boardroom conference table, twelve empty ergonomic chairs, each desk microphone displaying a solitary glowing red mute indicator in a shadowy cavernous room, architectural photography, eerie stillness --ar 4:5 --style raw",
+                    "color_mood": "Dark obsidian #090d16 with muted red #dc2626 glow"
+                },
+                {
+                    "slide": 6,
+                    "type": "The Operator Diagnostic",
+                    "headline": "The 4:45 PM Friday Test",
+                    "bullet": "Measure what your teams do when doing the right thing means missing a quarterly target. If adherence brings punishment, your policy is corporate theatre.",
+                    "visual_concept": "Three diagnostic interrogation spotlight beams cutting through atmospheric boardroom shadows onto three stark executive dossiers.",
+                    "image_prompt": "Cinematic editorial composition of three harsh overhead spotlights illuminating three white institutional folders on a dark slate table, deep moody shadows, minimalist corporate thriller atmosphere, 35mm film grain --ar 4:5 --style raw",
+                    "color_mood": "Shadow slate #090d16 with focused white light"
+                },
+                {
+                    "slide": 7,
+                    "type": "Strategic Playbook",
+                    "headline": "Integrity Is Capital Preservation",
+                    "bullet": "True governance is cold downside protection and balance sheet defense. Full case study and operational blueprint linked in bio.",
+                    "visual_concept": "A minimalist architectural doorway opening into bright daylight, with forensic field notes and a tactile dossier in hand.",
+                    "image_prompt": "Cinematic low-angle editorial photograph of an executive walking towards an illuminated architectural glass doorway, carrying a closed leather investigative dossier, sharp morning sunlight casting long dramatic shadows, minimalist luxury aesthetic --ar 4:5 --style raw",
+                    "color_mood": "Deep charcoal #111827 with crisp daylight ivory #f8fafc"
+                }
             ]
             generated_asset = {
                 "type": "carousel",
                 "title": f"Carousel Deck: {topic_title}",
+                "visual_style_guide": {
+                    "mood": "Forensic, cinematic, high-stakes institutional minimalism",
+                    "palette": "Obsidian Slate (#070b14), Hazard Amber (#f59e0b), Crisp Bone White (#f8fafc)",
+                    "typography_vibe": "Bold condensed Swiss grotesque headlines, clean monospaced data accents",
+                    "aspect_ratio": "4:5 (Vertical Carousel - 1080x1350px)",
+                    "aesthetic_archetype": "Investigative Case File / Dark Boardroom Forensic"
+                },
                 "slides": slides,
                 "copy_script": post_script
             }

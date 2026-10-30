@@ -3570,10 +3570,12 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
           <span style="font-weight: 700; color: #fff; font-size: 13px;">Carousel 1: Problem Deconstruction Deck</span>
           <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(1)">📑 Copy Deck Script</button>
         </div>
-        <div class="inline-slide-display">
+        <div id="c1-deck-style-guide"></div>
+        <div class="inline-slide-display" id="c1-slide-card">
           <span id="c1-slide-number" style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">#1</span>
-          <div id="c1-slide-headline" style="font-size: 15px; font-weight: 800; color: #fff;">Headline</div>
-          <div id="c1-slide-bullet" style="font-size: 13px; color: #cbd5e1;">Bullet text</div>
+          <div id="c1-slide-headline" style="font-size: 16px; font-weight: 800; color: #fff; margin-top: 4px; line-height: 1.35;">Headline</div>
+          <div id="c1-slide-bullet" style="font-size: 13.5px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">Bullet text</div>
+          <div id="c1-slide-visual-guide" style="margin-top: 12px;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
           <button class="btn btn-xs" onclick="navigateCarousel(1, -1)">◀ Prev</button>
@@ -3588,10 +3590,12 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
           <span style="font-weight: 700; color: #fff; font-size: 13px;">Carousel 2: Tactical Operator Framework Deck</span>
           <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(2)">📑 Copy Deck Script</button>
         </div>
-        <div class="inline-slide-display">
+        <div id="c2-deck-style-guide"></div>
+        <div class="inline-slide-display" id="c2-slide-card">
           <span id="c2-slide-number" style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">#1</span>
-          <div id="c2-slide-headline" style="font-size: 15px; font-weight: 800; color: #fff;">Headline</div>
-          <div id="c2-slide-bullet" style="font-size: 13px; color: #cbd5e1;">Bullet text</div>
+          <div id="c2-slide-headline" style="font-size: 16px; font-weight: 800; color: #fff; margin-top: 4px; line-height: 1.35;">Headline</div>
+          <div id="c2-slide-bullet" style="font-size: 13.5px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">Bullet text</div>
+          <div id="c2-slide-visual-guide" style="margin-top: 12px;"></div>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
           <button class="btn btn-xs" onclick="navigateCarousel(2, -1)">◀ Prev</button>
@@ -3612,7 +3616,26 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
       <!-- Standard Single Asset Fallback -->
       <div id="single-asset-panel">
-        <textarea id="view-content-markdown" class="form-input" style="height: 380px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
+        <div id="single-tier1-deck-container" style="display: none; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: 700; color: #fff; font-size: 13px;">🗂️ Interactive Slide Deck & Art Direction Guide</span>
+            <button class="btn btn-primary btn-xs" onclick="copySingleCarouselScript()">📑 Copy Full Deck Script</button>
+          </div>
+          <div id="single-deck-style-guide"></div>
+          <div class="inline-slide-display" id="single-slide-card">
+            <span id="single-slide-number" style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">#1</span>
+            <div id="single-slide-headline" style="font-size: 16px; font-weight: 800; color: #fff; margin-top: 4px; line-height: 1.35;">Headline</div>
+            <div id="single-slide-bullet" style="font-size: 13.5px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;">Bullet text</div>
+            <div id="single-slide-visual-guide" style="margin-top: 12px;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+            <button class="btn btn-xs" onclick="navigateSingleCarousel(-1)">◀ Prev Slide</button>
+            <span id="single-slide-counter-text" style="font-size: 12px; color: #38bdf8; font-weight: 700;">Slide 1 of 6</span>
+            <button class="btn btn-xs" onclick="navigateSingleCarousel(1)">Next Slide ▶</button>
+          </div>
+        </div>
+        <div id="single-markdown-label" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Companion Post Copy / Markdown</div>
+        <textarea id="view-content-markdown" class="form-input" style="height: 320px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
         <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
           <button class="btn btn-primary btn-xs" onclick="copyMarkdown()">📋 Copy Content</button>
         </div>
@@ -4670,22 +4693,96 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
     }
 
+    function copyPromptDirect(btn) {
+      if (!btn) return;
+      const prompt = btn.getAttribute('data-prompt');
+      if (!prompt) return;
+      copyTextDirect(prompt);
+      const origText = btn.innerHTML;
+      btn.innerHTML = '✅ Copied Prompt!';
+      btn.style.color = '#10b981';
+      btn.style.borderColor = '#10b981';
+      setTimeout(() => {
+        btn.innerHTML = origText;
+        btn.style.color = '#fbbf24';
+        btn.style.borderColor = '#f59e0b';
+      }, 2000);
+    }
+
+    function renderDeckStyleGuideBannerHtml(vsg) {
+      if (!vsg || typeof vsg !== 'object') return '';
+      const mood = escapeHtml(vsg.mood || 'Forensic institutional realism');
+      const palette = escapeHtml(vsg.palette || 'Obsidian Slate, Hazard Amber, Bone White');
+      const ratio = escapeHtml(vsg.aspect_ratio || '4:5 (1080x1350px)');
+      const typography = vsg.typography_vibe ? escapeHtml(vsg.typography_vibe) : '';
+
+      return `
+        <div class="deck-style-guide-banner" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.5px;">🎨 Deck Visual Identity & Art Direction</span>
+            <span style="font-size: 10.5px; background: rgba(56, 189, 248, 0.15); color: #7dd3fc; padding: 2px 8px; border-radius: 4px; font-weight: 700;">📐 ${ratio}</span>
+          </div>
+          <div style="font-size: 12px; color: #94a3b8;"><strong style="color: #cbd5e1;">Visual Mood:</strong> ${mood}</div>
+          <div style="font-size: 12px; color: #94a3b8;"><strong style="color: #cbd5e1;">Color Palette:</strong> ${palette}</div>
+          ${typography ? `<div style="font-size: 11.5px; color: #64748b;"><strong style="color: #94a3b8;">Typography:</strong> ${typography}</div>` : ''}
+        </div>
+      `;
+    }
+
+    function renderSlideCardHtml(slide, slideIndex, totalSlides) {
+      if (!slide) return '';
+      const slideType = escapeHtml(slide.type || ('Slide #' + (slideIndex + 1)));
+      const headline = escapeHtml(slide.headline || '');
+      const bullet = escapeHtml(slide.bullet || '');
+      const visualConcept = slide.visual_concept ? escapeHtml(slide.visual_concept) : '';
+      const imagePrompt = slide.image_prompt || '';
+      const colorMood = slide.color_mood ? escapeHtml(slide.color_mood) : '';
+
+      let visualHtml = '';
+      if (visualConcept || imagePrompt) {
+        visualHtml = `
+          <div class="slide-visual-guide" style="margin-top: 12px; background: rgba(2, 6, 23, 0.85); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 11.5px; font-weight: 800; color: #f59e0b;">🎨 Visual Direction</span>
+                ${colorMood ? `<span style="font-size: 10px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 1px 6px; border-radius: 4px;">${colorMood}</span>` : ''}
+              </div>
+              ${imagePrompt ? `<button type="button" class="btn btn-xs copy-prompt-btn" style="background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; color: #fbbf24; font-weight: 700; cursor: pointer;" onclick="copyPromptDirect(this)" data-prompt="${escapeHtml(imagePrompt)}">📋 Copy Image Prompt</button>` : ''}
+            </div>
+            ${visualConcept ? `<div style="font-size: 12px; color: #cbd5e1; line-height: 1.45; margin-bottom: 8px;"><strong style="color: #94a3b8;">Scene Concept:</strong> ${visualConcept}</div>` : ''}
+            ${imagePrompt ? `
+              <div style="background: #030712; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 8px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; color: #38bdf8; line-height: 1.5; white-space: pre-wrap; word-break: break-word;">
+                <span style="color: #64748b; font-weight: 600; display: block; margin-bottom: 3px; font-family: inherit;">Midjourney / DALL-E / Canva AI Prompt:</span>${escapeHtml(imagePrompt)}
+              </div>` : ''}
+          </div>
+        `;
+      }
+
+      return `
+        <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">${slideType}</span>
+        <div style="font-size: 16px; font-weight: 800; color: #fff; margin-top: 4px; line-height: 1.35;">${headline}</div>
+        <div style="font-size: 13.5px; color: #cbd5e1; margin-top: 6px; line-height: 1.5;">${bullet}</div>
+        ${visualHtml}
+      `;
+    }
+
     function renderInlineAssetWidget(asset, msgIdx) {
       if (asset.type === 'carousel') {
         const slides = asset.slides || [];
         const currentSlide = slides[0] || {};
+        const vsgHtml = renderDeckStyleGuideBannerHtml(asset.visual_style_guide);
+        const slideHtml = renderSlideCardHtml(currentSlide, 0, slides.length);
         return `
           <div class="inline-asset-box" id="inline-carousel-viewer-${msgIdx}">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px;">
               <span style="font-size: 13px; font-weight: 800; color: #38bdf8;">🗂️ Generated Carousel Deck: ${escapeHtml(asset.title || 'Slide Deck')}</span>
               <button class="btn btn-xs btn-primary" onclick="copyTextDirect('${escapeHtml(asset.copy_script || '')}')">📋 Copy Carousel Script</button>
             </div>
+            ${vsgHtml}
             <div class="inline-slide-display" id="carousel-slide-box-${msgIdx}">
-              <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">${escapeHtml(currentSlide.type || '#1')}</span>
-              <div style="font-size: 15px; font-weight: 800; color: #fff; margin-top: 4px;">${escapeHtml(currentSlide.headline || '')}</div>
-              <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px;">${escapeHtml(currentSlide.bullet || '')}</div>
+              ${slideHtml}
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
               <button class="btn btn-xs" onclick="navigateInlineCarousel(${msgIdx}, -1)">◀ Prev Slide</button>
               <span id="carousel-counter-${msgIdx}" style="font-size: 12px; color: #38bdf8; font-weight: 700;">Slide 1 of ${slides.length}</span>
               <button class="btn btn-xs" onclick="navigateInlineCarousel(${msgIdx}, 1)">Next Slide ▶</button>
@@ -4770,11 +4867,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       const box = document.getElementById(`carousel-slide-box-${msgIdx}`);
       const counter = document.getElementById(`carousel-counter-${msgIdx}`);
       if (box) {
-        box.innerHTML = `
-          <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">${escapeHtml(slide.type || `#${next+1}`)}</span>
-          <div style="font-size: 15px; font-weight: 800; color: #fff; margin-top: 4px;">${escapeHtml(slide.headline || '')}</div>
-          <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px;">${escapeHtml(slide.bullet || '')}</div>
-        `;
+        box.innerHTML = renderSlideCardHtml(slide, next, slides.length);
       }
       if (counter) counter.innerText = `Slide ${next+1} of ${slides.length}`;
     }
@@ -4935,6 +5028,16 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         if (campTabs) campTabs.style.display = 'none';
         if (singlePanel) singlePanel.style.display = 'block';
         document.getElementById('view-content-markdown').value = item.content_markdown || item.article || '';
+
+        const singleDeckContainer = document.getElementById('single-tier1-deck-container');
+        const singleSlides = item.slides_outline || (item.carousel_1 && item.carousel_1.slides) || item.slides || [];
+        if (singleDeckContainer && singleSlides.length > 0) {
+          singleDeckContainer.style.display = 'block';
+          currentSingleIndex = 0;
+          updateSingleCarousel();
+        } else if (singleDeckContainer) {
+          singleDeckContainer.style.display = 'none';
+        }
       }
 
       modal.style.display = 'flex';
@@ -4998,10 +5101,27 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       const curIdx = deckNum === 1 ? currentC1Index : currentC2Index;
       const slide = slides[curIdx] || {};
 
-      document.getElementById(`c${deckNum}-slide-number`).innerText = slide.type || `#${curIdx+1}`;
-      document.getElementById(`c${deckNum}-slide-headline`).innerText = slide.headline || '';
-      document.getElementById(`c${deckNum}-slide-bullet`).innerText = slide.bullet || '';
-      document.getElementById(`c${deckNum}-slide-counter-text`).innerText = `Slide ${curIdx+1} of ${slides.length || 7}`;
+      const bannerEl = document.getElementById(`c${deckNum}-deck-style-guide`);
+      if (bannerEl && deck.visual_style_guide) {
+        bannerEl.innerHTML = renderDeckStyleGuideBannerHtml(deck.visual_style_guide);
+        bannerEl.style.display = 'block';
+      } else if (bannerEl) {
+        bannerEl.style.display = 'none';
+      }
+
+      const cardEl = document.getElementById(`c${deckNum}-slide-card`);
+      if (cardEl) {
+        cardEl.innerHTML = renderSlideCardHtml(slide, curIdx, slides.length);
+      } else {
+        const numEl = document.getElementById(`c${deckNum}-slide-number`);
+        if (numEl) numEl.innerText = slide.type || `#${curIdx+1}`;
+        const headEl = document.getElementById(`c${deckNum}-slide-headline`);
+        if (headEl) headEl.innerText = slide.headline || '';
+        const bulEl = document.getElementById(`c${deckNum}-slide-bullet`);
+        if (bulEl) bulEl.innerText = slide.bullet || '';
+      }
+      const countEl = document.getElementById(`c${deckNum}-slide-counter-text`);
+      if (countEl) countEl.innerText = `Slide ${curIdx+1} of ${slides.length || 7}`;
     }
 
     function navigateCarousel(deckNum, delta) {
@@ -5018,13 +5138,65 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       updateCampaignCarousel(deckNum);
     }
 
+    let currentSingleIndex = 0;
+    function updateSingleCarousel() {
+      const item = currentModalContentItem;
+      if (!item) return;
+      const slides = item.slides_outline || (item.carousel_1 && item.carousel_1.slides) || item.slides || [];
+      const deckGuide = item.visual_style_guide || (item.carousel_1 && item.carousel_1.visual_style_guide) || null;
+      const curIdx = currentSingleIndex;
+      const slide = slides[curIdx] || {};
+
+      const bannerEl = document.getElementById('single-deck-style-guide');
+      if (bannerEl && deckGuide) {
+        bannerEl.innerHTML = renderDeckStyleGuideBannerHtml(deckGuide);
+        bannerEl.style.display = 'block';
+      } else if (bannerEl) {
+        bannerEl.style.display = 'none';
+      }
+
+      const cardEl = document.getElementById('single-slide-card');
+      if (cardEl) {
+        cardEl.innerHTML = renderSlideCardHtml(slide, curIdx, slides.length);
+      }
+      const countEl = document.getElementById('single-slide-counter-text');
+      if (countEl) countEl.innerText = `Slide ${curIdx+1} of ${slides.length}`;
+    }
+
+    function navigateSingleCarousel(delta) {
+      const item = currentModalContentItem;
+      if (!item) return;
+      const slides = item.slides_outline || (item.carousel_1 && item.carousel_1.slides) || item.slides || [];
+      if (!slides.length) return;
+      currentSingleIndex = Math.max(0, Math.min(slides.length - 1, currentSingleIndex + delta));
+      updateSingleCarousel();
+    }
+
+    function copySingleCarouselScript() {
+      const item = currentModalContentItem;
+      if (!item) return;
+      const slides = item.slides_outline || (item.carousel_1 && item.carousel_1.slides) || item.slides || [];
+      const text = slides.map(s => {
+        let block = `[SLIDE ${s.slide || ''} - ${s.type || ''}]\nHEADLINE: ${s.headline || ''}\nBULLET: ${s.bullet || ''}\n`;
+        if (s.visual_concept) block += `VISUAL CONCEPT: ${s.visual_concept}\n`;
+        if (s.image_prompt) block += `IMAGE PROMPT: ${s.image_prompt}\n`;
+        return block;
+      }).join(String.fromCharCode(10));
+      copyTextDirect(text);
+    }
+
     function copyCarouselScript(deckNum) {
       const item = currentModalContentItem;
       if (!item) return;
       const deckKey = deckNum === 1 ? 'carousel_1' : 'carousel_2';
       const deck = item[deckKey] || (item.campaign_pack && item.campaign_pack[deckKey]) || {};
       const slides = deck.slides || [];
-      const text = slides.map(s => `[SLIDE ${s.slide || ''} - ${s.type || ''}]\nHEADLINE: ${s.headline || ''}\nBULLET: ${s.bullet || ''}\n`).join('\\n');
+      const text = slides.map(s => {
+        let block = `[SLIDE ${s.slide || ''} - ${s.type || ''}]\nHEADLINE: ${s.headline || ''}\nBULLET: ${s.bullet || ''}\n`;
+        if (s.visual_concept) block += `VISUAL CONCEPT: ${s.visual_concept}\n`;
+        if (s.image_prompt) block += `IMAGE PROMPT: ${s.image_prompt}\n`;
+        return block;
+      }).join(String.fromCharCode(10));
       copyTextDirect(text);
     }
 
@@ -5077,11 +5249,31 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     // Utility Helpers
     function copyTextDirect(text) {
       if (!text) return;
-      navigator.clipboard.writeText(text).then(() => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Copied to clipboard!');
+        }).catch(() => {
+          fallbackCopyText(text);
+        });
+      } else {
+        fallbackCopyText(text);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
         showToast('Copied to clipboard!');
-      }).catch(() => {
+      } catch (err) {
         showToast('Failed to copy');
-      });
+      }
+      document.body.removeChild(ta);
     }
 
     function showToast(msg) {
