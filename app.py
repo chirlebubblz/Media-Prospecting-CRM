@@ -3239,14 +3239,19 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Right Controls -->
     <div style="display: flex; align-items: center; gap: 10px;">
-      <select id="voice-select-header" class="select-filter" onchange="onVoiceSelectHeaderChange(this.value)" style="font-weight: 700; background: var(--bg-surface); border-color: var(--border-accent); color: #fff; max-width: 320px;">
-        <option value="forensic-operator">🎙️ Rupert Evill / Forensic Risk Operator</option>
-        <option value="christian-hunt">🎙️ Christian Hunt / Human Risk</option>
-        <option value="jordan-sabalo">🎙️ Jordan Sabalo / Contrarian Tech</option>
-        <option value="growth-dealmaker">🎙️ Strategic Dealmaker (PE & M&A)</option>
-        <option value="__NEW__">➕ Add / Clone Custom Voice...</option>
-      </select>
-      <button type="button" class="btn btn-xs" onclick="openVoiceModal()" style="background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #c4b5fd; font-weight: 700; padding: 6px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer;" title="Create or Clone Custom Author Voice"><span>➕ Clone / Custom Voice</span></button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+        <select id="voice-select-header" class="select-filter" onchange="onVoiceSelectHeaderChange(this.value)" style="font-weight: 700; background: var(--bg-surface); border-color: rgba(139, 92, 246, 0.4); color: #fff; max-width: 320px; cursor: pointer;">
+          <option value="forensic-operator">🎙️ Rupert Evill / Forensic Risk</option>
+          <option value="christian-hunt">🎙️ Christian Hunt / Human Risk</option>
+          <option value="jordan-sabalo">🎙️ Jordan Sabalo / Tech & Growth</option>
+          <option value="growth-dealmaker">🎙️ Strategic Dealmaker (PE & M&A)</option>
+          <option value="__NEW__" style="color: #c4b5fd; font-weight: 700;">➕ Add / Clone Custom Voice...</option>
+        </select>
+        <button type="button" class="btn btn-xs" onclick="openVoiceModal()" style="background: rgba(139, 92, 246, 0.25); border: 1px solid rgba(139, 92, 246, 0.5); color: #c4b5fd; font-weight: 700; padding: 7px 14px; border-radius: 6px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; white-space: nowrap;" title="Create, Clone or Edit Author Voices">
+          <span>➕ Custom Voice</span>
+        </button>
+      </div>
+      
       <a href="/" class="btn" style="text-decoration:none;"><span>⬅️ Back to CRM Leads</span></a>
     </div>
   </header>
@@ -3923,6 +3928,9 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         return;
       }
       activeVoiceId = val;
+      const headerSelect = document.getElementById('voice-select-header');
+      const voiceTitle = (headerSelect && headerSelect.selectedIndex >= 0 && headerSelect.options[headerSelect.selectedIndex]) ? headerSelect.options[headerSelect.selectedIndex].text : val;
+      showToast('Switched author voice to: ' + voiceTitle);
     }
 
     function openVoiceModal(editVoiceId = null) {
@@ -4553,7 +4561,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         }
 
         const voiceSelect = document.getElementById('voice-select-header') || document.getElementById('studio-voice-select');
-        const voiceName = voiceSelect ? voiceSelect.options[voiceSelect.selectedIndex].text : 'Forensic Risk Operator';
+        const voiceName = (voiceSelect && voiceSelect.selectedIndex >= 0 && voiceSelect.options[voiceSelect.selectedIndex]) ? voiceSelect.options[voiceSelect.selectedIndex].text : 'Forensic Risk Operator';
 
         let dossierHtml = '';
         if (msg.dossier && (msg.dossier.thesis || msg.dossier.unseen_tension || (msg.dossier.data_points && msg.dossier.data_points.length))) {
@@ -5091,10 +5099,12 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       try { return new Date(iso).toLocaleDateString(); } catch (e) { return iso.substring(0, 10); }
     }
 
-    // Initial Load
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initial Load: Execute immediately AND on DOMContentLoaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadContentPageData);
+    } else {
       loadContentPageData();
-    });
+    }
   </script>
 </body>
 </html>
