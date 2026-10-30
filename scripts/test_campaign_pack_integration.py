@@ -67,4 +67,4 @@ assert "weekly_posts" in latest, "weekly_posts must be restored"
 assert "carousel_1" in latest, "carousel_1 must be restored"
 assert "carousel_2" in latest, "carousel_2 must be restored"
 
-print("\n[✔] ALL TESTS PASSED SUCCESSFULLY!")
+print("\n[+] ALL TESTS PASSED SUCCESSFULLY!")

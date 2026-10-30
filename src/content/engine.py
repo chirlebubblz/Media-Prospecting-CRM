@@ -153,7 +153,13 @@ class ResearchSynthesizer:
                         pass
                 if self.api_key:
                     break
-        self.model_name = "gemini-2.5-flash"
+        self.models_to_try = [
+            "gemini-3-flash-preview",
+            "gemini-3.1-flash-lite",
+            "gemini-flash-lite-latest",
+            "gemini-2.5-flash"
+        ]
+        self.model_name = self.models_to_try[0]
 
     def _call_gemini_api(
         self,
@@ -164,11 +170,11 @@ class ResearchSynthesizer:
         max_output_tokens: int = 8192,
         timeout: int = 60
     ) -> Optional[str]:
-        """Helper to invoke Gemini 2.5 Flash REST API with JSON response format."""
+        """Helper to invoke Gemini REST API with multi-model fallback."""
         if not self.api_key or not requests:
             return None
 
-        models_to_try = [self.model_name, "gemini-flash-latest"]
+        models_to_try = self.models_to_try
 
         payload: Dict[str, Any] = {
             "contents": [{"parts": [{"text": prompt}]}]
