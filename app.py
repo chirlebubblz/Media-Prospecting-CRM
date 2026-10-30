@@ -2283,18 +2283,18 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Content Engine | Research Dossiers & Voice Cloning</title>
+  <title>Content Engine | NotebookLM Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #070b14;
-      --bg-surface: #0e1626;
-      --card-bg: #121d33;
-      --card-hover: #172540;
-      --border: #1e2c47;
-      --border-accent: #2c426b;
+      --bg: #0b0f19;
+      --bg-surface: #111827;
+      --card-bg: #1e293b;
+      --card-hover: #24344d;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(56, 189, 248, 0.3);
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --primary: #38bdf8;
@@ -2303,7 +2303,6 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       --gold: #f59e0b;
       --purple: #a855f7;
       --rose: #f43f5e;
-      --tag-bg: #18233a;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2312,23 +2311,26 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
-      padding-bottom: 90px;
       overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     /* Top Navigation Bar */
     .top-navbar {
-      background: rgba(14, 22, 38, 0.95);
+      background: rgba(17, 24, 39, 0.95);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 100;
-      padding: 12px 28px;
+      padding: 10px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
+      flex-wrap: wrap;
     }
     .brand {
       display: flex;
@@ -2336,37 +2338,65 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       gap: 12px;
     }
     .brand-badge {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: 10px;
-      background: rgba(139, 92, 246, 0.2);
-      border: 1px solid rgba(139, 92, 246, 0.5);
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.4);
       color: #c084fc;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
-      box-shadow: 0 0 15px rgba(139, 92, 246, 0.25);
+      font-size: 19px;
+      box-shadow: 0 0 14px rgba(139, 92, 246, 0.2);
     }
     .brand-title {
-      font-size: 17px;
+      font-size: 15.5px;
       font-weight: 800;
       color: #ffffff;
       letter-spacing: -0.02em;
     }
     .brand-sub {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--text-muted);
     }
 
-    /* Container */
-    .container {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 24px 28px;
+    /* Studio View Switcher Tabs */
+    .view-switcher-tabs {
+      display: inline-flex;
+      background: rgba(11, 15, 25, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+    .view-tab-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .view-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .view-tab-btn.active {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #ffffff;
+      border-color: #38bdf8;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(14, 165, 233, 0.35);
     }
 
-    /* Buttons */
+    /* Common Buttons */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -2375,70 +2405,597 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       background: var(--bg-surface);
       border: 1px solid var(--border);
       color: #cbd5e1;
-      padding: 8px 14px;
+      padding: 7px 14px;
       border-radius: 7px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
     }
     .btn:hover {
-      background: #172540;
-      border-color: var(--border-accent);
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.2);
       color: #ffffff;
     }
     .btn-primary {
-      background: linear-gradient(135deg, #7c3aed, #a855f7);
-      border-color: #a855f7;
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      border-color: #38bdf8;
       color: #ffffff;
-      box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+      box-shadow: 0 0 12px rgba(14, 165, 233, 0.3);
     }
     .btn-primary:hover {
-      background: linear-gradient(135deg, #6d28d9, #9333ea);
-      box-shadow: 0 0 18px rgba(168, 85, 247, 0.5);
+      background: linear-gradient(135deg, #0369a1, #0284c7);
+      box-shadow: 0 0 16px rgba(14, 165, 233, 0.45);
       color: #ffffff;
     }
-    .btn-success {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.4);
-      color: #34d399;
-    }
-    .btn-success:hover {
-      background: rgba(16, 185, 129, 0.25);
-      color: #6ee7b7;
-    }
-    .btn-emerald {
-      background: linear-gradient(135deg, #059669, #10b981);
-      border-color: #10b981;
-      color: #ffffff;
-      font-weight: 700;
-      box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
-    }
-    .btn-emerald:hover {
-      background: linear-gradient(135deg, #047857, #059669);
-      color: #ffffff;
-    }
-    .btn-danger {
-      background: rgba(244, 63, 94, 0.15);
-      border-color: rgba(244, 63, 94, 0.35);
-      color: #fb7185;
-    }
-    .btn-danger:hover {
-      background: rgba(244, 63, 94, 0.25);
-      color: #fda4af;
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.7);
+      border-color: var(--border-accent);
+      color: #7dd3fc;
     }
     .btn-xs {
-      padding: 5px 10px;
+      padding: 4px 10px;
       font-size: 11.5px;
       border-radius: 6px;
+      font-weight: 600;
     }
 
-    /* KPI Ribbon */
+    /* ==========================================================
+       NotebookLM Studio Main Layout
+       ========================================================== */
+    .studio-wrapper {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      height: calc(100vh - 61px);
+    }
+
+    /* Left Sidebar: Reference Sources (~310px) */
+    .sources-sidebar {
+      width: 310px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transition: all 0.25s ease;
+    }
+    .sources-sidebar.collapsed {
+      width: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .sidebar-header {
+      padding: 16px 18px 12px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .sidebar-title {
+      font-size: 13.5px;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sidebar-badge {
+      font-size: 11px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 12px;
+      padding: 2px 8px;
+      font-weight: 700;
+    }
+    .add-source-pill-btn {
+      width: 100%;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px dashed rgba(56, 189, 248, 0.35);
+      color: #7dd3fc;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      margin-bottom: 12px;
+    }
+    .add-source-pill-btn:hover {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+    .sources-scroll-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .source-item-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      transition: all 0.2s ease;
+    }
+    .source-item-card:hover {
+      border-color: rgba(255, 255, 255, 0.18);
+      background: #1e293b;
+    }
+    .source-item-card.inactive {
+      opacity: 0.5;
+    }
+    .source-icon {
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+    .source-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .source-name-text {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .source-meta-text {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .source-del-icon {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .source-del-icon:hover {
+      color: #f43f5e;
+      background: rgba(244, 63, 94, 0.15);
+    }
+    .quick-links-area {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      background: rgba(11, 15, 25, 0.5);
+    }
+    .quick-links-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .quick-links-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    /* Right Main Canvas (ChatGPT / Gemini / NotebookLM centered look) */
+    .chat-canvas {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+      position: relative;
+    }
+    .chat-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      scroll-behavior: smooth;
+    }
+    .chat-centered-container {
+      max-width: 860px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Welcome / Empty State */
+    .gemini-welcome-box {
+      text-align: center;
+      padding: 48px 16px 24px 16px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    .gemini-icon-glow {
+      font-size: 38px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .gemini-greeting {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.025em;
+      margin-bottom: 8px;
+    }
+    .gemini-sub {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+    .gemini-prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      text-align: left;
+    }
+    @media (max-width: 680px) {
+      .gemini-prompt-grid { grid-template-columns: 1fr; }
+    }
+    .gemini-prompt-card {
+      background: rgba(30, 41, 59, 0.45);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .gemini-prompt-card:hover {
+      background: rgba(30, 41, 59, 0.85);
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    .gemini-prompt-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .gemini-prompt-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Messages in Stream */
+    .msg-user-bubble {
+      align-self: flex-end;
+      max-width: 80%;
+      background: #1e3a8a;
+      color: #ffffff;
+      border-radius: 18px 18px 4px 18px;
+      padding: 12px 18px;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 4px 14px rgba(30, 58, 138, 0.3);
+    }
+    .msg-assistant-bubble {
+      align-self: flex-start;
+      width: 100%;
+      background: rgba(17, 24, 39, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .assistant-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+    .assistant-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 12px;
+      padding: 3px 10px;
+    }
+    .msg-markdown-content {
+      font-size: 14px;
+      color: #f1f5f9;
+      line-height: 1.68;
+    }
+    .msg-markdown-content h3 { font-size: 15.5px; font-weight: 800; color: #fff; margin-bottom: 8px; margin-top: 14px; }
+    .msg-markdown-content h4 { font-size: 14px; font-weight: 700; color: #38bdf8; margin-bottom: 6px; margin-top: 12px; }
+    .msg-markdown-content p { margin-bottom: 10px; }
+    .msg-markdown-content ul { margin-left: 20px; margin-bottom: 10px; }
+    .msg-markdown-content li { margin-bottom: 5px; }
+
+    /* Dossier Callout Box */
+    .dossier-callout-box {
+      background: rgba(7, 11, 20, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .dossier-thesis-text {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.5;
+    }
+    .dossier-tension-text {
+      font-size: 13px;
+      color: #cbd5e1;
+      border-left: 2px solid #a855f7;
+      padding-left: 10px;
+      margin-top: 4px;
+    }
+
+    /* 4 Contrarian Angles Grid */
+    .angles-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 4px;
+    }
+    @media (max-width: 680px) {
+      .angles-grid { grid-template-columns: 1fr; }
+    }
+    .angle-card {
+      background: rgba(7, 11, 20, 0.65);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+      transition: all 0.2s ease;
+    }
+    .angle-card:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.15);
+    }
+    .angle-card-badge {
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #c084fc;
+      letter-spacing: 0.05em;
+    }
+    .angle-card-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.35;
+    }
+    .angle-card-hook {
+      font-size: 12px;
+      color: #38bdf8;
+      font-style: italic;
+      line-height: 1.4;
+    }
+    .angle-card-desc {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .angle-card-btn {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    .angle-card-btn:hover {
+      background: linear-gradient(135deg, #0284c7, #0ea5e9);
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    /* Format Generator Action Bar */
+    .format-action-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(7, 11, 20, 0.7);
+      border: 1px solid var(--border-accent);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .format-pill-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-accent);
+      color: #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .format-pill-btn:hover {
+      background: #1e293b;
+      border-color: #38bdf8;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .format-pill-btn.campaign {
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(168, 85, 247, 0.2));
+      border-color: rgba(244, 63, 94, 0.5);
+      color: #fb7185;
+    }
+    .format-pill-btn.campaign:hover {
+      background: linear-gradient(135deg, #f43f5e, #a855f7);
+      color: #ffffff;
+    }
+
+    /* Inline Asset Widgets */
+    .inline-asset-box {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid #38bdf8;
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .inline-slide-display {
+      background: #070b14;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 18px 24px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* Signature ChatGPT / Gemini Floating Bottom Input Capsule */
+    .chat-bottom-wrapper {
+      padding: 10px 20px 20px 20px;
+      background: linear-gradient(180deg, rgba(11, 15, 25, 0) 0%, rgba(11, 15, 25, 0.95) 40%, #0b0f19 100%);
+      width: 100%;
+      flex-shrink: 0;
+    }
+    .chat-capsule {
+      max-width: 840px;
+      margin: 0 auto;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 28px;
+      padding: 6px 10px 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+      transition: all 0.2s ease;
+    }
+    .chat-capsule:focus-within {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    .capsule-btn-attach {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    .capsule-btn-attach:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+    .capsule-textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.45;
+      resize: none;
+      min-height: 26px;
+      max-height: 130px;
+      padding: 6px 0;
+    }
+    .capsule-btn-send {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border: none;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 15px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.35);
+    }
+    .capsule-btn-send:hover {
+      transform: scale(1.06);
+      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.55);
+    }
+    .capsule-status-caption {
+      max-width: 840px;
+      margin: 6px auto 0 auto;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+    }
+
+    /* ==========================================================
+       Saved Library View & KPI Elements
+       ========================================================= */
+    .library-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      width: 100%;
+    }
     .kpi-ribbon {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 14px;
-      margin-bottom: 22px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
     }
     .kpi-card {
       background: var(--bg-surface);
@@ -2450,520 +3007,179 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     }
     .kpi-card:hover {
       border-color: var(--border-accent);
-      background: #121c2e;
-      transform: translateY(-1px);
+      transform: translateY(-2px);
     }
-    .kpi-label {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .kpi-value {
-      font-size: 26px;
-      font-weight: 800;
-      color: #ffffff;
-      margin: 4px 0 2px 0;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .kpi-sub {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
+    .kpi-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .kpi-value { font-size: 24px; font-weight: 800; margin: 4px 0; }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); }
 
-    /* Filter & Search Toolbar */
     .filter-toolbar {
       display: flex;
-      flex-wrap: wrap;
-      align-items: center;
       gap: 12px;
-      margin-bottom: 18px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      padding: 12px 18px;
-      border-radius: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
     }
     .search-input-wrap {
       flex: 1;
-      min-width: 260px;
+      min-width: 280px;
       position: relative;
     }
+    .search-input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px 14px 10px 38px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+    .search-input:focus { border-color: #38bdf8; }
     .search-icon {
       position: absolute;
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 14px;
       color: var(--text-muted);
-      pointer-events: none;
-    }
-    .search-input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: #ffffff;
-      padding: 9px 36px 9px 34px;
-      border-radius: 7px;
-      font-size: 13px;
-      outline: none;
-      transition: all 0.2s;
-    }
-    .search-input:focus {
-      border-color: #a855f7;
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
-    }
-    .search-clear-btn {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .filter-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
     }
     .select-filter {
-      background: var(--bg);
+      background: var(--bg-surface);
       border: 1px solid var(--border);
-      color: #cbd5e1;
+      color: #fff;
       padding: 8px 12px;
-      border-radius: 7px;
+      border-radius: 8px;
       font-size: 12.5px;
       outline: none;
-      cursor: pointer;
-    }
-    .select-filter:focus {
-      border-color: #a855f7;
     }
 
-    /* Quick Filter Pills */
     .quick-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      background: rgba(14, 22, 38, 0.7);
-      border: 1px solid var(--border);
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
       color: var(--text-muted);
       cursor: pointer;
       transition: all 0.2s;
     }
-    .quick-pill:hover {
-      border-color: var(--border-accent);
-      color: #ffffff;
+    .quick-pill:hover, .quick-pill.active {
+      color: #fff;
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.12);
     }
-    .quick-pill.active {
-      background: rgba(168, 85, 247, 0.2);
-      border-color: #a855f7;
-      color: #c4b5fd;
-    }
-    .quick-pill.pill-emerald.active {
-      background: rgba(16, 185, 129, 0.2);
-      border-color: #10b981;
-      color: #34d399;
-    }
+    .quick-pill.pill-cyan.active { border-color: #38bdf8; color: #38bdf8; }
+    .quick-pill.pill-pink.active { border-color: #f43f5e; color: #fb7185; }
+    .quick-pill.pill-purple.active { border-color: #a855f7; color: #c084fc; }
+    .quick-pill.pill-emerald.active { border-color: #10b981; color: #34d399; }
 
-    /* Content Cards Grid */
     .content-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-      gap: 18px;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
     }
     .content-card {
-      background: var(--card-bg);
+      background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 10px;
       padding: 18px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
     .content-card:hover {
       border-color: var(--border-accent);
-      background: var(--card-hover);
+      transform: translateY(-2px);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
     .tier-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 9px;
-      border-radius: 6px;
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.03em;
-    }
-    .tier-badge.t1 { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
-    .tier-badge.t2 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
-    .tier-badge.t3 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
-    .tier-badge.research { 
-      background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(14, 165, 233, 0.25)); 
-      color: #38bdf8; 
-      border: 1px solid rgba(56, 189, 248, 0.5); 
-    }
-    .tier-badge.campaign { 
-      background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(168, 85, 247, 0.25)); 
-      color: #fb7185; 
-      border: 1px solid rgba(244, 63, 94, 0.5); 
-    }
-    .quick-pill.pill-pink.active {
-      background: rgba(244, 63, 94, 0.25);
-      border-color: #f43f5e;
-      color: #fda4af;
-    }
-    .quick-pill.pill-cyan.active {
-      background: rgba(14, 165, 233, 0.25);
-      border-color: #0ea5e9;
-      color: #7dd3fc;
-    }
-
-    /* Campaign Tabbed Navigation */
-    .campaign-tabs-strip {
-      display: flex;
-      gap: 6px;
-      background: rgba(7, 11, 20, 0.7);
-      padding: 6px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      margin-top: 10px;
-      margin-bottom: 14px;
-      overflow-x: auto;
-    }
-    .campaign-tab-btn {
-      padding: 7px 14px;
+      padding: 3px 8px;
       border-radius: 6px;
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-muted);
-      font-size: 12.5px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      display: inline-block;
     }
-    .campaign-tab-btn:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .campaign-tab-btn.active {
-      background: rgba(168, 85, 247, 0.2);
-      border-color: #a855f7;
-      color: #e9d5ff;
-    }
-    .campaign-post-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      transition: border-color 0.2s;
-    }
-    .campaign-post-card:hover {
-      border-color: rgba(168, 85, 247, 0.4);
-    }
-    .campaign-post-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .campaign-post-day {
-      font-size: 13px;
-      font-weight: 700;
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .campaign-post-title {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-style: italic;
-    }
-    .campaign-post-body {
-      font-size: 13px;
-      color: #cbd5e1;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      font-family: inherit;
-      background: rgba(7, 11, 20, 0.4);
-      padding: 12px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      max-height: 220px;
-      overflow-y: auto;
-    }
-    .campaign-post-tags {
-      margin-top: 8px;
-      font-size: 11.5px;
-      color: #a855f7;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .campaign-word-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      color: #34d399;
-      border-radius: 12px;
-      font-size: 11.5px;
-      font-weight: 700;
-    }
-
-    .content-card-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: #ffffff;
-      line-height: 1.35;
-      cursor: pointer;
-    }
-    .content-card-title:hover {
-      color: var(--primary);
-    }
-    .content-card-excerpt {
-      font-size: 12.5px;
-      color: #94a3b8;
-      line-height: 1.5;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      white-space: pre-wrap;
-    }
-    .dossier-stats-strip {
-      background: rgba(7, 11, 20, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 11.5px;
-      color: #cbd5e1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .content-actions-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-top: 1px solid var(--border);
-      padding-top: 10px;
-      margin-top: auto;
-    }
+    .tier-badge.t1 { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4); }
+    .tier-badge.t2 { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .tier-badge.t3 { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .tier-badge.campaign { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4); }
+    .tier-badge.research { background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(14, 165, 233, 0.4); }
 
     /* Modals */
     .modal-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      inset: 0;
       background: rgba(3, 7, 18, 0.85);
-      backdrop-filter: blur(8px);
-      z-index: 200;
-      display: none;
+      backdrop-filter: blur(6px);
+      display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 200;
       padding: 20px;
     }
-    .modal-overlay.active {
-      display: flex;
-    }
     .modal-card {
-      background: #0f172a;
-      border: 1px solid var(--border-accent);
-      border-radius: 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
       width: 100%;
-      max-width: 620px;
+      max-width: 660px;
       max-height: 90vh;
       overflow-y: auto;
       padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
     }
-    .modal-card-lg { max-width: 760px; }
-    .modal-card-xl { max-width: 900px; }
+    .modal-card-xl { max-width: 1050px; }
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border);
       padding-bottom: 12px;
+      margin-bottom: 16px;
     }
-    .modal-title {
-      font-size: 17px;
-      font-weight: 800;
-      color: #ffffff;
-    }
+    .modal-title { font-size: 16px; font-weight: 800; color: #ffffff; }
     .close-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
       font-size: 22px;
       cursor: pointer;
-      line-height: 1;
     }
     .close-btn:hover { color: #ffffff; }
 
-    /* Form Fields */
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .drop-zone {
+      border: 2px dashed rgba(56, 189, 248, 0.35);
+      border-radius: 10px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      background: rgba(7, 11, 20, 0.5);
+      transition: all 0.2s ease;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
     }
     .form-label {
       font-size: 12px;
       font-weight: 700;
       color: #cbd5e1;
+      margin-bottom: 6px;
+      display: block;
     }
     .form-input {
-      background: rgba(7, 11, 20, 0.8);
+      width: 100%;
+      background: #070b14;
       border: 1px solid var(--border);
       color: #ffffff;
-      padding: 9px 12px;
-      border-radius: 7px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: inherit;
       font-size: 13px;
       outline: none;
-      font-family: inherit;
     }
-    .form-input:focus {
-      border-color: #a855f7;
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);
-    }
-    .form-row-2col {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    /* Modal Tabs Header */
-    .modal-tabs-header {
-      display: flex;
-      gap: 6px;
-      background: rgba(7, 11, 20, 0.6);
-      padding: 4px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      margin-bottom: 12px;
-    }
-    .modal-tab-btn {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 8px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .modal-tab-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.05); }
-    .modal-tab-btn.active {
-      background: #1e293b;
-      color: #38bdf8;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    }
-
-    /* Slide Deck Viewer */
-    .slide-deck-viewer {
-      background: rgba(7, 11, 20, 0.7);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .slide-deck-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
-    }
-    .slide-card-presentation {
-      background: linear-gradient(135deg, #121c2e, #0e1626);
-      border: 1px solid rgba(56, 189, 248, 0.2);
-      border-radius: 8px;
-      padding: 20px;
-      min-height: 140px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      position: relative;
-    }
-    .slide-number-pill {
-      position: absolute;
-      top: 12px;
-      right: 14px;
-      font-size: 11px;
-      font-weight: 800;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.15);
-      padding: 2px 8px;
-      border-radius: 12px;
-    }
-    .slide-headline-text {
-      font-size: 17px;
-      font-weight: 800;
-      color: #ffffff;
-      line-height: 1.35;
-      margin-bottom: 8px;
-    }
-    .slide-bullet-text {
-      font-size: 13.5px;
-      color: #cbd5e1;
-      line-height: 1.5;
-      white-space: pre-wrap;
-    }
-
-    /* Hook & Quote Box */
-    .hook-box {
-      background: rgba(168, 85, 247, 0.08);
-      border-left: 3px solid #a855f7;
-      padding: 10px 14px;
-      border-radius: 0 8px 8px 0;
-      font-size: 12.5px;
-      color: #e2e8f0;
-      font-style: italic;
-    }
-
-    /* Spinner */
-    .spinner-box {
-      display: none;
-      text-align: center;
-      padding: 20px;
-      background: rgba(7, 11, 20, 0.6);
-      border: 1px dashed var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      color: #38bdf8;
-    }
-    .spinner-icon {
-      font-size: 26px;
-      display: inline-block;
-      animation: spin 1s infinite linear;
-      margin-bottom: 6px;
-    }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .form-input:focus { border-color: #38bdf8; }
 
     /* Toast */
     #toast {
@@ -2995,29 +3211,142 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
   <!-- Top Navigation Bar -->
   <header class="top-navbar">
     <div class="brand">
+      <button class="btn btn-xs" id="sidebar-toggle-btn" onclick="toggleSourcesSidebar()" style="background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); color: #cbd5e1; padding: 6px 10px;" title="Toggle Reference Sources Sidebar">
+        <span>📁 Sources</span>
+      </button>
       <div class="brand-badge">📝</div>
       <div>
         <div class="brand-title" style="display: flex; align-items: center; gap: 8px;">
-          <span>Content Engine</span>
-          <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4);">Voice Cloning Studio</span>
+          <span>Content Engine | NotebookLM Studio</span>
           <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
             <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; display: inline-block;"></span>
-            ⚡ Gemini 2.5 Flash Connected
+            ⚡ Gemini Flash
           </span>
         </div>
-        <div class="brand-sub">Research Dossiers & Author Voice Cloning</div>
+        <div class="brand-sub">Interactive Research & Voice Synthesis Studio</div>
       </div>
     </div>
 
+    <!-- View Switcher Tabs -->
+    <div class="view-switcher-tabs">
+      <button class="view-tab-btn active" id="tab-studio-view" onclick="switchMainView('studio')">
+        💬 NotebookLM Studio
+      </button>
+      <button class="view-tab-btn" id="tab-library-view" onclick="switchMainView('library')">
+        🗂️ Saved Library & Cards <span id="library-tab-count">(0)</span>
+      </button>
+    </div>
+
+    <!-- Right Controls -->
     <div style="display: flex; align-items: center; gap: 10px;">
+      <select id="studio-voice-select" class="select-filter" style="font-weight: 700; background: var(--bg-surface); border-color: var(--border-accent); color: #fff;">
+        <option value="forensic-operator">🎙️ Forensic Risk Operator (Rupert Evill)</option>
+        <option value="growth-dealmaker">🎙️ Strategic Dealmaker (PE & M&A)</option>
+      </select>
       <a href="/" class="btn" style="text-decoration:none;"><span>⬅️ Back to CRM Leads</span></a>
-      <button class="btn btn-secondary" onclick="openDeepResearchModal()" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);"><span>🔬 Deep Research Studio</span></button>
-      <button class="btn btn-primary" onclick="openCreateModal()"><span>✨ Synthesize New Content</span></button>
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="container">
+  <!-- ==========================================================
+       VIEW 1: NotebookLM Studio View (Active by default)
+       ========================================================== -->
+  <div id="view-notebooklm-studio" class="studio-wrapper">
+
+    <!-- Left Sidebar: Reference Sources Panel (~310px) -->
+    <aside class="sources-sidebar sources-panel" id="sources-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <span>📁 Reference Sources</span>
+          <span class="sidebar-badge" id="active-sources-count">0 active</span>
+        </div>
+      </div>
+
+      <div class="sources-scroll-list" id="sources-list-container">
+        <!-- 1-Click Add Source Button -->
+        <button class="add-source-pill-btn" onclick="openAddSourceModal()">
+          <span>➕ Add Reference Source</span>
+        </button>
+
+        <!-- Active Sources List -->
+        <div id="sources-list" style="display: flex; flex-direction: column; gap: 8px;">
+          <div style="text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 12px;">
+            <div style="font-size: 22px; margin-bottom: 6px;">📂</div>
+            No reference sources added yet.<br>
+            <span style="font-size: 11px; opacity: 0.8;">Upload PDFs, DOCX, scrape URLs, or hook CRM leads.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Researched Links from CRM Dossiers -->
+      <div class="quick-links-area">
+        <div class="quick-links-title">
+          <span>🔗 Researched Citations</span>
+        </div>
+        <div class="quick-links-chips" id="quick-researched-links">
+          <!-- Populated via JS from /api/content/researched-links -->
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Main Canvas (ChatGPT / Gemini / NotebookLM centered style) -->
+    <main class="chat-canvas">
+      <div class="chat-scroll-area" id="chat-scroll-area">
+        <div class="chat-centered-container" id="chat-messages-container">
+
+          <!-- Centered Welcome / Empty State -->
+          <div class="gemini-welcome-box" id="studio-welcome-card">
+            <div class="gemini-icon-glow">🔬</div>
+            <h1 class="gemini-greeting">What would you like to investigate today?</h1>
+            <p class="gemini-sub">
+              Ground your inquiry in active reference sources on the left, ask forensic questions, or explore provocative contrarian angles.
+            </p>
+            <div class="gemini-prompt-grid">
+              <div class="gemini-prompt-card" onclick="sendStarterPrompt('Whistleblower retaliation patterns and why corporate hotlines expose informants')">
+                <div class="gemini-prompt-title"><span>🔬 Whistleblower retaliation patterns</span></div>
+                <div class="gemini-prompt-desc">Why corporate hotlines expose informants instead of protecting them.</div>
+              </div>
+              <div class="gemini-prompt-card" onclick="sendStarterPrompt('Why PE rollups fail in Year 1: operational integration and the destruction of goodwill')">
+                <div class="gemini-prompt-title"><span>💼 Why PE rollups fail in Year 1</span></div>
+                <div class="gemini-prompt-desc">How centralizing back-offices and destroying local autonomy murders deal multiples.</div>
+              </div>
+              <div class="gemini-prompt-card" onclick="sendStarterPrompt('Cross-border remote contractor wage theft and the digital erasure of behavioral friction')">
+                <div class="gemini-prompt-title"><span>🌐 Cross-border contractor wage theft</span></div>
+                <div class="gemini-prompt-desc">Digital distance and the psychological erasure of ethical friction in vendor desks.</div>
+              </div>
+              <div class="gemini-prompt-card" onclick="sendStarterPrompt('The Policy Wall Problem: Why pristine compliance binders create false boardroom security under commercial stress')">
+                <div class="gemini-prompt-title"><span>⚖️ The Policy Wall Problem</span></div>
+                <div class="gemini-prompt-desc">Why written codes fail 67% of frontline stress tests under commercial targets.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Signature ChatGPT / Gemini Floating Bottom Input Capsule -->
+      <div class="chat-bottom-wrapper">
+        <div class="chat-capsule">
+          <button type="button" class="capsule-btn-attach" onclick="openAddSourceModal()" title="Attach PDF, Word DOCX, Web Link, or Notes">
+            <span>📎</span>
+          </button>
+          <textarea id="chat-input-textarea" class="capsule-textarea" placeholder="Ask a research question, propose an angle, or request a format (e.g. 'make a carousel')..." rows="1" onkeydown="handleChatInputKey(event)" oninput="autoGrowChatInput(this)"></textarea>
+          <button type="button" id="chat-send-btn" class="capsule-btn-send" onclick="submitNotebookChat()" title="Send Message">
+            <span>➤</span>
+          </button>
+        </div>
+        <div class="capsule-status-caption">
+          <span id="chat-sources-status-pill">💡 0 active sources in prompt context (General forensic intelligence mode)</span>
+          <span style="opacity: 0.7;">Shift+Enter for newline • Powered by Gemini Flash</span>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- ==========================================================
+       VIEW 2: Saved Library & Content Cards Grid (Existing View)
+       ========================================================== -->
+  <div id="view-saved-library" style="display: none;" class="library-container">
 
     <!-- KPI Summary Ribbon -->
     <div class="kpi-ribbon" id="kpi-ribbon">
@@ -3060,16 +3389,12 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Filter & Search Toolbar -->
     <div class="filter-toolbar">
-      <div class="search-input-wrap" style="position: relative; display: flex; align-items: center;">
+      <div class="search-input-wrap">
         <span class="search-icon">🔍</span>
-        <input type="text" id="content-search-input" class="search-input" style="padding-right: 140px;" placeholder="Type a research question, premise, or keyword (press Enter to research)..." oninput="handleContentSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault(); executeResearchFromMainBar();}">
-        <button id="search-clear-btn" class="search-clear-btn" onclick="clearContentSearch()" style="display: none; right: 135px;">✕</button>
-        <button type="button" class="btn btn-xs" onclick="executeResearchFromMainBar()" style="position: absolute; right: 6px; background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border: 1px solid #38bdf8; font-weight: 700; padding: 6px 14px; border-radius: 6px; box-shadow: 0 0 10px rgba(14, 165, 233, 0.4); cursor: pointer;" title="Run Deep Research on this question or premise">
-          <span>🔬 Research This</span>
-        </button>
+        <input type="text" id="content-search-input" class="search-input" placeholder="Filter previously saved content pieces..." oninput="handleContentSearch()">
       </div>
 
-      <div class="filter-controls">
+      <div style="display: flex; gap: 8px;">
         <select id="tier-filter-select" class="select-filter" onchange="handleFilterChange()">
           <option value="ALL">All Formats</option>
           <option value="Research">🔬 Research Notebooks (Dossiers)</option>
@@ -3083,7 +3408,6 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
           <option value="ALL">All Voices</option>
           <option value="forensic-operator">Forensic Risk Operator</option>
           <option value="growth-dealmaker">Strategic Dealmaker</option>
-          <option value="custom">Custom Voice</option>
         </select>
 
         <select id="sort-order-select" class="select-filter" onchange="handleFilterChange()">
@@ -3109,10 +3433,91 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       <!-- Injected via JavaScript -->
     </div>
 
-  </main>
+  </div>
 
-  <!-- Content View Modal (Slide Deck & Post Copy) -->
-  <div class="modal-overlay" id="content-view-modal">
+  <!-- ==========================================================
+       MODAL: Add Reference Source to NotebookLM Studio
+       ========================================================== -->
+  <div class="modal-overlay" id="add-source-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">📁 Add Reference Source</div>
+        <button class="close-btn" onclick="closeAddSourceModal()">&times;</button>
+      </div>
+
+      <!-- 4 Modal Tabs -->
+      <div style="display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 14px;">
+        <button class="view-tab-btn active" id="src-tab-btn-file" onclick="switchAddSourceTab('file')">📄 Upload File</button>
+        <button class="view-tab-btn" id="src-tab-btn-url" onclick="switchAddSourceTab('url')">🌐 Web Links</button>
+        <button class="view-tab-btn" id="src-tab-btn-text" onclick="switchAddSourceTab('text')">✍️ Notes / Text</button>
+        <button class="view-tab-btn" id="src-tab-btn-crm" onclick="switchAddSourceTab('crm')">💼 CRM Lead Hook</button>
+      </div>
+
+      <!-- Tab 1: Upload File -->
+      <div id="src-tab-file" class="src-tab-pane">
+        <div class="drop-zone" id="file-drop-zone" onclick="document.getElementById('source-file-input').click()">
+          <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
+          <div style="font-weight: 700; color: #fff; font-size: 14px;">Drag & drop reference file here, or click to browse</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Supports PDF (.pdf), Word (.docx), Plain Text (.txt), Markdown (.md)</div>
+          <input type="file" id="source-file-input" style="display: none;" accept=".pdf,.docx,.doc,.txt,.md,.json,.csv" onchange="onSourceFileSelected(event)">
+        </div>
+        <div id="file-selected-info" style="display: none; margin-top: 12px; background: rgba(7, 11, 20, 0.6); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span id="file-selected-name" style="font-weight: 600; color: #38bdf8;"></span>
+            <span id="file-selected-size" style="color: var(--text-muted); font-size: 11.5px;"></span>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button class="btn" onclick="closeAddSourceModal()">Cancel</button>
+          <button class="btn btn-primary" id="upload-file-btn" onclick="uploadSourceFile()" style="font-weight: 700;" disabled>
+            <span>⬆️ Upload & Extract Text</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 2: Web Links -->
+      <div id="src-tab-url" class="src-tab-pane" style="display: none;">
+        <label class="form-label">Article or Webpage URLs (one per line):</label>
+        <textarea id="source-url-input" class="form-input" style="height: 120px;" placeholder="https://example.com/investigation-article&#10;https://sec.gov/news/press-release/..."></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button class="btn" onclick="closeAddSourceModal()">Cancel</button>
+          <button class="btn btn-primary" id="scrape-url-btn" onclick="scrapeSourceUrls()" style="font-weight: 700;">
+            <span>🌐 Scrape & Ingest Links</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 3: Paste Text / Notes -->
+      <div id="src-tab-text" class="src-tab-pane" style="display: none;">
+        <label class="form-label">Source / Note Title:</label>
+        <input type="text" id="source-note-title" class="form-input" placeholder="e.g. Interview Notes with Former Chief Risk Officer" style="margin-bottom: 10px;">
+        <label class="form-label">Raw Notes / Transcript Content:</label>
+        <textarea id="source-note-text" class="form-input" style="height: 140px;" placeholder="Paste raw notes, investigation findings, meeting transcripts, or case studies here..."></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+          <button class="btn" onclick="closeAddSourceModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveNoteSource()" style="font-weight: 700;">
+            <span>✍️ Add Note as Source</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab 4: CRM Lead Hook -->
+      <div id="src-tab-crm" class="src-tab-pane" style="display: none;">
+        <div style="margin-bottom: 10px;">
+          <input type="text" id="crm-leads-search" class="form-input" placeholder="🔍 Search across 72 Executives and 139 Podcasts..." oninput="filterCrmLeadsPicker(this.value)">
+        </div>
+        <div id="crm-leads-picker-container" style="max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+          <!-- Loaded via JS -->
+        </div>
+        <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+          <button class="btn" onclick="closeAddSourceModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content View Modal (Slide Deck & Post Copy for Saved Library) -->
+  <div class="modal-overlay" id="content-view-modal" style="display: none;">
     <div class="modal-card modal-card-xl">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -3122,481 +3527,92 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         <button class="close-btn" onclick="closeContentViewModal()">&times;</button>
       </div>
 
-      <!-- Campaign Pack Tab Navigation (Only visible for Campaign Packs) -->
-      <div class="campaign-tabs-strip" id="campaign-tabs-strip" style="display: none;">
-        <button class="campaign-tab-btn active" id="camp-tab-btn-article" onclick="switchCampaignTab('article')">📖 Long Article (2,000+ words)</button>
-        <button class="campaign-tab-btn" id="camp-tab-btn-posts" onclick="switchCampaignTab('posts')">📅 5-Day Post Series (Mon-Fri)</button>
-        <button class="campaign-tab-btn" id="camp-tab-btn-c1" onclick="switchCampaignTab('c1')">🗂️ Carousel 1: Problem Deck</button>
-        <button class="campaign-tab-btn" id="camp-tab-btn-c2" onclick="switchCampaignTab('c2')">🗂️ Carousel 2: Framework Deck</button>
-        <button class="campaign-tab-btn" id="camp-tab-btn-dossier" onclick="switchCampaignTab('dossier')">🔬 Research Dossier</button>
-        <button class="campaign-tab-btn" onclick="copyFullCampaignBundle()" style="margin-left: auto; background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(168, 85, 247, 0.25)); border-color: rgba(244, 63, 94, 0.5); color: #fb7185;">📋 Copy Entire Campaign Bundle</button>
+      <!-- Campaign Pack Tab Navigation -->
+      <div class="campaign-tabs-strip" id="campaign-tabs-strip" style="display: none; display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 10px; flex-wrap: wrap;">
+        <button class="view-tab-btn active" id="camp-tab-btn-article" onclick="switchCampaignTab('article')">📖 Long Article</button>
+        <button class="view-tab-btn" id="camp-tab-btn-posts" onclick="switchCampaignTab('posts')">📅 5-Day Posts</button>
+        <button class="view-tab-btn" id="camp-tab-btn-c1" onclick="switchCampaignTab('c1')">🗂️ Problem Deck</button>
+        <button class="view-tab-btn" id="camp-tab-btn-c2" onclick="switchCampaignTab('c2')">🗂️ Blueprint Deck</button>
+        <button class="view-tab-btn" id="camp-tab-btn-dossier" onclick="switchCampaignTab('dossier')">🔬 Dossier</button>
+        <button class="btn btn-xs" onclick="copyFullCampaignBundle()" style="margin-left: auto; color: #fb7185; border-color: rgba(244, 63, 94, 0.4);">📋 Copy Entire Bundle</button>
       </div>
 
       <!-- Campaign View: Long Article -->
       <div id="campaign-article-panel" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span class="campaign-word-badge" id="article-word-count-badge">📖 2,150 words</span>
-            <span style="font-size: 12px; color: var(--text-muted);">Modeled after master reference investigative articles</span>
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-primary btn-xs" onclick="copyCampaignArticle()">📋 Copy Long Article</button>
-            <button class="btn btn-xs" onclick="copyMarkdown()">⬇️ Copy Raw Markdown</button>
-          </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+          <span class="campaign-word-badge" id="article-word-count-badge" style="color: #38bdf8; font-weight: 700; font-size: 12px;">📖 2,150 words</span>
+          <button class="btn btn-primary btn-xs" onclick="copyCampaignArticle()">📋 Copy Long Article</button>
         </div>
         <textarea id="campaign-article-textarea" class="form-input" style="height: 380px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
       </div>
 
       <!-- Campaign View: 5-Day Post Series -->
       <div id="campaign-posts-panel" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
-          <div style="font-size: 12px; color: var(--text-muted);">
-            5 Strategic Daily Feed Posts (Mon-Fri) designed for mobile dwell time and comment engagement.
-          </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border);">
+          <div style="font-size: 12px; color: var(--text-muted);">5 Strategic Daily Feed Posts (Mon-Fri)</div>
           <button class="btn btn-primary btn-xs" onclick="copyAllPostsText()">📋 Copy All 5 Posts</button>
         </div>
-        <div id="campaign-posts-list" style="max-height: 420px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 12px;">
-          <!-- Injected via JavaScript -->
-        </div>
+        <div id="campaign-posts-list" style="max-height: 420px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 12px;"></div>
       </div>
 
       <!-- Campaign View: Carousel 1 -->
       <div id="campaign-c1-panel" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
-          <div>
-            <span style="font-weight: 700; color: #ffffff; font-size: 13px;">Carousel 1: Problem Deconstruction Deck</span>
-            <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 8px;">7-8 Slides: Hook, Safety Mirage, Hard Number, Operational Break, Board Questions</span>
-          </div>
-          <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(1)">📑 Copy Problem Deck Script</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-weight: 700; color: #fff; font-size: 13px;">Carousel 1: Problem Deconstruction Deck</span>
+          <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(1)">📑 Copy Deck Script</button>
         </div>
-        <div class="slide-deck-viewer" style="display: flex;">
-          <div class="slide-deck-nav">
-            <button class="btn btn-xs" onclick="navigateCarousel(1, -1)">◀ Prev Slide</button>
-            <span id="c1-slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 7</span>
-            <button class="btn btn-xs" onclick="navigateCarousel(1, 1)">Next Slide ▶</button>
-          </div>
-          <div class="slide-card-presentation">
-            <span class="slide-number-pill" id="c1-slide-number">#1</span>
-            <div class="slide-headline-text" id="c1-slide-headline">Headline</div>
-            <div class="slide-bullet-text" id="c1-slide-bullet">Bullet text</div>
-          </div>
+        <div class="inline-slide-display">
+          <span id="c1-slide-number" style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">#1</span>
+          <div id="c1-slide-headline" style="font-size: 15px; font-weight: 800; color: #fff;">Headline</div>
+          <div id="c1-slide-bullet" style="font-size: 13px; color: #cbd5e1;">Bullet text</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <button class="btn btn-xs" onclick="navigateCarousel(1, -1)">◀ Prev</button>
+          <span id="c1-slide-counter-text" style="font-size: 12px; color: #38bdf8; font-weight: 700;">Slide 1 of 7</span>
+          <button class="btn btn-xs" onclick="navigateCarousel(1, 1)">Next ▶</button>
         </div>
       </div>
 
       <!-- Campaign View: Carousel 2 -->
       <div id="campaign-c2-panel" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
-          <div>
-            <span style="font-weight: 700; color: #ffffff; font-size: 13px;">Carousel 2: Tactical Operator Framework Deck</span>
-            <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 8px;">7-8 Slides: Step-by-Step Operator Blueprint & Boardroom Diagnostic Checklist</span>
-          </div>
-          <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(2)">📑 Copy Framework Deck Script</button>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-weight: 700; color: #fff; font-size: 13px;">Carousel 2: Tactical Operator Framework Deck</span>
+          <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(2)">📑 Copy Deck Script</button>
         </div>
-        <div class="slide-deck-viewer" style="display: flex;">
-          <div class="slide-deck-nav">
-            <button class="btn btn-xs" onclick="navigateCarousel(2, -1)">◀ Prev Slide</button>
-            <span id="c2-slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 7</span>
-            <button class="btn btn-xs" onclick="navigateCarousel(2, 1)">Next Slide ▶</button>
-          </div>
-          <div class="slide-card-presentation">
-            <span class="slide-number-pill" id="c2-slide-number">#1</span>
-            <div class="slide-headline-text" id="c2-slide-headline">Headline</div>
-            <div class="slide-bullet-text" id="c2-slide-bullet">Bullet text</div>
-          </div>
+        <div class="inline-slide-display">
+          <span id="c2-slide-number" style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">#1</span>
+          <div id="c2-slide-headline" style="font-size: 15px; font-weight: 800; color: #fff;">Headline</div>
+          <div id="c2-slide-bullet" style="font-size: 13px; color: #cbd5e1;">Bullet text</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <button class="btn btn-xs" onclick="navigateCarousel(2, -1)">◀ Prev</button>
+          <span id="c2-slide-counter-text" style="font-size: 12px; color: #38bdf8; font-weight: 700;">Slide 1 of 7</span>
+          <button class="btn btn-xs" onclick="navigateCarousel(2, 1)">Next ▶</button>
         </div>
       </div>
 
       <!-- Campaign View: Research Dossier -->
       <div id="campaign-dossier-panel" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
-          <div style="font-size: 12px; color: var(--text-muted);">Empirical Evidence, Statistics, Forensic Quotes & Verified Citations</div>
-          <button class="btn btn-primary btn-xs" onclick="copyCampaignDossier()">📋 Copy Dossier</button>
-        </div>
-        <div id="campaign-dossier-content" style="max-height: 400px; overflow-y: auto; background: rgba(7, 11, 20, 0.4); padding: 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
-          <!-- Injected via JavaScript -->
-        </div>
-      </div>
-
-      <!-- Standard Single Tier View (For Tier 1 / 2 / 3 items) -->
-      <div id="standard-content-view">
-        <!-- Quick Action Copy Bar -->
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
-          <div style="font-size: 12px; color: var(--text-muted);">
-            Source: <span id="view-content-source-label" style="color: #ffffff; font-weight: 600;">Document</span>
-          </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn btn-primary btn-xs" onclick="copyFullPost()">📋 Copy Full Post</button>
-            <button class="btn btn-xs" id="btn-copy-slide-script" onclick="copySlideScript()" style="display: none;">📑 Copy Slide Script</button>
-            <button class="btn btn-xs" onclick="copyLinkedInPost()">💼 Copy for LinkedIn</button>
-            <button class="btn btn-xs" onclick="copyBriefing()">📄 Copy Briefing</button>
-            <button class="btn btn-xs" onclick="copyMarkdown()">⬇️ Copy Markdown</button>
-          </div>
-        </div>
-
-        <!-- Slide Deck Viewer (For Carousels) -->
-        <div class="slide-deck-viewer" id="slide-deck-container" style="display: none;">
-          <div class="slide-deck-nav">
-            <button class="btn btn-xs" onclick="navigateSlide(-1)">◀ Prev Slide</button>
-            <span id="slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 5</span>
-            <button class="btn btn-xs" onclick="navigateSlide(1)">Next Slide ▶</button>
-          </div>
-          <div class="slide-card-presentation">
-            <span class="slide-number-pill" id="slide-current-number">#1</span>
-            <div class="slide-headline-text" id="slide-current-headline">Headline</div>
-            <div class="slide-bullet-text" id="slide-current-bullet">Bullet text</div>
-          </div>
-        </div>
-
-        <!-- Content Markdown Reader -->
-        <div class="form-group" style="margin-top: 14px;">
-          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Formatted Content / Copy:</span>
-            <span style="font-size: 11px; color: var(--text-muted);">Ready to paste directly into LinkedIn or newsletter</span>
-          </label>
-          <textarea id="view-content-markdown" class="form-input" style="height: 320px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
+        <div class="dossier-callout-box">
+          <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Investigative Thesis</div>
+          <div id="campaign-dossier-thesis" style="font-size: 13.5px; font-weight: 600; color: #fff;"></div>
+          <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; margin-top: 8px;">Unseen Frontline Tension</div>
+          <div id="campaign-dossier-tension" style="font-size: 13px; color: #cbd5e1;"></div>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px;">
-        <button class="btn" onclick="closeContentViewModal()">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Research Dossier Modal -->
-  <div class="modal-overlay" id="dossier-modal">
-    <div class="modal-card modal-card-lg">
-      <div class="modal-header">
-        <div class="modal-title" id="dossier-modal-title">🔬 Verified Research Dossier</div>
-        <button class="close-btn" onclick="closeDossierModal()">&times;</button>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 10px; padding: 14px;">
-          <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Core Thesis:</div>
-          <div id="dossier-thesis" style="font-size: 14px; font-weight: 600; color: #ffffff; margin-top: 4px;"></div>
-          <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; margin-top: 10px;">Unseen Tension:</div>
-          <div id="dossier-tension" style="font-size: 13px; color: #cbd5e1; margin-top: 3px;"></div>
-        </div>
-
-        <div>
-          <div class="form-label" style="margin-bottom: 8px;">📊 Verified Facts & Data Points:</div>
-          <div id="dossier-data-points" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        </div>
-
-        <div>
-          <div class="form-label" style="margin-bottom: 8px;">💬 Forensic Quotes & Mental Models:</div>
-          <div id="dossier-quotes" style="display: flex; flex-direction: column; gap: 6px;"></div>
-        </div>
-
-        <div>
-          <div class="form-label" style="margin-bottom: 8px;">🔗 Citations & Sources:</div>
-          <div id="dossier-citations" style="display: flex; flex-direction: column; gap: 6px;"></div>
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px;">
-        <button class="btn btn-emerald" id="dossier-synthesize-btn" onclick="synthesizeFromDossierLinks()">
-          ✨ Synthesize New Post from These Links
-        </button>
-        <button class="btn" onclick="closeDossierModal()">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Deep Research Studio Modal (NotebookLM Mode) -->
-  <div class="modal-overlay" id="deep-research-modal">
-    <div class="modal-card modal-card-lg" style="max-width: 800px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 26px;">🔬</span>
-          <div>
-            <div class="modal-title" style="color: #38bdf8; display: flex; align-items: center; gap: 8px;">
-              <span>Deep Research Studio</span>
-              <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(14, 165, 233, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4);">NotebookLM Mode</span>
-            </div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-              Enter any single sentence, question, or hypothesis. Gemini investigates empirical studies, whistleblower/risk data points, and builds a comprehensive research notebook.
-            </div>
-          </div>
-        </div>
-        <button class="close-btn" onclick="closeDeepResearchModal()">&times;</button>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 14px;">
-        <!-- Research Inquiry Input -->
-        <div class="form-group">
-          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Research Question, Premise, or Hypothesis *</span>
-            <span style="font-size: 11px; color: #38bdf8;">A single sentence or inquiry is all that is needed</span>
-          </label>
-          <textarea id="deep-research-prompt" class="form-input" rows="3" placeholder="e.g. How do corporate whistleblower programs fail employees, and what is the real retaliation rate under operational pressure?" style="font-size: 13.5px; line-height: 1.5;"></textarea>
-        </div>
-
-        <!-- Quick Focus Angle Pills -->
-        <div class="form-group">
-          <label class="form-label" style="font-size: 11.5px; color: #94a3b8; margin-bottom: 6px;">
-            Quick-Add Focus Angles (Click to append to prompt):
-          </label>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;" id="focus-angle-pills">
-            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Retaliation Rates')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Retaliation Rates</button>
-            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Hotline Failures')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Hotline Failures</button>
-            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Behavioral Human Risk')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Behavioral Human Risk</button>
-            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ PE & M&A Diligence')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ PE & M&A Diligence</button>
-            <button type="button" class="btn btn-xs" onclick="appendFocusAngle('+ Cross-Border Supply Chains')" style="background: rgba(14, 165, 233, 0.15); border-color: rgba(56, 189, 248, 0.35); color: #7dd3fc;">+ Cross-Border Supply Chains</button>
-          </div>
-        </div>
-
-        <!-- Optional Seed URLs -->
-        <div class="form-group">
-          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Optional Seed URLs or Empirical Study Links:</span>
-            <span style="font-size: 11px; color: var(--text-muted);">Leave empty to let Gemini research open benchmarks</span>
-          </label>
-          <textarea id="deep-research-urls" class="form-input" rows="2" placeholder="https://... (Optional: paste one or more URLs to ingest as ground-truth context)"></textarea>
-        </div>
-
-        <!-- Author Voice Selector -->
-        <div class="form-row-2col">
-          <div class="form-group">
-            <label class="form-label">Author Voice Profile:</label>
-            <select id="deep-research-voice-select" class="form-input">
-              <option value="forensic-operator">Forensic Risk Operator (Rupert Evill - The Integrity Gap)</option>
-              <option value="growth-dealmaker">Strategic Dealmaker (M&A / Capital Risk)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Investigation Depth:</label>
-            <div style="font-size: 12px; color: #34d399; padding: 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px;">
-              ⚡ <strong>NotebookLM Deep Fact Mining</strong>: Extracts 5-7 verified statistics, unseen frontline tension, thesis, expert quotes, & citations.
-            </div>
-          </div>
-        </div>
-
-        <!-- Progress Spinner -->
-        <div id="deep-research-spinner" style="display: none; padding: 24px; text-align: center; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px;">
-          <div class="spinner" style="border-top-color: #38bdf8; margin: 0 auto 12px auto;"></div>
-          <div id="deep-research-status-text" style="font-size: 13.5px; font-weight: 700; color: #38bdf8;">
-            🔬 Investigating empirical benchmarks & whistleblower studies...
-          </div>
-          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">
-            Mining data points (ECI, SEC, ACFE, HBR), resolving unseen behavioral tensions, and compiling your research notebook...
-          </div>
-        </div>
-      </div>
-
-      <!-- Submit Action Buttons -->
-      <div id="deep-research-actions" style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; flex-wrap: wrap; gap: 8px;">
-        <button class="btn" onclick="closeDeepResearchModal()">Cancel</button>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-secondary" onclick="submitDeepResearch(false)" style="background: rgba(14, 165, 233, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: 700;">
-            <span>🔬 Build Research Notebook Only</span>
-          </button>
-          <button class="btn btn-primary" onclick="submitDeepResearch(true)" style="background: linear-gradient(135deg, #0284c7, #8b5cf6); border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);">
-            <span>⚡ Research + Auto-Generate Full Campaign Pack</span>
-          </button>
+      <!-- Standard Single Asset Fallback -->
+      <div id="single-asset-panel">
+        <textarea id="view-content-markdown" class="form-input" style="height: 380px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+          <button class="btn btn-primary btn-xs" onclick="copyMarkdown()">📋 Copy Content</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Research Notebook Viewer Modal -->
-  <div class="modal-overlay" id="research-notebook-modal">
-    <div class="modal-card modal-card-xl" style="max-width: 900px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-          <span class="tier-badge research">🔬 Research Notebook Dossier</span>
-          <div class="modal-title" id="rnb-modal-title" style="color: #ffffff;">Research Dossier</div>
-        </div>
-        <button class="close-btn" onclick="closeResearchNotebookModal()">&times;</button>
-      </div>
-
-      <!-- Action Top Bar -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(7, 11, 20, 0.6); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
-        <div style="font-size: 12px; color: var(--text-muted);">
-          Status: <span style="color: #38bdf8; font-weight: 600;">🔬 Researched (NotebookLM Mode)</span>
-          <span id="rnb-topic-label" style="margin-left: 8px; color: #94a3b8;"></span>
-        </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-primary btn-xs" id="rnb-generate-campaign-btn" onclick="triggerCampaignFromCurrentNotebook()" style="background: linear-gradient(135deg, #f43f5e, #a855f7); border-color: #fb7185; font-weight: 700; box-shadow: 0 0 12px rgba(244, 63, 94, 0.3);">
-            ⚡ Generate Campaign from this Notebook
-          </button>
-          <button class="btn btn-xs" onclick="copyNotebookExecutiveBriefing()">📋 Copy Briefing</button>
-          <button class="btn btn-xs" onclick="copyNotebookFullDossier()">⬇️ Copy Full Dossier</button>
-        </div>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 14px; max-height: 65vh; overflow-y: auto; padding-right: 4px;">
-        <!-- Core Thesis & Unseen Tension Card -->
-        <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(56, 189, 248, 0.05)); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px; padding: 14px;">
-          <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em;">Core Investigative Thesis</div>
-          <div id="rnb-thesis" style="font-size: 14px; font-weight: 600; color: #ffffff; margin-top: 5px; line-height: 1.5;"></div>
-          <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 12px;">Unseen Frontline Tension</div>
-          <div id="rnb-tension" style="font-size: 13px; color: #cbd5e1; margin-top: 4px; line-height: 1.5;"></div>
-        </div>
-
-        <!-- 400-Word Synthesized Executive Summary -->
-        <div>
-          <div class="form-label" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-size: 12px; font-weight: 700; color: #ffffff;">📖 Synthesized Executive Research Briefing:</span>
-            <span id="rnb-word-count-badge" style="font-size: 11px; color: #38bdf8; font-weight: 600;">~400 Words</span>
-          </div>
-          <div id="rnb-executive-summary" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 14px; font-size: 13px; color: #e2e8f0; line-height: 1.7; white-space: pre-wrap;"></div>
-        </div>
-
-        <!-- Verified Facts & Empirical Proof Points -->
-        <div>
-          <div class="form-label" style="margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #ffffff;">
-            📊 Verified Empirical Facts & Benchmarks (ECI, SEC, ACFE, HBR):
-          </div>
-          <div id="rnb-data-points" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        </div>
-
-        <!-- Forensic Quotes & Operator Mental Models -->
-        <div>
-          <div class="form-label" style="margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #ffffff;">
-            💬 Forensic Quotes & Mental Models:
-          </div>
-          <div id="rnb-quotes" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        </div>
-
-        <!-- Citations -->
-        <div>
-          <div class="form-label" style="margin-bottom: 8px; font-size: 12px; font-weight: 700; color: #ffffff;">
-            🔗 Source Citations & References:
-          </div>
-          <div id="rnb-citations" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px;">
-        <button class="btn btn-primary" onclick="triggerCampaignFromCurrentNotebook()" style="background: linear-gradient(135deg, #0284c7, #8b5cf6); border-color: #38bdf8; font-weight: 700;">
-          ⚡ Transform into Full Campaign Pack
-        </button>
-        <button class="btn" onclick="closeResearchNotebookModal()">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Synthesize New Content Modal -->
-  <div class="modal-overlay" id="new-content-modal">
-    <div class="modal-card modal-card-lg">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title">✨ Synthesize New Content</div>
-          <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-            Synthesize PDFs, web URLs, briefs, or CRM lead angles into ready-to-publish content conditioned on author voices.
-          </div>
-        </div>
-        <button class="close-btn" onclick="closeNewContentModal()">&times;</button>
-      </div>
-
-      <!-- 4 Input Mode Tabs -->
-      <div>
-        <label class="form-label">Select Knowledge / Research Source:</label>
-        <div class="modal-tabs-header">
-          <button class="modal-tab-btn active" id="tab-src-pdf" onclick="switchContentSourceTab('pdf')">📄 Upload PDF</button>
-          <button class="modal-tab-btn" id="tab-src-url" onclick="switchContentSourceTab('url')">🌐 Web URL</button>
-          <button class="modal-tab-btn" id="tab-src-text" onclick="switchContentSourceTab('text')">✍️ Paste Text / .MD</button>
-          <button class="modal-tab-btn" id="tab-src-lead" onclick="switchContentSourceTab('lead')">🎯 Select Lead Hook</button>
-        </div>
-      </div>
-
-      <!-- PDF Tab Panel -->
-      <div id="panel-src-pdf" style="display: block;">
-        <div class="form-group">
-          <label class="form-label">Upload PDF Document / Whitepaper</label>
-          <input type="file" id="gen-pdf-file" accept=".pdf" class="form-input" style="padding: 14px; background: rgba(7, 11, 20, 0.4); border: 2px dashed var(--border);">
-          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Supports industry reports, academic papers, regulatory guidance, and pitch decks.</div>
-        </div>
-      </div>
-
-      <!-- URL Tab Panel -->
-      <div id="panel-src-url" style="display: none;">
-        <div class="form-group">
-          <label class="form-label">Article, Report, or Research URLs (Single or Multi-URL) *</label>
-          <textarea id="gen-url-input" class="form-input" rows="3" placeholder="Paste one or more article/research URLs (one per line)..."></textarea>
-          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Paste multiple links separated by newlines or commas. Gemini 2.5 Flash ingests and cross-references each into a synthesized dossier.</div>
-        </div>
-        <div class="form-group" style="margin-top: 10px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <label class="form-label" style="margin: 0; font-size: 11.5px; color: #38bdf8;">📌 Quick-Insert Researched Links:</label>
-            <span style="font-size: 10.5px; color: var(--text-muted);">Click any pill to append to URL box</span>
-          </div>
-          <div id="researched-links-pills" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 110px; overflow-y: auto; padding: 4px 0;">
-            <span style="font-size: 11px; color: var(--text-muted);">Loading links...</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Text Tab Panel -->
-      <div id="panel-src-text" style="display: none;">
-        <div class="form-group">
-          <label class="form-label">Executive Briefing, Speech Transcript, or Raw Markdown</label>
-          <textarea id="gen-text-input" class="form-input" rows="5" placeholder="Paste report excerpts, interview transcripts, or rough thesis bullets..."></textarea>
-        </div>
-      </div>
-
-      <!-- Lead Tab Panel -->
-      <div id="panel-src-lead" style="display: none;">
-        <div class="form-row-2col">
-          <div class="form-group">
-            <label class="form-label">Pipeline Source</label>
-            <select id="gen-lead-pipeline" class="form-input" onchange="populateLeadDropdown()">
-              <option value="media">🎙️ Podcast & Media Host</option>
-              <option value="exec">💼 Executive & Dealmaker</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Select CRM Target Lead</label>
-            <select id="gen-lead-id" class="form-input"></select>
-          </div>
-        </div>
-      </div>
-
-      <!-- Generation Settings -->
-      <div class="form-row-2col">
-        <div class="form-group">
-          <label class="form-label">Content Tier Format *</label>
-          <select id="gen-tier-select" class="form-input" style="font-weight: 600;">
-            <option value="Full Campaign Distribution Pack" selected>📦 Full Campaign Distribution Pack (1 Long Article + 5 Daily Posts + 2 Carousels)</option>
-            <option value="Tier 1: Short-Form Carousel">Tier 1: Swipeable Carousel & Companion Post</option>
-            <option value="Tier 2: In-Feed Long-Form Essay">Tier 2: In-Feed Long-Form Essay</option>
-            <option value="Tier 3: LinkedIn Article">Tier 3: Executive Briefing / Article</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Author Voice Profile</label>
-          <select id="gen-voice-select" class="form-input">
-            <option value="forensic-operator">Rupert / Forensic Risk Operator (Contrarian, Zero Fluff)</option>
-            <option value="growth-dealmaker">Strategic Dealmaker & M&A Operator (Commercially Sharp)</option>
-            <option value="custom">Custom Voice</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Working Title / Core Topic Angle (Optional)</label>
-        <input type="text" id="gen-topic-input" class="form-input" placeholder="e.g. Why Traditional Compliance Creates Fraud Risk">
-      </div>
-
-      <div class="spinner-box" id="gen-spinner">
-        <div class="spinner-icon">⚡</div>
-        <div>Mining research facts, extracting quotes, and conditioning voice output...</div>
-        <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Takes about 2 to 4 seconds.</div>
-      </div>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px;" id="gen-actions">
-        <button class="btn" onclick="closeNewContentModal()">Cancel</button>
-        <button class="btn btn-emerald" onclick="generateContent()" style="padding: 9px 20px;">
-          <span>⚡ Generate Content & Dossier</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Element -->
-  <div id="toast">Saved</div>
+  <!-- Toast Notification -->
+  <div id="toast">Copied to clipboard!</div>
 
   <!-- Client JavaScript -->
   <script>
@@ -3608,38 +3624,197 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     let voiceFilter = 'ALL';
     let searchQuery = '';
     let sortOrder = 'newest';
+    let researchedLinks = [];
+    let crmLeadsSources = [];
+
+    // NotebookLM Studio State
+    let currentMainView = 'studio';
+    let notebookSources = [];
+    let notebookChatMessages = [];
+    let isChatStreaming = false;
+    let selectedFileForUpload = null;
     let currentModalContentItem = null;
-    let currentSlideIndex = 0;
     let currentC1Index = 0;
     let currentC2Index = 0;
     let currentCampaignTab = 'article';
-    let currentSourceTab = 'pdf';
-    let researchedLinks = [];
+    let isSidebarCollapsed = false;
 
-    async function loadResearchedLinks() {
-      try {
-        const res = await fetch('/api/content/researched-links');
-        researchedLinks = await res.json();
-        renderResearchedLinksPills();
-      } catch (e) {
-        console.error('Failed to load researched links', e);
+    // Sidebar Toggle
+    function toggleSourcesSidebar() {
+      const sidebar = document.getElementById('sources-sidebar');
+      if (sidebar) {
+        isSidebarCollapsed = !isSidebarCollapsed;
+        if (isSidebarCollapsed) {
+          sidebar.classList.add('collapsed');
+        } else {
+          sidebar.classList.remove('collapsed');
+        }
       }
     }
 
-    function renderResearchedLinksPills() {
-      const container = document.getElementById('researched-links-pills');
+    // View Switcher: Studio vs Saved Library
+    function switchMainView(view) {
+      currentMainView = view;
+      const studioView = document.getElementById('view-notebooklm-studio');
+      const libraryView = document.getElementById('view-saved-library');
+      const tabStudio = document.getElementById('tab-studio-view');
+      const tabLibrary = document.getElementById('tab-library-view');
+
+      if (view === 'studio') {
+        if (studioView) studioView.style.display = 'flex';
+        if (libraryView) libraryView.style.display = 'none';
+        if (tabStudio) tabStudio.classList.add('active');
+        if (tabLibrary) tabLibrary.classList.remove('active');
+      } else {
+        if (studioView) studioView.style.display = 'none';
+        if (libraryView) libraryView.style.display = 'block';
+        if (tabStudio) tabStudio.classList.remove('active');
+        if (tabLibrary) tabLibrary.classList.add('active');
+        renderContentGrid();
+      }
+    }
+
+    // Load initial page data
+    async function loadContentPageData() {
+      try {
+        const [resContent, resVoices, resMedia, resExec, resLinks] = await Promise.all([
+          fetch('/api/content').then(r => r.json()).catch(() => []),
+          fetch('/api/voices').then(r => r.json()).catch(() => []),
+          fetch('/api/leads').then(r => r.json()).catch(() => []),
+          fetch('/api/executives').then(r => r.json()).catch(() => []),
+          fetch('/api/content/researched-links').then(r => r.json()).catch(() => [])
+        ]);
+
+        contentItems = Array.isArray(resContent) ? resContent : [];
+        voiceProfiles = Array.isArray(resVoices) ? resVoices : [];
+        mediaLeads = Array.isArray(resMedia) ? resMedia : [];
+        execLeads = Array.isArray(resExec) ? resExec : [];
+        researchedLinks = Array.isArray(resLinks) ? resLinks : [];
+
+        updateCountersAndPills();
+        renderQuickResearchedLinks();
+        renderSourcesList();
+        renderContentGrid();
+        loadCrmLeadsForSources();
+      } catch (err) {
+        console.error('Error loading content data:', err);
+      }
+    }
+
+    function updateCountersAndPills() {
+      const total = contentItems.length;
+      const tResearch = contentItems.filter(c => (c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')).length;
+      const tCamp = contentItems.filter(c => ((c.tier || '').toLowerCase().includes('campaign') || !!c.campaign_pack) && !(c.tier || '').toLowerCase().includes('research')).length;
+      const t1 = contentItems.filter(c => (c.tier || '').includes('Tier 1')).length;
+      const t2 = contentItems.filter(c => (c.tier || '').includes('Tier 2')).length;
+      const t3 = contentItems.filter(c => (c.tier || '').includes('Tier 3') || (c.tier || '').toLowerCase().includes('article')).length;
+      const facts = contentItems.reduce((acc, c) => acc + ((c.research_dossier && c.research_dossier.data_points) ? c.research_dossier.data_points.length : 0), 0);
+
+      document.getElementById('library-tab-count').innerText = `(${total})`;
+      document.getElementById('kpi-total-content').innerText = total;
+      document.getElementById('kpi-research-count').innerText = tResearch;
+      document.getElementById('kpi-campaign-count').innerText = tCamp;
+      document.getElementById('kpi-t1-count').innerText = t1;
+      document.getElementById('kpi-t2-count').innerText = t2;
+      document.getElementById('kpi-t3-count').innerText = t3;
+      document.getElementById('kpi-facts-count').innerText = facts;
+
+      document.getElementById('pill-all-count').innerText = `(${total})`;
+      document.getElementById('pill-research-count').innerText = `(${tResearch})`;
+      document.getElementById('pill-campaign-count').innerText = `(${tCamp})`;
+      document.getElementById('pill-t1-count').innerText = `(${t1})`;
+      document.getElementById('pill-t2-count').innerText = `(${t2})`;
+      document.getElementById('pill-t3-count').innerText = `(${t3})`;
+    }
+
+    // ==========================================================
+    // Sources Management
+    // ==========================================================
+    function getSourceIcon(type) {
+      if (type === 'pdf') return '📄';
+      if (type === 'docx' || type === 'doc') return '📝';
+      if (type === 'url') return '🌐';
+      if (type === 'lead') return '💼';
+      if (type === 'note') return '✍️';
+      return '📄';
+    }
+
+    function renderSourcesList() {
+      const container = document.getElementById('sources-list');
+      const badge = document.getElementById('active-sources-count');
+      const statusPill = document.getElementById('chat-sources-status-pill');
       if (!container) return;
-      if (!researchedLinks || researchedLinks.length === 0) {
-        container.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No researched links saved in dossiers yet.</span>';
+
+      const activeCount = notebookSources.filter(s => s.active !== false).length;
+      if (badge) badge.innerText = `${activeCount} active`;
+      if (statusPill) {
+        if (activeCount > 0) {
+          statusPill.innerHTML = `<span>📌 <strong>${activeCount} reference source${activeCount > 1 ? 's' : ''}</strong> active in session context</span>`;
+        } else {
+          statusPill.innerHTML = `<span>💡 0 active sources (General forensic intelligence mode)</span>`;
+        }
+      }
+
+      if (notebookSources.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 24px 12px; color: var(--text-muted); font-size: 12px;">
+            <div style="font-size: 22px; margin-bottom: 6px;">📂</div>
+            No reference sources added yet.<br>
+            <span style="font-size: 11px; opacity: 0.8;">Upload PDFs, DOCX, scrape URLs, or hook CRM leads.</span>
+          </div>
+        `;
         return;
       }
-      container.innerHTML = researchedLinks.slice(0, 16).map(l => {
+
+      container.innerHTML = notebookSources.map(s => {
+        const isActive = s.active !== false;
+        return `
+          <div class="source-item-card ${isActive ? 'active' : 'inactive'}" id="src-card-${s.id}">
+            <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleSourceActive('${s.id}')" title="Include in research context">
+            <div class="source-icon">${getSourceIcon(s.type)}</div>
+            <div class="source-details">
+              <div class="source-name-text" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
+              <div class="source-meta-text">
+                <span>${s.size_label || (s.text ? s.text.length + ' chars' : 'Doc')}</span>
+                <span>•</span>
+                <span style="text-transform: uppercase;">${s.type}</span>
+              </div>
+            </div>
+            <button class="source-del-icon" onclick="removeSource('${s.id}')" title="Remove source">✕</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleSourceActive(sourceId) {
+      const src = notebookSources.find(s => s.id === sourceId);
+      if (src) {
+        src.active = src.active === false ? true : false;
+        renderSourcesList();
+      }
+    }
+
+    function removeSource(sourceId) {
+      notebookSources = notebookSources.filter(s => s.id !== sourceId);
+      renderSourcesList();
+      showToast('Source removed from session');
+    }
+
+    function renderQuickResearchedLinks() {
+      const container = document.getElementById('quick-researched-links');
+      if (!container) return;
+      if (!researchedLinks || researchedLinks.length === 0) {
+        container.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No researched links found in saved dossiers.</span>';
+        return;
+      }
+
+      container.innerHTML = researchedLinks.slice(0, 12).map(l => {
         let hostname = '';
         try { hostname = new URL(l.url).hostname.replace('www.', ''); } catch (e) { hostname = l.url; }
         const displayTitle = l.title && l.title !== l.url ? l.title : hostname;
-        const truncated = displayTitle.length > 30 ? displayTitle.substring(0, 28) + '…' : displayTitle;
+        const truncated = displayTitle.length > 24 ? displayTitle.substring(0, 22) + '…' : displayTitle;
         return `
-          <button type="button" class="btn-xs" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #7dd3fc; border-radius: 12px; padding: 3px 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px;" onclick="appendResearchedUrl('${escapeHtml(l.url)}')" title="${escapeHtml(l.title || l.url)}">
+          <button type="button" class="btn-xs" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #7dd3fc; border-radius: 12px; padding: 3px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px;" onclick="addQuickCitationSource('${escapeHtml(l.url)}', '${escapeHtml(l.title || hostname)}')" title="${escapeHtml(l.title || l.url)}">
             <span>🔗 ${escapeHtml(truncated)}</span>
             <span style="opacity: 0.6; font-size: 9px;">+Add</span>
           </button>
@@ -3647,240 +3822,670 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       }).join('');
     }
 
-    function appendResearchedUrl(url) {
-      const textarea = document.getElementById('gen-url-input');
-      if (!textarea) return;
-      const current = textarea.value.trim();
-      const existing = current ? current.split('\n').map(u => u.trim()).filter(Boolean) : [];
-      if (!existing.includes(url)) {
-        existing.push(url);
-        textarea.value = existing.join('\n');
-        showToast('Link added to synthesis list');
-      } else {
-        showToast('Link already in list');
+    async function addQuickCitationSource(url, title) {
+      const existing = notebookSources.find(s => s.url === url);
+      if (existing) {
+        showToast('Link already active as source');
+        return;
+      }
+      showToast('Scraping citation link...');
+      try {
+        const res = await fetch('/api/content/notebook/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
+        const data = await res.json();
+        if (data.id) {
+          data.active = true;
+          notebookSources.unshift(data);
+          renderSourcesList();
+          showToast(`Added source: ${data.name.substring(0, 30)}`);
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Error scraping citation link');
       }
     }
 
-    async function loadContentPageData() {
+    // ==========================================================
+    // Add Source Modal Tabs & Handlers
+    // ==========================================================
+    function openAddSourceModal() {
+      const modal = document.getElementById('add-source-modal');
+      if (modal) modal.style.display = 'flex';
+      switchAddSourceTab('file');
+    }
+
+    function closeAddSourceModal() {
+      const modal = document.getElementById('add-source-modal');
+      if (modal) modal.style.display = 'none';
+      selectedFileForUpload = null;
+      const fileInfo = document.getElementById('file-selected-info');
+      if (fileInfo) fileInfo.style.display = 'none';
+      const uploadBtn = document.getElementById('upload-file-btn');
+      if (uploadBtn) uploadBtn.disabled = true;
+    }
+
+    function switchAddSourceTab(tab) {
+      ['file', 'url', 'text', 'crm'].forEach(t => {
+        const pane = document.getElementById(`src-tab-${t}`);
+        const btn = document.getElementById(`src-tab-btn-${t}`);
+        if (pane) pane.style.display = t === tab ? 'block' : 'none';
+        if (btn) {
+          if (t === tab) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+      if (tab === 'crm') {
+        renderCrmLeadsPicker();
+      }
+    }
+
+    function onSourceFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedFileForUpload = file;
+      const fileInfo = document.getElementById('file-selected-info');
+      const fileName = document.getElementById('file-selected-name');
+      const fileSize = document.getElementById('file-selected-size');
+      const uploadBtn = document.getElementById('upload-file-btn');
+
+      if (fileInfo && fileName && fileSize && uploadBtn) {
+        fileName.innerText = file.name;
+        fileSize.innerText = `${(file.size / 1024).toFixed(1)} KB`;
+        fileInfo.style.display = 'block';
+        uploadBtn.disabled = false;
+      }
+    }
+
+    const dropZone = document.getElementById('file-drop-zone');
+    if (dropZone) {
+      ['dragenter', 'dragover'].forEach(name => {
+        dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+      });
+      dropZone.addEventListener('drop', (e) => {
+        if (e.dataTransfer.files.length) {
+          onSourceFileSelected({ target: { files: e.dataTransfer.files } });
+        }
+      });
+    }
+
+    async function uploadSourceFile() {
+      if (!selectedFileForUpload) return;
+      const btn = document.getElementById('upload-file-btn');
+      btn.disabled = true;
+      btn.innerText = 'Extracting Text...';
+
+      const formData = new FormData();
+      formData.append('file', selectedFileForUpload);
+
       try {
-        const [resContent, resVoices, resMedia, resExec] = await Promise.all([
-          fetch('/api/content').then(r => r.json()).catch(() => []),
-          fetch('/api/voices').then(r => r.json()).catch(() => []),
-          fetch('/api/leads').then(r => r.json()).catch(() => []),
-          fetch('/api/executives').then(r => r.json()).catch(() => [])
-        ]);
-
-        contentItems = Array.isArray(resContent) ? resContent : [];
-        voiceProfiles = Array.isArray(resVoices) ? resVoices : [];
-        mediaLeads = Array.isArray(resMedia) ? resMedia : [];
-        execLeads = Array.isArray(resExec) ? resExec : [];
-
-        updateCountersAndPills();
-        populateLeadDropdown();
-        renderContentGrid();
-        loadResearchedLinks();
-
-        // Check if navigated from CRM with source_lead
-        const urlParams = new URLSearchParams(window.location.search);
-        const sourceLead = urlParams.get('source_lead');
-        const pipeline = urlParams.get('pipeline') || 'media';
-        if (sourceLead) {
-          openCreateModal();
-          switchContentSourceTab('lead');
-          const pipeSelect = document.getElementById('gen-lead-pipeline');
-          if (pipeSelect) {
-            pipeSelect.value = pipeline;
-            populateLeadDropdown();
-          }
-          const leadSelect = document.getElementById('gen-lead-id');
-          if (leadSelect) {
-            leadSelect.value = sourceLead;
-          }
+        const res = await fetch('/api/content/notebook/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.id) {
+          data.active = true;
+          notebookSources.unshift(data);
+          renderSourcesList();
+          closeAddSourceModal();
+          showToast(`Extracted ${data.name} (${data.size_label})`);
+        } else {
+          showToast(data.error || 'Upload error');
         }
       } catch (err) {
-        console.error('Error loading content data:', err);
-        showToast('Error loading content data');
+        console.error(err);
+        showToast('Error uploading and parsing file');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⬆️ Upload & Extract Text</span>';
       }
     }
 
-    function updateCountersAndPills() {
-      const total = contentItems.length;
-      const tResearch = contentItems.filter(c => (c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')).length;
-      const tCamp = contentItems.filter(c => ((c.tier || '').toLowerCase().includes('campaign') || !!c.campaign_pack) && !(c.tier || '').toLowerCase().includes('research') && !(c.tier || '').includes('🔬')).length;
-      const t1 = contentItems.filter(c => !((c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')) && (c.tier || '').includes('Tier 1')).length;
-      const t2 = contentItems.filter(c => !((c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')) && (c.tier || '').includes('Tier 2')).length;
-      const t3 = contentItems.filter(c => !((c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬')) && ((c.tier || '').includes('Tier 3') || (c.tier || '').toLowerCase().includes('article')) && !(c.tier || '').toLowerCase().includes('campaign')).length;
-      const facts = contentItems.reduce((acc, c) => acc + ((c.research_dossier && c.research_dossier.data_points) ? c.research_dossier.data_points.length : 0), 0);
-
-      document.getElementById('kpi-total-content').innerText = total;
-      const kpiResearch = document.getElementById('kpi-research-count');
-      if (kpiResearch) kpiResearch.innerText = tResearch;
-      const kpiCamp = document.getElementById('kpi-campaign-count');
-      if (kpiCamp) kpiCamp.innerText = tCamp;
-      document.getElementById('kpi-t1-count').innerText = t1;
-      document.getElementById('kpi-t2-count').innerText = t2;
-      document.getElementById('kpi-t3-count').innerText = t3;
-      document.getElementById('kpi-facts-count').innerText = facts;
-
-      document.getElementById('pill-all-count').innerText = `(${total})`;
-      const pillResearch = document.getElementById('pill-research-count');
-      if (pillResearch) pillResearch.innerText = `(${tResearch})`;
-      const pillCamp = document.getElementById('pill-campaign-count');
-      if (pillCamp) pillCamp.innerText = `(${tCamp})`;
-      document.getElementById('pill-t1-count').innerText = `(${t1})`;
-      document.getElementById('pill-t2-count').innerText = `(${t2})`;
-      document.getElementById('pill-t3-count').innerText = `(${t3})`;
-    }
-
-    function renderContentGrid() {
-      const container = document.getElementById('content-cards-container');
-      let filtered = contentItems.slice();
-
-      // Tier filter
-      if (tierFilter !== 'ALL') {
-        if (tierFilter.toLowerCase().includes('research')) {
-          filtered = filtered.filter(c => (c.tier || '').toLowerCase().includes('research') || (c.tier || '').includes('🔬'));
-        } else {
-          filtered = filtered.filter(c => (c.tier || '').toLowerCase().includes(tierFilter.toLowerCase()));
-        }
-      }
-
-      // Voice filter
-      if (voiceFilter !== 'ALL') {
-        filtered = filtered.filter(c => (c.voice_profile_id || '').toLowerCase() === voiceFilter.toLowerCase());
-      }
-
-      // Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(c => {
-          const title = (c.title || '').toLowerCase();
-          const topic = (c.topic || '').toLowerCase();
-          const text = (c.content_markdown || '').toLowerCase();
-          const thesis = ((c.research_dossier && c.research_dossier.thesis) || '').toLowerCase();
-          return title.includes(q) || topic.includes(q) || text.includes(q) || thesis.includes(q);
-        });
-      }
-
-      // Sort
-      if (sortOrder === 'alpha') {
-        filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-      } else if (sortOrder === 'oldest') {
-        filtered.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
-      } else {
-        filtered.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-      }
-
-      if (filtered.length === 0) {
-        if (searchQuery.trim()) {
-          const qRaw = searchQuery.trim();
-          container.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: rgba(14, 165, 233, 0.05); border: 1px dashed rgba(56, 189, 248, 0.4); border-radius: 12px;">
-              <div style="font-size: 34px; margin-bottom: 10px;">🔬</div>
-              <div style="font-size: 16px; font-weight: 700; color: #ffffff;" id="empty-search-header-msg"></div>
-              <div style="font-size: 13px; color: var(--text-muted); margin: 6px 0 16px 0;">Turn this question or premise into an autonomous deep research dossier.</div>
-              <button type="button" class="btn btn-primary" id="btn-empty-research-action" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35); padding: 10px 22px;">
-                <span>🔬 Run Deep Research on this Topic</span>
-              </button>
-            </div>
-          `;
-          const msgEl = document.getElementById('empty-search-header-msg');
-          if (msgEl) msgEl.innerText = 'No saved content matches: ' + qRaw;
-          const btnEl = document.getElementById('btn-empty-research-action');
-          if (btnEl) btnEl.onclick = () => launchResearchFromSearch(qRaw);
-        } else {
-          container.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px;">
-              <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
-              <div style="font-size: 15px; font-weight: 700; color: #ffffff;">No content pieces match this filter</div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Click "🔬 Deep Research Studio" or "✨ Synthesize New Content" to create research-backed copy.</div>
-            </div>
-          `;
-        }
+    async function scrapeSourceUrls() {
+      const textarea = document.getElementById('source-url-input');
+      const btn = document.getElementById('scrape-url-btn');
+      const rawUrls = (textarea ? textarea.value : '').trim();
+      if (!rawUrls) {
+        showToast('Please enter at least one URL');
         return;
       }
 
-      container.innerHTML = filtered.map(item => {
-        const isResearch = (item.tier || '').toLowerCase().includes('research') || (item.tier || '').includes('🔬');
-        const isCamp = !isResearch && ((item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack);
-        const isT1 = !isResearch && !isCamp && (item.tier || '').includes('Tier 1');
-        const isT2 = !isResearch && !isCamp && (item.tier || '').includes('Tier 2');
-        const tierClass = isResearch ? 'research' : (isCamp ? 'campaign' : (isT1 ? 't1' : (isT2 ? 't2' : 't3')));
-        const tierLabel = isResearch ? '🔬 Research Notebook' : (isCamp ? '📦 Campaign Pack' : (item.tier || 'Content'));
-        const factsCount = (item.research_dossier && item.research_dossier.data_points) ? item.research_dossier.data_points.length : 0;
-        const citesCount = (item.research_dossier && item.research_dossier.citations) ? item.research_dossier.citations.length : 0;
-        const quotesCount = (item.research_dossier && item.research_dossier.quotes) ? item.research_dossier.quotes.length : 0;
-        const slidesCount = Array.isArray(item.slides_outline) ? item.slides_outline.length : 0;
-        const wordCount = (item.article || item.content_markdown || '').trim().split(/\s+/).filter(Boolean).length;
+      btn.disabled = true;
+      btn.innerText = 'Scraping articles...';
 
-        let actionsHtml = '';
-        if (isResearch) {
-          actionsHtml = `
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button class="btn btn-secondary btn-xs" onclick="openResearchNotebookModal('${escapeHtml(item.id)}')" style="background: rgba(14, 165, 233, 0.2); border-color: #38bdf8; color: #7dd3fc; font-weight: 600;">📖 Open Research Notebook</button>
-              <button class="btn btn-primary btn-xs" onclick="generateCampaignFromNotebook('${escapeHtml(item.id)}')" style="background: linear-gradient(135deg, #f43f5e, #a855f7); border-color: #fb7185; font-weight: 600;">⚡ Generate Campaign</button>
-            </div>
-            <button class="btn btn-danger btn-xs" onclick="deleteContentItem('${escapeHtml(item.id)}')">🗑️</button>
-          `;
-        } else {
-          actionsHtml = `
-            <div style="display: flex; gap: 6px;">
-              <button class="btn btn-primary btn-xs" onclick="openContentViewModal('${escapeHtml(item.id)}')">👁️ View / Copy</button>
-              <button class="btn btn-xs" onclick="openDossierModal('${escapeHtml(item.id)}')">🔬 Dossier</button>
-            </div>
-            <button class="btn btn-danger btn-xs" onclick="deleteContentItem('${escapeHtml(item.id)}')">🗑️</button>
-          `;
+      const urls = rawUrls.split(/[\n,]+/).map(u => u.trim()).filter(u => u.startsWith('http'));
+      if (urls.length === 0) {
+        showToast('No valid http/https URLs found');
+        btn.disabled = false;
+        btn.innerHTML = '<span>🌐 Scrape & Ingest Links</span>';
+        return;
+      }
+
+      let addedCount = 0;
+      for (const u of urls) {
+        try {
+          const res = await fetch('/api/content/notebook/scrape', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: u })
+          });
+          const data = await res.json();
+          if (data.id) {
+            data.active = true;
+            notebookSources.unshift(data);
+            addedCount++;
+          }
+        } catch (e) {
+          console.error(e);
         }
+      }
 
+      renderSourcesList();
+      closeAddSourceModal();
+      showToast(`Scraped and ingested ${addedCount} link source(s)!`);
+      if (textarea) textarea.value = '';
+      btn.disabled = false;
+      btn.innerHTML = '<span>🌐 Scrape & Ingest Links</span>';
+    }
+
+    function saveNoteSource() {
+      const titleInput = document.getElementById('source-note-title');
+      const textInput = document.getElementById('source-note-text');
+      const title = (titleInput ? titleInput.value : '').trim() || 'Custom Research Note';
+      const text = (textInput ? textInput.value : '').trim();
+
+      if (!text) {
+        showToast('Please paste note or transcript text');
+        return;
+      }
+
+      const noteSource = {
+        id: `src_note_${Date.now()}_${Math.floor(Math.random()*1000)}`,
+        name: title,
+        type: 'note',
+        text: text,
+        size_label: `${text.length.toLocaleString()} chars`,
+        active: true
+      };
+
+      notebookSources.unshift(noteSource);
+      renderSourcesList();
+      closeAddSourceModal();
+      if (titleInput) titleInput.value = '';
+      if (textInput) textInput.value = '';
+      showToast(`Added note source: ${title}`);
+    }
+
+    async function loadCrmLeadsForSources() {
+      try {
+        const res = await fetch('/api/content/notebook/crm-leads');
+        crmLeadsSources = await res.json();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderCrmLeadsPicker(query = '') {
+      const container = document.getElementById('crm-leads-picker-container');
+      if (!container) return;
+      if (!crmLeadsSources || crmLeadsSources.length === 0) {
+        container.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 12px;">Loading CRM leads...</div>';
+        return;
+      }
+
+      const q = query.toLowerCase().trim();
+      const filtered = q
+        ? crmLeadsSources.filter(l => (l.name || '').toLowerCase().includes(q) || (l.company || '').toLowerCase().includes(q) || (l.role || '').toLowerCase().includes(q))
+        : crmLeadsSources;
+
+      container.innerHTML = filtered.slice(0, 30).map(lead => {
         return `
-          <div class="content-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span class="tier-badge ${tierClass}">${escapeHtml(tierLabel)}</span>
-              <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: var(--tag-bg); color: #94a3b8; border: 1px solid var(--border);">${escapeHtml(item.topic || 'General')}</span>
+          <div style="background: rgba(7, 11, 20, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="tier-badge ${lead.category === 'Executive' ? 't1' : 't3'}" style="font-size: 10px; padding: 1px 6px;">${lead.category}</span>
+                <span style="font-size: 12.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(lead.name)}</span>
+              </div>
+              <div style="font-size: 11px; color: #38bdf8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(lead.hook || lead.role)}</div>
             </div>
-
-            <div class="content-card-title" onclick="${isResearch ? `openResearchNotebookModal('${escapeHtml(item.id)}')` : `openContentViewModal('${escapeHtml(item.id)}')`}">
-              ${escapeHtml(item.title || 'Untitled Post')}
-            </div>
-
-            <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-              <span>Source:</span>
-              <span style="color: #cbd5e1; font-weight: 600;">${escapeHtml(item.source_reference || item.source_type || 'Internal')}</span>
-              ${isCamp ? `<span style="color: #fb7185; font-weight: 600;">• 📖 ${wordCount} Words</span><span style="color: #38bdf8; font-weight: 600;">• 📅 5 Posts</span><span style="color: #c084fc; font-weight: 600;">• 🗂️ 2 Decks</span>` : (isT1 && slidesCount ? `<span>• 📑 ${slidesCount} Slides</span>` : '')}
-            </div>
-
-            <div class="content-card-excerpt">
-              ${escapeHtml(item.content_markdown || item.article || '')}
-            </div>
-
-            <div class="dossier-stats-strip">
-              <span>🔬 <strong>${factsCount}</strong> Research Facts</span>
-              <span>🔗 <strong>${citesCount}</strong> Citations</span>
-              ${quotesCount ? `<span>💬 <strong>${quotesCount}</strong> Quotes</span>` : ''}
-            </div>
-
-            <div class="content-actions-footer">
-              ${actionsHtml}
-            </div>
+            <button class="btn btn-xs btn-primary" onclick="addCrmLeadSource('${escapeHtml(lead.id)}')" style="font-weight: 700;">
+              <span>+ Add</span>
+            </button>
           </div>
         `;
       }).join('');
     }
 
-    function handleContentSearch() {
-      const input = document.getElementById('content-search-input');
-      const clearBtn = document.getElementById('search-clear-btn');
-      searchQuery = input.value;
-      clearBtn.style.display = searchQuery ? 'block' : 'none';
-      renderContentGrid();
+    function filterCrmLeadsPicker(val) {
+      renderCrmLeadsPicker(val);
     }
 
-    function clearContentSearch() {
-      const input = document.getElementById('content-search-input');
-      const clearBtn = document.getElementById('search-clear-btn');
-      input.value = '';
-      searchQuery = '';
-      clearBtn.style.display = 'none';
+    function addCrmLeadSource(leadId) {
+      const lead = crmLeadsSources.find(l => l.id === leadId);
+      if (!lead) return;
+      const existing = notebookSources.find(s => s.id === lead.id);
+      if (existing) {
+        showToast('Lead already added as source');
+        return;
+      }
+
+      const newSrc = {
+        id: lead.id,
+        name: lead.name,
+        type: 'lead',
+        text: lead.text,
+        size_label: `${lead.text.length} chars`,
+        active: true
+      };
+
+      notebookSources.unshift(newSrc);
+      renderSourcesList();
+      closeAddSourceModal();
+      showToast(`Added CRM lead source: ${lead.name}`);
+    }
+
+    // ==========================================================
+    // Chat & Synthesis Studio Stream
+    // ==========================================================
+    function autoGrowChatInput(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 130)}px`;
+    }
+
+    function handleChatInputKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitNotebookChat();
+      }
+    }
+
+    function sendStarterPrompt(promptText) {
+      submitNotebookChat(promptText);
+    }
+
+    function selectContrarianAngle(angleTitle) {
+      const text = `Refine and expand on Angle: "${angleTitle}". Challenge conventional compliance assumptions and detail the frontline operational proof points and diagnostics.`;
+      submitNotebookChat(text);
+    }
+
+    function triggerFormatGeneration(formatType) {
+      const formatLabels = {
+        carousel: 'Generate a 7-8 slide carousel deck with headlines, bullets, and companion copy script',
+        essay: 'Generate a 600-900 word LinkedIn in-feed essay with punchy spacing and mental models',
+        article: 'Generate a 2,000+ word investigative perspective article with sections, citations, and ground-truth case studies',
+        weekly_posts: 'Generate a 5-day post series (Monday through Friday) designed for mobile dwell time',
+        campaign_pack: 'Generate the entire full authority campaign pack (1 article, 5 posts, 2 carousels, citations)'
+      };
+      const text = formatLabels[formatType] || `Generate asset in format: ${formatType}`;
+      submitNotebookChat(text, formatType);
+    }
+
+    async function submitNotebookChat(customQuery = null, requestedFormat = null) {
+      if (isChatStreaming) return;
+      const textarea = document.getElementById('chat-input-textarea');
+      const query = (customQuery || (textarea ? textarea.value : '')).trim();
+      if (!query) return;
+
+      if (!customQuery && textarea) {
+        textarea.value = '';
+        autoGrowChatInput(textarea);
+      }
+
+      // Hide welcome box once chat begins
+      const welcomeCard = document.getElementById('studio-welcome-card');
+      if (welcomeCard) welcomeCard.style.display = 'none';
+
+      // 1. Append user message
+      notebookChatMessages.push({ role: 'user', content: query });
+      renderChatMessages();
+
+      // 2. Render loading bubble
+      const streamContainer = document.getElementById('chat-messages-container');
+      const loadingCard = document.createElement('div');
+      loadingCard.id = 'studio-loading-card';
+      loadingCard.className = 'msg-assistant-bubble';
+      loadingCard.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; color: #38bdf8; font-weight: 700; font-size: 13.5px;">
+          <span style="font-size: 20px; animation: spin 1s infinite linear;">⚡</span>
+          <span>Gemini Flash is analyzing active sources & synthesizing forensic intelligence...</span>
+        </div>
+      `;
+      streamContainer.appendChild(loadingCard);
+      const scrollArea = document.getElementById('chat-scroll-area');
+      if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+      isChatStreaming = true;
+
+      // 3. API Call
+      const selectedVoice = document.getElementById('studio-voice-select').value;
+      const activeSources = notebookSources.filter(s => s.active !== false);
+
+      try {
+        const res = await fetch('/api/content/notebook/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: notebookChatMessages.map(m => ({ role: m.role, content: m.content })),
+            sources: activeSources,
+            voice_id: selectedVoice,
+            requested_format: requestedFormat
+          })
+        });
+
+        const data = await res.json();
+        const loadingEl = document.getElementById('studio-loading-card');
+        if (loadingEl) loadingEl.remove();
+
+        // 4. Append assistant message
+        notebookChatMessages.push({
+          role: 'assistant',
+          content: data.reply_text || 'Research synthesis completed.',
+          dossier: data.research_dossier || {},
+          angles: data.suggested_angles || [],
+          asset: data.generated_asset || null
+        });
+
+        renderChatMessages();
+
+        if (data.generated_asset) {
+          showToast(`Generated ${data.generated_asset.type} & saved to Library!`);
+          fetch('/api/content').then(r => r.json()).then(items => {
+            contentItems = items;
+            updateCountersAndPills();
+          }).catch(() => {});
+        }
+      } catch (err) {
+        console.error(err);
+        const loadingEl = document.getElementById('studio-loading-card');
+        if (loadingEl) loadingEl.remove();
+        notebookChatMessages.push({
+          role: 'assistant',
+          content: 'Error connecting to synthesis engine. Please try again.',
+          dossier: {},
+          angles: [],
+          asset: null
+        });
+        renderChatMessages();
+      } finally {
+        isChatStreaming = false;
+      }
+    }
+
+    function renderChatMessages() {
+      const container = document.getElementById('chat-messages-container');
+      if (!container) return;
+
+      container.innerHTML = notebookChatMessages.map((msg, idx) => {
+        if (msg.role === 'user') {
+          return `
+            <div class="msg-user-bubble">
+              <div>${escapeHtml(msg.content)}</div>
+            </div>
+          `;
+        }
+
+        const voiceSelect = document.getElementById('studio-voice-select');
+        const voiceName = voiceSelect ? voiceSelect.options[voiceSelect.selectedIndex].text : 'Forensic Risk Operator';
+
+        let dossierHtml = '';
+        if (msg.dossier && (msg.dossier.thesis || msg.dossier.unseen_tension || (msg.dossier.data_points && msg.dossier.data_points.length))) {
+          const dataPointsHtml = (msg.dossier.data_points || []).slice(0, 4).map(dp => `
+            <div style="font-size: 12px; color: #e2e8f0; display: flex; gap: 6px; align-items: flex-start;">
+              <span style="color: #38bdf8; font-weight: 700;">•</span>
+              <div>
+                <strong>${escapeHtml(dp.source || 'Audit')}:</strong> ${escapeHtml(dp.fact || '')}
+                ${dp.url ? `<a href="${dp.url}" target="_blank" style="color: #38bdf8; text-decoration: none; margin-left: 4px;">🔗</a>` : ''}
+              </div>
+            </div>
+          `).join('');
+
+          dossierHtml = `
+            <div class="dossier-callout-box">
+              <div style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em;">Core Forensic Thesis & Frontline Tension</div>
+              <div class="dossier-thesis-text">${escapeHtml(msg.dossier.thesis || '')}</div>
+              <div class="dossier-tension-text">${escapeHtml(msg.dossier.unseen_tension || '')}</div>
+              ${dataPointsHtml ? `
+                <div style="border-top: 1px solid rgba(56, 189, 248, 0.2); padding-top: 8px; margin-top: 4px; display: flex; flex-direction: column; gap: 4px;">
+                  ${dataPointsHtml}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
+
+        let anglesHtml = '';
+        if (msg.angles && msg.angles.length >= 4) {
+          anglesHtml = `
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: #ffffff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🎯 4 Provocative Contrarian Angles (Click to Refine):</span>
+              </div>
+              <div class="angles-grid">
+                ${msg.angles.map(a => `
+                  <div class="angle-card">
+                    <div>
+                      <div class="angle-card-badge">${escapeHtml(a.id || 'Angle')}</div>
+                      <div class="angle-card-title" style="margin-top: 4px;">${escapeHtml(a.title)}</div>
+                      <div class="angle-card-hook" style="margin-top: 4px;">"${escapeHtml(a.hook)}"</div>
+                      <div class="angle-card-desc" style="margin-top: 6px;">${escapeHtml(a.description)}</div>
+                    </div>
+                    <button class="angle-card-btn" onclick="selectContrarianAngle('${escapeHtml(a.title)}')">
+                      🎯 Select This Angle
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        const formatBarHtml = `
+          <div class="format-action-bar">
+            <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px;">
+              ⚡ 1-Click Generation:
+            </span>
+            <button class="format-pill-btn" onclick="triggerFormatGeneration('carousel')">
+              <span>🗂️ Carousel Only</span>
+            </button>
+            <button class="format-pill-btn" onclick="triggerFormatGeneration('essay')">
+              <span>📝 In-Feed Essay</span>
+            </button>
+            <button class="format-pill-btn" onclick="triggerFormatGeneration('article')">
+              <span>📖 Long Article</span>
+            </button>
+            <button class="format-pill-btn" onclick="triggerFormatGeneration('weekly_posts')">
+              <span>📅 5-Day Posts</span>
+            </button>
+            <button class="format-pill-btn campaign" onclick="triggerFormatGeneration('campaign_pack')">
+              <span>📦 Full Campaign Pack</span>
+            </button>
+          </div>
+        `;
+
+        let assetHtml = '';
+        if (msg.asset) {
+          assetHtml = renderInlineAssetWidget(msg.asset, idx);
+        }
+
+        return `
+          <div class="msg-assistant-bubble" id="msg-card-${idx}">
+            <div class="assistant-meta-row">
+              <span class="assistant-badge">⚡ ${voiceName}</span>
+              <span style="font-size: 11.5px; color: var(--text-muted);">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            </div>
+            <div class="msg-markdown-content">${formatMarkdownText(msg.content)}</div>
+            ${dossierHtml}
+            ${anglesHtml}
+            ${formatBarHtml}
+            ${assetHtml}
+          </div>
+        `;
+      }).join('');
+
+      const scrollArea = document.getElementById('chat-scroll-area');
+      if (scrollArea) scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+
+    function renderInlineAssetWidget(asset, msgIdx) {
+      if (asset.type === 'carousel') {
+        const slides = asset.slides || [];
+        const currentSlide = slides[0] || {};
+        return `
+          <div class="inline-asset-box" id="inline-carousel-viewer-${msgIdx}">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+              <span style="font-size: 13px; font-weight: 800; color: #38bdf8;">🗂️ Generated Carousel Deck: ${escapeHtml(asset.title || 'Slide Deck')}</span>
+              <button class="btn btn-xs btn-primary" onclick="copyTextDirect('${escapeHtml(asset.copy_script || '')}')">📋 Copy Carousel Script</button>
+            </div>
+            <div class="inline-slide-display" id="carousel-slide-box-${msgIdx}">
+              <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">${escapeHtml(currentSlide.type || '#1')}</span>
+              <div style="font-size: 15px; font-weight: 800; color: #fff; margin-top: 4px;">${escapeHtml(currentSlide.headline || '')}</div>
+              <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px;">${escapeHtml(currentSlide.bullet || '')}</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <button class="btn btn-xs" onclick="navigateInlineCarousel(${msgIdx}, -1)">◀ Prev Slide</button>
+              <span id="carousel-counter-${msgIdx}" style="font-size: 12px; color: #38bdf8; font-weight: 700;">Slide 1 of ${slides.length}</span>
+              <button class="btn btn-xs" onclick="navigateInlineCarousel(${msgIdx}, 1)">Next Slide ▶</button>
+            </div>
+          </div>
+        `;
+      } else if (asset.type === 'essay') {
+        return `
+          <div class="inline-asset-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; font-weight: 800; color: #10b981;">📝 Generated In-Feed Essay</span>
+                <span class="tier-badge t2" style="font-size: 10.5px;">⏱️ 3 min read</span>
+              </div>
+              <button class="btn btn-xs btn-primary" onclick="copyTextDirect('${escapeHtml(asset.markdown || '')}')">📋 Copy Essay</button>
+            </div>
+            <div style="background: rgba(7, 11, 20, 0.7); border: 1px solid var(--border); border-radius: 8px; padding: 14px; max-height: 280px; overflow-y: auto; font-size: 13px; line-height: 1.7; white-space: pre-wrap; color: #e2e8f0;">${escapeHtml(asset.markdown || '')}</div>
+          </div>
+        `;
+      } else if (asset.type === 'article') {
+        return `
+          <div class="inline-asset-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; font-weight: 800; color: #38bdf8;">📖 Generated Investigative Perspective Article</span>
+                <span class="tier-badge t3" style="font-size: 10.5px;">📖 ${asset.word_count || 2150} words</span>
+              </div>
+              <button class="btn btn-xs btn-primary" onclick="copyTextDirect('${escapeHtml(asset.markdown || '')}')">📋 Copy Full Article</button>
+            </div>
+            <div style="background: rgba(7, 11, 20, 0.7); border: 1px solid var(--border); border-radius: 8px; padding: 14px; max-height: 320px; overflow-y: auto; font-size: 13px; line-height: 1.7; white-space: pre-wrap; color: #e2e8f0;">${escapeHtml(asset.markdown || '')}</div>
+          </div>
+        `;
+      } else if (asset.type === 'weekly_posts') {
+        const posts = asset.posts || [];
+        return `
+          <div class="inline-asset-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+              <span style="font-size: 13px; font-weight: 800; color: #c084fc;">📅 5-Day Post Series (Mon-Fri)</span>
+              <button class="btn btn-xs btn-primary" onclick="copyAllPostsFromAsset(${msgIdx})">📋 Copy All 5 Days</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px; max-height: 320px; overflow-y: auto;">
+              ${posts.map(p => `
+                <div style="background: rgba(7, 11, 20, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 11.5px; font-weight: 800; color: #38bdf8;">${escapeHtml(p.day)}: ${escapeHtml(p.theme || '')}</span>
+                    <button class="btn btn-xs" onclick="copyTextDirect('${escapeHtml(p.body || p.headline || '')}')">📋 Copy Day</button>
+                  </div>
+                  <div style="font-size: 12.5px; color: #cbd5e1; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(p.body || p.headline || '')}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (asset.type === 'campaign_pack') {
+        return `
+          <div class="inline-asset-box" style="border-color: #f43f5e;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(244, 63, 94, 0.4); padding-bottom: 8px;">
+              <span style="font-size: 13.5px; font-weight: 800; color: #fb7185;">📦 Full Authority Campaign Pack (1 Article + 5 Posts + 2 Carousels)</span>
+              <button class="btn btn-xs btn-primary" onclick="openCampaignPackModalFromAsset(${msgIdx})" style="background: linear-gradient(135deg, #f43f5e, #a855f7); border-color: #fb7185;">🔍 Open Full Pack Viewer</button>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;">
+              Synthesized and saved the complete authority campaign bundle to your Library. Includes a 2,000+ word investigative article, Monday-Friday daily posts, Problem Deconstruction Deck, and Tactical Blueprint Deck.
+            </div>
+          </div>
+        `;
+      }
+      return '';
+    }
+
+    let inlineCarouselIndices = {};
+    function navigateInlineCarousel(msgIdx, delta) {
+      const msg = notebookChatMessages[msgIdx];
+      if (!msg || !msg.asset || !msg.asset.slides) return;
+      const slides = msg.asset.slides;
+      const cur = inlineCarouselIndices[msgIdx] || 0;
+      let next = cur + delta;
+      if (next < 0) next = slides.length - 1;
+      if (next >= slides.length) next = 0;
+      inlineCarouselIndices[msgIdx] = next;
+
+      const slide = slides[next];
+      const box = document.getElementById(`carousel-slide-box-${msgIdx}`);
+      const counter = document.getElementById(`carousel-counter-${msgIdx}`);
+      if (box) {
+        box.innerHTML = `
+          <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">${escapeHtml(slide.type || `#${next+1}`)}</span>
+          <div style="font-size: 15px; font-weight: 800; color: #fff; margin-top: 4px;">${escapeHtml(slide.headline || '')}</div>
+          <div style="font-size: 13px; color: #cbd5e1; margin-top: 4px;">${escapeHtml(slide.bullet || '')}</div>
+        `;
+      }
+      if (counter) counter.innerText = `Slide ${next+1} of ${slides.length}`;
+    }
+
+    function copyAllPostsFromAsset(msgIdx) {
+      const msg = notebookChatMessages[msgIdx];
+      if (!msg || !msg.asset || !msg.asset.posts) return;
+      const allText = msg.asset.posts.map(p => `=== ${p.day.toUpperCase()} (${p.theme || ''}) ===\n\n${p.body || p.headline}\n`).join('\n---\n\n');
+      copyTextDirect(allText);
+    }
+
+    function openCampaignPackModalFromAsset(msgIdx) {
+      const msg = notebookChatMessages[msgIdx];
+      if (!msg || !msg.asset) return;
+      const fakeItem = {
+        title: msg.asset.title || 'Campaign Pack',
+        tier: 'Full Campaign Distribution Pack',
+        article: msg.asset.article || '',
+        weekly_posts: msg.asset.weekly_posts || [],
+        carousel_1: msg.asset.carousel_1 || {},
+        carousel_2: msg.asset.carousel_2 || {},
+        research_dossier: msg.asset.research_dossier || {}
+      };
+      openContentViewModal(fakeItem);
+    }
+
+    function formatMarkdownText(text) {
+      if (!text) return '';
+      let html = escapeHtml(text);
+      html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+      html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+      html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+      html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+      html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+      html = html.replace(/\n\n/g, '</p><p>');
+      html = html.replace(/\n/g, '<br>');
+      return `<p>${html}</p>`;
+    }
+
+    // ==========================================================
+    // Saved Library Functions
+    // ==========================================================
+    function setQuickTierFilter(tier) {
+      tierFilter = tier;
+      const pills = document.querySelectorAll('.quick-pill');
+      pills.forEach(p => p.classList.remove('active'));
+      const activePill = document.getElementById(`qp-${tier.toLowerCase()}`) || document.getElementById('qp-all');
+      if (activePill) activePill.classList.add('active');
+      const select = document.getElementById('tier-filter-select');
+      if (select) select.value = tier;
       renderContentGrid();
     }
 
@@ -3888,959 +4493,285 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       tierFilter = document.getElementById('tier-filter-select').value;
       voiceFilter = document.getElementById('voice-filter-select').value;
       sortOrder = document.getElementById('sort-order-select').value;
-      updatePillsState();
       renderContentGrid();
     }
 
-    function setQuickTierFilter(tier) {
-      tierFilter = tier;
-      document.getElementById('tier-filter-select').value = tier;
-      updatePillsState();
+    function handleContentSearch() {
+      searchQuery = document.getElementById('content-search-input').value.trim();
       renderContentGrid();
     }
 
-    function updatePillsState() {
-      document.querySelectorAll('#quick-filter-pills .quick-pill').forEach(p => p.classList.remove('active'));
-      if (tierFilter === 'ALL') document.getElementById('qp-all').classList.add('active');
-      else if (tierFilter.toLowerCase().includes('research')) {
-        const p = document.getElementById('qp-research');
-        if (p) p.classList.add('active');
-      }
-      else if (tierFilter.toLowerCase().includes('campaign')) {
-        const p = document.getElementById('qp-campaign');
-        if (p) p.classList.add('active');
-      }
-      else if (tierFilter.includes('Tier 1')) document.getElementById('qp-t1').classList.add('active');
-      else if (tierFilter.includes('Tier 2')) document.getElementById('qp-t2').classList.add('active');
-      else if (tierFilter.includes('Tier 3')) document.getElementById('qp-t3').classList.add('active');
-    }
+    function renderContentGrid() {
+      const container = document.getElementById('content-cards-container');
+      if (!container) return;
 
-    /* Deep Research Studio Modal Open / Close */
-    function openDeepResearchModal() {
-      document.getElementById('deep-research-modal').classList.add('active');
-      document.getElementById('deep-research-spinner').style.display = 'none';
-      document.getElementById('deep-research-actions').style.display = 'flex';
-      setTimeout(() => {
-        const p = document.getElementById('deep-research-prompt');
-        if (p) p.focus();
-      }, 100);
-    }
+      let filtered = contentItems.slice();
 
-    function closeDeepResearchModal() {
-      document.getElementById('deep-research-modal').classList.remove('active');
-      document.getElementById('deep-research-spinner').style.display = 'none';
-      document.getElementById('deep-research-actions').style.display = 'flex';
-    }
-
-    function appendFocusAngle(angle) {
-      const p = document.getElementById('deep-research-prompt');
-      if (!p) return;
-      const cleanAngle = angle.replace(/^\+\s*/, '');
-      const current = p.value.trim();
-      if (!current) {
-        p.value = cleanAngle;
-      } else if (!current.toLowerCase().includes(cleanAngle.toLowerCase())) {
-        p.value = current + ' -- Focus: ' + cleanAngle;
-      }
-      p.focus();
-    }
-
-    function executeResearchFromMainBar() {
-      const input = document.getElementById('content-search-input');
-      const val = (input ? input.value : searchQuery).trim();
-      if (!val) {
-        openDeepResearchModal();
-      } else {
-        launchResearchFromSearch(val);
-      }
-    }
-
-    function launchResearchFromSearch(query) {
-      openDeepResearchModal();
-      const p = document.getElementById('deep-research-prompt');
-      if (p) {
-        p.value = query;
-        p.focus();
-      }
-    }
-
-    async function submitDeepResearch(autoGenerateCampaign) {
-      const promptInput = document.getElementById('deep-research-prompt');
-      const prompt = promptInput.value.trim();
-      if (!prompt) {
-        alert('Please enter a research question, premise, or hypothesis.');
-        promptInput.focus();
-        return;
-      }
-
-      const urls = document.getElementById('deep-research-urls').value.trim();
-      const voiceId = document.getElementById('deep-research-voice-select').value;
-
-      const spinner = document.getElementById('deep-research-spinner');
-      const actions = document.getElementById('deep-research-actions');
-      const statusText = document.getElementById('deep-research-status-text');
-
-      spinner.style.display = 'block';
-      actions.style.display = 'none';
-
-      if (autoGenerateCampaign) {
-        statusText.innerHTML = '⚡ Step 1/2: Running NotebookLM Deep Research... Step 2/2: Synthesizing Full Authority Campaign Pack (1 Article + 5 Posts + 2 Decks)...';
-      } else {
-        statusText.innerHTML = '🔬 Investigating empirical benchmarks (ECI, SEC, ACFE, HBR) & compiling research notebook...';
-      }
-
-      try {
-        const res = await fetch('/api/content/research', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: prompt,
-            optional_urls: urls,
-            voice_id: voiceId,
-            auto_generate_campaign: autoGenerateCampaign
-          })
+      if (tierFilter !== 'ALL') {
+        filtered = filtered.filter(item => {
+          const t = (item.tier || '').toLowerCase();
+          if (tierFilter === 'Research') return t.includes('research') || t.includes('🔬');
+          if (tierFilter === 'Campaign') return t.includes('campaign') || !!item.campaign_pack;
+          return (item.tier || '').includes(tierFilter);
         });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `Server responded with ${res.status}`);
-        }
-
-        const newItem = await res.json();
-        contentItems.unshift(newItem);
-        updateCountersAndPills();
-        renderContentGrid();
-        closeDeepResearchModal();
-
-        if (autoGenerateCampaign) {
-          openContentViewModal(newItem.id);
-        } else {
-          openResearchNotebookModal(newItem.id);
-        }
-      } catch (err) {
-        alert('Research failed: ' + err.message);
-        spinner.style.display = 'none';
-        actions.style.display = 'flex';
-      }
-    }
-
-    /* Research Notebook Viewer */
-    let currentNotebookItem = null;
-
-    function openResearchNotebookModal(itemId) {
-      const item = contentItems.find(c => c.id === itemId);
-      if (!item) return;
-      currentNotebookItem = item;
-
-      document.getElementById('rnb-modal-title').innerText = item.title || 'Research Dossier';
-      document.getElementById('rnb-topic-label').innerText = item.topic ? `• Topic: ${item.topic}` : '';
-
-      const d = item.research_dossier || {};
-      document.getElementById('rnb-thesis').innerText = d.thesis || item.title || 'Core premise under operational investigation.';
-      document.getElementById('rnb-tension').innerText = d.unseen_tension || 'Frontline commercial pressure creates informal workarounds that bypass formal reporting.';
-
-      const execSum = item.content_markdown || d.executive_summary || item.article || 'No executive briefing generated.';
-      document.getElementById('rnb-executive-summary').innerText = execSum;
-      const words = execSum.trim().split(/\s+/).filter(Boolean).length;
-      document.getElementById('rnb-word-count-badge').innerText = `📖 ${words.toLocaleString()} words`;
-
-      // Data Points
-      const dpContainer = document.getElementById('rnb-data-points');
-      const dps = d.data_points || [];
-      if (dps.length > 0) {
-        dpContainer.innerHTML = dps.map(p => {
-          const fact = typeof p === 'string' ? p : (p.fact || '');
-          const source = typeof p === 'object' ? (p.source || 'Empirical Benchmark') : 'Empirical Benchmark';
-          const url = typeof p === 'object' ? (p.url || '') : '';
-          return `
-            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border); border-left: 3px solid #38bdf8; border-radius: 6px; padding: 10px 14px;">
-              <div style="font-size: 13px; color: #ffffff; line-height: 1.5;">📌 ${escapeHtml(fact)}</div>
-              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: 8px;">
-                <span>Source: <strong style="color: #38bdf8;">${escapeHtml(source)}</strong></span>
-                ${url ? `<a href="${escapeHtml(url)}" target="_blank" style="color: #7dd3fc; text-decoration: underline;">Link ↗</a>` : ''}
-              </div>
-            </div>
-          `;
-        }).join('');
-      } else {
-        dpContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">No data points recorded.</div>';
       }
 
-      // Quotes
-      const qContainer = document.getElementById('rnb-quotes');
-      const quotes = d.quotes || [];
-      if (quotes.length > 0) {
-        qContainer.innerHTML = quotes.map(q => `
-          <div style="background: rgba(168, 85, 247, 0.08); border-left: 3px solid #a855f7; border-radius: 4px; padding: 10px 14px; font-size: 13px; color: #e2e8f0; font-style: italic; line-height: 1.5;">
-            "${escapeHtml(q)}"
+      if (voiceFilter !== 'ALL') {
+        filtered = filtered.filter(item => item.voice_profile_id === voiceFilter);
+      }
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = filtered.filter(item =>
+          (item.title || '').toLowerCase().includes(q) ||
+          (item.topic || '').toLowerCase().includes(q) ||
+          (item.content_markdown || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (sortOrder === 'newest') {
+        filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      } else if (sortOrder === 'oldest') {
+        filtered.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
+      } else if (sortOrder === 'alpha') {
+        filtered.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-muted);">
+            <div style="font-size: 32px; margin-bottom: 8px;">📭</div>
+            <div style="font-size: 15px; font-weight: 700; color: #fff;">No content pieces match your filter.</div>
+            <div style="font-size: 13px; margin-top: 4px;">Use the NotebookLM Studio tab to synthesize a new piece!</div>
           </div>
-        `).join('');
-      } else {
-        qContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted);">No quotes extracted.</div>';
-      }
-
-      // Citations
-      const cContainer = document.getElementById('rnb-citations');
-      const cites = d.citations || [];
-      if (cites.length > 0) {
-        cContainer.innerHTML = cites.map(c => {
-          const title = typeof c === 'string' ? c : (c.title || c.url || 'Citation');
-          const url = typeof c === 'object' ? (c.url || '') : (c.startsWith('http') ? c : '');
-          return `
-            <span style="font-size: 11.5px; background: rgba(7, 11, 20, 0.7); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: #94a3b8; display: inline-flex; align-items: center; gap: 6px;">
-              <span>🔗 ${escapeHtml(title)}</span>
-              ${url ? `<a href="${escapeHtml(url)}" target="_blank" style="color: #38bdf8; font-weight: 700;">↗</a>` : ''}
-            </span>
-          `;
-        }).join('');
-      } else {
-        cContainer.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">No formal citations listed.</span>';
-      }
-
-      document.getElementById('research-notebook-modal').classList.add('active');
-    }
-
-    function closeResearchNotebookModal() {
-      document.getElementById('research-notebook-modal').classList.remove('active');
-      currentNotebookItem = null;
-    }
-
-    async function generateCampaignFromNotebook(itemId) {
-      const item = contentItems.find(c => c.id === itemId);
-      if (!item) return;
-
-      const confirmed = confirm(`Transform this research notebook into a Full Authority Campaign Pack (1 Article + 5 Posts + 2 Carousels)?\n\nTitle: ${item.title}`);
-      if (!confirmed) return;
-
-      const btn = document.getElementById('rnb-generate-campaign-btn');
-      if (btn) {
-        btn.innerText = '⚡ Generating 1 Article + 5 Posts + 2 Decks...';
-        btn.disabled = true;
-      }
-
-      try {
-        const res = await fetch('/api/content/research', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            notebook_id: item.id,
-            prompt: item.title,
-            voice_id: item.voice_profile_id || 'forensic-operator',
-            auto_generate_campaign: true
-          })
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || `Failed with status ${res.status}`);
-        }
-
-        const newCampaign = await res.json();
-        contentItems.unshift(newCampaign);
-        updateCountersAndPills();
-        renderContentGrid();
-
-        closeResearchNotebookModal();
-        openContentViewModal(newCampaign.id);
-      } catch (err) {
-        alert('Campaign generation failed: ' + err.message);
-      } finally {
-        if (btn) {
-          btn.innerText = '⚡ Generate Campaign from this Notebook';
-          btn.disabled = false;
-        }
-      }
-    }
-
-    function triggerCampaignFromCurrentNotebook() {
-      if (!currentNotebookItem) return;
-      generateCampaignFromNotebook(currentNotebookItem.id);
-    }
-
-    function copyNotebookExecutiveBriefing() {
-      if (!currentNotebookItem) return;
-      const text = currentNotebookItem.content_markdown || (currentNotebookItem.research_dossier && currentNotebookItem.research_dossier.executive_summary) || '';
-      navigator.clipboard.writeText(text).then(() => {
-        alert('📋 Executive Briefing copied to clipboard!');
-      });
-    }
-
-    function copyNotebookFullDossier() {
-      if (!currentNotebookItem) return;
-      const d = currentNotebookItem.research_dossier || {};
-      const dpText = (d.data_points || []).map(p => `- ${p.fact} (${p.source})`).join('\n');
-      const qText = (d.quotes || []).map(q => `> "${q}"`).join('\n\n');
-      const cText = (d.citations || []).map(c => `- [${c.title}](${c.url || ''})`).join('\n');
-
-      const md = `# RESEARCH DOSSIER: ${currentNotebookItem.title}\n\n` +
-        `**Core Thesis:** ${d.thesis || ''}\n\n` +
-        `**Unseen Tension:** ${d.unseen_tension || ''}\n\n` +
-        `## Executive Summary\n${currentNotebookItem.content_markdown || d.executive_summary || ''}\n\n` +
-        `## Empirical Proof Points\n${dpText}\n\n` +
-        `## Forensic Quotes & Mental Models\n${qText}\n\n` +
-        `## Citations\n${cText}\n`;
-
-      navigator.clipboard.writeText(md).then(() => {
-        alert('📋 Full Research Notebook Dossier copied to clipboard!');
-      });
-    }
-
-    /* Modal Open / Close */
-    function openCreateModal() {
-      openNewContentModal();
-    }
-
-    function openNewContentModal() {
-      document.getElementById('new-content-modal').classList.add('active');
-      switchContentSourceTab('pdf');
-      populateLeadDropdown();
-    }
-
-    function closeNewContentModal() {
-      document.getElementById('new-content-modal').classList.remove('active');
-      document.getElementById('gen-spinner').style.display = 'none';
-      document.getElementById('gen-actions').style.display = 'flex';
-    }
-
-    function switchContentSourceTab(tab) {
-      currentSourceTab = tab;
-      document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(`tab-src-${tab}`).classList.add('active');
-
-      document.getElementById('panel-src-pdf').style.display = tab === 'pdf' ? 'block' : 'none';
-      document.getElementById('panel-src-url').style.display = tab === 'url' ? 'block' : 'none';
-      document.getElementById('panel-src-text').style.display = tab === 'text' ? 'block' : 'none';
-      document.getElementById('panel-src-lead').style.display = tab === 'lead' ? 'block' : 'none';
-    }
-
-    function populateLeadDropdown() {
-      const pipe = document.getElementById('gen-lead-pipeline').value;
-      const select = document.getElementById('gen-lead-id');
-      const list = pipe === 'media' ? mediaLeads : execLeads;
-
-      if (!list || list.length === 0) {
-        select.innerHTML = '<option value="">No leads available</option>';
+        `;
         return;
       }
 
-      select.innerHTML = list.map(l => `
-        <option value="${escapeHtml(l.id)}">${escapeHtml(l.name)} (${escapeHtml(l.company || l.genre || 'Lead')})</option>
-      `).join('');
+      container.innerHTML = filtered.map(item => {
+        const isCamp = (item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack;
+        const isResearch = (item.tier || '').toLowerCase().includes('research') || (item.tier || '').includes('🔬');
+        const badgeClass = isCamp ? 'campaign' : isResearch ? 'research' : item.tier && item.tier.includes('Tier 1') ? 't1' : item.tier && item.tier.includes('Tier 2') ? 't2' : 't3';
+
+        return `
+          <div class="content-card" onclick="openContentViewModalById('${item.id}')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="tier-badge ${badgeClass}">${escapeHtml(item.tier || 'Content')}</span>
+              <span style="font-size: 11px; color: var(--text-muted);">${strDate(item.created_at)}</span>
+            </div>
+            <div style="font-size: 14.5px; font-weight: 700; color: #ffffff; line-height: 1.4;">${escapeHtml(item.title || item.topic || 'Untitled Piece')}</div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5; max-height: 54px; overflow: hidden;">${escapeHtml((item.content_markdown || item.article || '').substring(0, 140))}…</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 10px; margin-top: auto;">
+              <span style="font-size: 11.5px; color: #38bdf8; font-weight: 600;">${item.voice_profile_id === 'growth-dealmaker' ? 'Strategic Dealmaker' : 'Forensic Risk Operator'}</span>
+              <button class="btn btn-xs" onclick="event.stopPropagation(); deleteContentItem('${item.id}')" style="color: #f43f5e;" title="Delete">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-    async function generateContent() {
-      const tier = document.getElementById('gen-tier-select').value;
-      const voiceId = document.getElementById('gen-voice-select').value;
-      const topic = document.getElementById('gen-topic-input').value.trim();
-
-      const spinner = document.getElementById('gen-spinner');
-      const actions = document.getElementById('gen-actions');
-      spinner.style.display = 'block';
-      actions.style.display = 'none';
-
-      try {
-        let res;
-        if (currentSourceTab === 'pdf') {
-          const fileInput = document.getElementById('gen-pdf-file');
-          if (!fileInput.files || fileInput.files.length === 0) {
-            alert('Please select a PDF file to upload.');
-            spinner.style.display = 'none';
-            actions.style.display = 'flex';
-            return;
-          }
-          const formData = new FormData();
-          formData.append('file', fileInput.files[0]);
-          formData.append('source_type', 'pdf');
-          formData.append('tier', tier);
-          formData.append('voice_id', voiceId);
-          if (topic) formData.append('topic', topic);
-
-          res = await fetch('/api/content/generate', {
-            method: 'POST',
-            body: formData
-          });
-        } else if (currentSourceTab === 'url') {
-          const url = document.getElementById('gen-url-input').value.trim();
-          if (!url) {
-            alert('Please enter a web URL.');
-            spinner.style.display = 'none';
-            actions.style.display = 'flex';
-            return;
-          }
-          res = await fetch('/api/content/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              source_type: 'url',
-              url: url,
-              tier: tier,
-              voice_id: voiceId,
-              topic: topic
-            })
-          });
-        } else if (currentSourceTab === 'text') {
-          const text = document.getElementById('gen-text-input').value.trim();
-          if (!text) {
-            alert('Please paste source text or briefing notes.');
-            spinner.style.display = 'none';
-            actions.style.display = 'flex';
-            return;
-          }
-          res = await fetch('/api/content/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              source_type: 'text',
-              text: text,
-              tier: tier,
-              voice_id: voiceId,
-              topic: topic || 'Strategic Leadership'
-            })
-          });
-        } else {
-          const leadId = document.getElementById('gen-lead-id').value;
-          const leadType = document.getElementById('gen-lead-pipeline').value;
-          res = await fetch('/api/content/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              source_type: 'lead',
-              lead_id: leadId,
-              lead_type: leadType,
-              tier: tier,
-              voice_id: voiceId,
-              topic: topic
-            })
-          });
-        }
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || 'Failed to generate content');
-        }
-
-        const createdItem = await res.json();
-        contentItems.unshift(createdItem);
-
-        closeNewContentModal();
-        updateCountersAndPills();
-        renderContentGrid();
-        loadResearchedLinks();
-        showToast('✨ Voice-conditioned content generated successfully!');
-        openContentViewModal(createdItem.id);
-      } catch (err) {
-        console.error('Error generating content:', err);
-        alert(`Generation failed: ${err.message}`);
-        spinner.style.display = 'none';
-        actions.style.display = 'flex';
-      }
+    function openContentViewModalById(id) {
+      const item = contentItems.find(x => x.id === id);
+      if (item) openContentViewModal(item);
     }
 
-    async function deleteContentItem(itemId) {
-      if (!confirm('Are you sure you want to permanently delete this content piece?')) return;
-      try {
-        const res = await fetch('/api/content/delete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: itemId })
-        });
-        if (res.ok) {
-          contentItems = contentItems.filter(c => c.id !== itemId);
-          updateCountersAndPills();
-          renderContentGrid();
-          showToast('Content piece deleted');
-        }
-      } catch (err) {
-        showToast('Error deleting content piece');
-      }
-    }
-
-    /* Content View Modal */
-    function openContentViewModal(itemId) {
-      const item = contentItems.find(c => c.id === itemId);
-      if (!item) return;
+    function openContentViewModal(item) {
       currentModalContentItem = item;
-
-      document.getElementById('view-content-title').innerText = item.title || 'Untitled Post';
-      const badge = document.getElementById('view-content-tier-badge');
-      const isCamp = (item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack;
-      const isT1 = !isCamp && (item.tier || '').includes('Tier 1');
-      const isT2 = !isCamp && (item.tier || '').includes('Tier 2');
-      badge.className = `tier-badge ${isCamp ? 'campaign' : (isT1 ? 't1' : (isT2 ? 't2' : 't3'))}`;
-      badge.innerText = isCamp ? '📦 Full Campaign Pack' : (item.tier || 'Content');
-
-      document.getElementById('view-content-source-label').innerText = `${item.source_reference || item.source_type} (${item.topic})`;
-
+      const modal = document.getElementById('content-view-modal');
+      const titleEl = document.getElementById('view-content-title');
+      const badgeEl = document.getElementById('view-content-tier-badge');
       const campTabs = document.getElementById('campaign-tabs-strip');
-      const stdView = document.getElementById('standard-content-view');
+      const singlePanel = document.getElementById('single-asset-panel');
+
+      titleEl.innerText = item.title || item.topic || 'Content Piece';
+      const isCamp = (item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack;
+      badgeEl.innerText = item.tier || 'Content';
+      badgeEl.className = `tier-badge ${isCamp ? 'campaign' : item.tier && item.tier.includes('Tier 1') ? 't1' : item.tier && item.tier.includes('Tier 2') ? 't2' : 't3'}`;
 
       if (isCamp) {
-        campTabs.style.display = 'flex';
-        stdView.style.display = 'none';
-
-        // Prepare Campaign View Data
-        const articleText = item.article || item.content_markdown || '';
-        document.getElementById('campaign-article-textarea').value = articleText;
-        const words = articleText.trim().split(/\s+/).filter(Boolean).length;
-        document.getElementById('article-word-count-badge').innerText = `📖 ${words.toLocaleString()} words`;
-
-        // Render 5-Day Posts
-        const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
-        const postsContainer = document.getElementById('campaign-posts-list');
-        if (posts.length > 0) {
-          postsContainer.innerHTML = posts.map((p, idx) => `
-            <div class="campaign-post-card">
-              <div class="campaign-post-header">
-                <div>
-                  <span class="campaign-post-day">🗓️ ${escapeHtml(p.day)}: ${escapeHtml(p.title || '')}</span>
-                </div>
-                <button class="btn btn-primary btn-xs" onclick="copySingleDayPost(${idx})">📋 Copy ${escapeHtml(p.day)} Post</button>
-              </div>
-              <div class="campaign-post-body">${escapeHtml(p.post_text || '')}</div>
-              ${p.hashtags ? `<div class="campaign-post-tags">${escapeHtml(p.hashtags)}</div>` : ''}
-            </div>
-          `).join('');
-        } else {
-          postsContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 12px;">No weekly posts generated.</div>';
-        }
-
-        // Render Carousels
-        currentC1Index = 0;
-        updateCarouselView(1);
-        currentC2Index = 0;
-        updateCarouselView(2);
-
-        // Render Dossier
-        renderCampaignDossier(item);
-
-        // Switch to Article view by default
+        if (campTabs) campTabs.style.display = 'flex';
+        if (singlePanel) singlePanel.style.display = 'none';
         switchCampaignTab('article');
       } else {
-        campTabs.style.display = 'none';
-        stdView.style.display = 'block';
-        hideAllCampaignPanels();
-
-        document.getElementById('view-content-markdown').value = item.content_markdown || '';
-
-        const slideContainer = document.getElementById('slide-deck-container');
-        const copyScriptBtn = document.getElementById('btn-copy-slide-script');
-
-        if (isT1 && Array.isArray(item.slides_outline) && item.slides_outline.length > 0) {
-          slideContainer.style.display = 'flex';
-          copyScriptBtn.style.display = 'inline-flex';
-          currentSlideIndex = 0;
-          updateSlideView();
-        } else {
-          slideContainer.style.display = 'none';
-          copyScriptBtn.style.display = 'none';
-        }
+        if (campTabs) campTabs.style.display = 'none';
+        if (singlePanel) singlePanel.style.display = 'block';
+        document.getElementById('view-content-markdown').value = item.content_markdown || item.article || '';
       }
 
-      document.getElementById('content-view-modal').classList.add('active');
+      modal.style.display = 'flex';
     }
 
     function closeContentViewModal() {
-      document.getElementById('content-view-modal').classList.remove('active');
-      currentModalContentItem = null;
-    }
-
-    function hideAllCampaignPanels() {
-      ['article', 'posts', 'c1', 'c2', 'dossier'].forEach(tab => {
-        const el = document.getElementById(`campaign-${tab}-panel`);
-        if (el) el.style.display = 'none';
-      });
+      const modal = document.getElementById('content-view-modal');
+      if (modal) modal.style.display = 'none';
     }
 
     function switchCampaignTab(tab) {
       currentCampaignTab = tab;
-      document.querySelectorAll('#campaign-tabs-strip .campaign-tab-btn').forEach(b => b.classList.remove('active'));
-      const activeBtn = document.getElementById(`camp-tab-btn-${tab}`);
-      if (activeBtn) activeBtn.classList.add('active');
+      const item = currentModalContentItem;
+      if (!item) return;
 
-      hideAllCampaignPanels();
-      const targetPanel = document.getElementById(`campaign-${tab}-panel`);
-      if (targetPanel) targetPanel.style.display = 'block';
+      ['article', 'posts', 'c1', 'c2', 'dossier'].forEach(t => {
+        const btn = document.getElementById(`camp-tab-btn-${t}`);
+        const panel = document.getElementById(`campaign-${t}-panel`);
+        if (btn) {
+          if (t === tab) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+        if (panel) panel.style.display = t === tab ? 'block' : 'none';
+      });
+
+      if (tab === 'article') {
+        const artText = item.article || item.content_markdown || '';
+        document.getElementById('campaign-article-textarea').value = artText;
+        document.getElementById('article-word-count-badge').innerText = `📖 ${artText.split(/\s+/).length} words`;
+      } else if (tab === 'posts') {
+        const postsList = document.getElementById('campaign-posts-list');
+        const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
+        postsList.innerHTML = posts.map(p => `
+          <div style="background: rgba(7, 11, 20, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 12px; font-weight: 800; color: #38bdf8;">${escapeHtml(p.day)}: ${escapeHtml(p.theme || '')}</span>
+              <button class="btn btn-xs" onclick="copyTextDirect('${escapeHtml(p.body || p.headline || '')}')">📋 Copy Day Post</button>
+            </div>
+            <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(p.body || p.headline || '')}</div>
+          </div>
+        `).join('');
+      } else if (tab === 'c1') {
+        currentC1Index = 0;
+        updateCampaignCarousel(1);
+      } else if (tab === 'c2') {
+        currentC2Index = 0;
+        updateCampaignCarousel(2);
+      } else if (tab === 'dossier') {
+        const dossier = item.research_dossier || {};
+        document.getElementById('campaign-dossier-thesis').innerText = dossier.thesis || 'N/A';
+        document.getElementById('campaign-dossier-tension').innerText = dossier.unseen_tension || 'N/A';
+      }
+    }
+
+    function updateCampaignCarousel(deckNum) {
+      const item = currentModalContentItem;
+      if (!item) return;
+      const deckKey = deckNum === 1 ? 'carousel_1' : 'carousel_2';
+      const deck = item[deckKey] || (item.campaign_pack && item.campaign_pack[deckKey]) || {};
+      const slides = deck.slides || [];
+      const curIdx = deckNum === 1 ? currentC1Index : currentC2Index;
+      const slide = slides[curIdx] || {};
+
+      document.getElementById(`c${deckNum}-slide-number`).innerText = slide.type || `#${curIdx+1}`;
+      document.getElementById(`c${deckNum}-slide-headline`).innerText = slide.headline || '';
+      document.getElementById(`c${deckNum}-slide-bullet`).innerText = slide.bullet || '';
+      document.getElementById(`c${deckNum}-slide-counter-text`).innerText = `Slide ${curIdx+1} of ${slides.length || 7}`;
     }
 
     function navigateCarousel(deckNum, delta) {
-      if (!currentModalContentItem) return;
-      const c = deckNum === 1 ? (currentModalContentItem.carousel_1 || {}) : (currentModalContentItem.carousel_2 || {});
-      const slides = c.slides || (deckNum === 1 ? currentModalContentItem.slides_outline : []) || [];
-      if (!slides.length) return;
-
+      const item = currentModalContentItem;
+      if (!item) return;
+      const deckKey = deckNum === 1 ? 'carousel_1' : 'carousel_2';
+      const deck = item[deckKey] || (item.campaign_pack && item.campaign_pack[deckKey]) || {};
+      const slides = deck.slides || [];
       if (deckNum === 1) {
         currentC1Index = Math.max(0, Math.min(slides.length - 1, currentC1Index + delta));
-        updateCarouselView(1);
       } else {
         currentC2Index = Math.max(0, Math.min(slides.length - 1, currentC2Index + delta));
-        updateCarouselView(2);
       }
-    }
-
-    function updateCarouselView(deckNum) {
-      if (!currentModalContentItem) return;
-      const c = deckNum === 1 ? (currentModalContentItem.carousel_1 || {}) : (currentModalContentItem.carousel_2 || {});
-      const slides = c.slides || (deckNum === 1 ? currentModalContentItem.slides_outline : []) || [];
-      const idx = deckNum === 1 ? currentC1Index : currentC2Index;
-      const prefix = deckNum === 1 ? 'c1' : 'c2';
-
-      if (!slides.length) {
-        document.getElementById(`${prefix}-slide-counter-text`).innerText = 'No slides';
-        document.getElementById(`${prefix}-slide-number`).innerText = '#0';
-        document.getElementById(`${prefix}-slide-headline`).innerText = 'No slides available';
-        document.getElementById(`${prefix}-slide-bullet`).innerText = '';
-        return;
-      }
-
-      const s = slides[idx] || slides[0];
-      document.getElementById(`${prefix}-slide-counter-text`).innerText = `Slide ${idx + 1} of ${slides.length}`;
-      document.getElementById(`${prefix}-slide-number`).innerText = `#${s.slide || (idx + 1)}`;
-      document.getElementById(`${prefix}-slide-headline`).innerText = s.headline || '';
-      document.getElementById(`${prefix}-slide-bullet`).innerText = s.bullet || '';
-    }
-
-    function renderCampaignDossier(item) {
-      const container = document.getElementById('campaign-dossier-content');
-      const d = item.research_dossier || {};
-      const dp = d.data_points || [];
-      const quotes = d.quotes || [];
-      const cites = d.citations || [];
-
-      let html = `
-        <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px;">
-          <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Core Investigative Thesis</div>
-          <div style="font-size: 13.5px; font-weight: 600; color: #ffffff; margin-top: 4px;">${escapeHtml(d.thesis || item.title)}</div>
-          <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; margin-top: 10px;">Unseen Frontline Tension</div>
-          <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 3px;">${escapeHtml(d.unseen_tension || 'Frontline operational workarounds bypass formal controls.')}</div>
-        </div>
-
-        <div>
-          <div style="font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">📊 Verified Facts & Empirical Proof:</div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            ${dp.length > 0 ? dp.map(p => `
-              <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 12px;">
-                <span style="color: #ffffff;">📌 ${escapeHtml(p.fact || '')}</span>
-                <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px;">Source: <span style="color: #38bdf8;">${escapeHtml(p.source || 'Study')}</span>${p.url ? ` • <a href="${escapeHtml(p.url)}" target="_blank" style="color: #38bdf8;">Link ↗</a>` : ''}</div>
-              </div>
-            `).join('') : '<div style="font-size: 11px; color: var(--text-muted);">No data points recorded.</div>'}
-          </div>
-        </div>
-
-        <div>
-          <div style="font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">💬 Forensic Quotes & Mental Models:</div>
-          <div style="display: flex; flex-direction: column; gap: 6px;">
-            ${quotes.length > 0 ? quotes.map(q => `
-              <div style="background: rgba(168, 85, 247, 0.08); border-left: 3px solid #a855f7; padding: 6px 12px; font-size: 12px; color: #e2e8f0; font-style: italic;">
-                "${escapeHtml(q)}"
-              </div>
-            `).join('') : '<div style="font-size: 11px; color: var(--text-muted);">No quotes extracted.</div>'}
-          </div>
-        </div>
-
-        <div>
-          <div style="font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">🔗 Citations:</div>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-            ${cites.length > 0 ? cites.map(c => `
-              <span style="font-size: 11px; background: rgba(7, 11, 20, 0.7); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; color: #94a3b8;">
-                🔗 ${escapeHtml(c.title || c.url || 'Citation')} ${c.url ? `<a href="${escapeHtml(c.url)}" target="_blank" style="color: #38bdf8; margin-left: 4px;">↗</a>` : ''}
-              </span>
-            `).join('') : '<span style="font-size: 11px; color: var(--text-muted);">No citations listed.</span>'}
-          </div>
-        </div>
-      `;
-      container.innerHTML = html;
-    }
-
-    function navigateSlide(delta) {
-      if (!currentModalContentItem || !currentModalContentItem.slides_outline) return;
-      const slides = currentModalContentItem.slides_outline;
-      currentSlideIndex = Math.max(0, Math.min(slides.length - 1, currentSlideIndex + delta));
-      updateSlideView();
-    }
-
-    function updateSlideView() {
-      if (!currentModalContentItem || !currentModalContentItem.slides_outline) return;
-      const slides = currentModalContentItem.slides_outline;
-      const slide = slides[currentSlideIndex];
-      if (!slide) return;
-
-      document.getElementById('slide-counter-text').innerText = `Slide ${currentSlideIndex + 1} of ${slides.length}`;
-      document.getElementById('slide-current-number').innerText = `#${slide.slide || (currentSlideIndex + 1)}`;
-      document.getElementById('slide-current-headline').innerText = slide.headline || '';
-      document.getElementById('slide-current-bullet').innerText = slide.bullet || '';
-    }
-
-    /* Copy Actions */
-    function copyFullPost() {
-      if (!currentModalContentItem) return;
-      copyText(currentModalContentItem.content_markdown || currentModalContentItem.article || '');
-    }
-
-    function copySlideScript() {
-      if (!currentModalContentItem || !currentModalContentItem.slides_outline) return;
-      const script = currentModalContentItem.slides_outline.map(s => `[Slide ${s.slide}]
-${s.headline}
-${s.bullet}
-`).join('\n');
-      copyText(script);
-    }
-
-    function copyLinkedInPost() {
-      if (!currentModalContentItem) return;
-      copyText(currentModalContentItem.content_markdown || currentModalContentItem.article || '');
-    }
-
-    function copyBriefing() {
-      if (!currentModalContentItem) return;
-      const d = currentModalContentItem.research_dossier || {};
-      let text = `# ${currentModalContentItem.title}
-
-Thesis: ${d.thesis || ''}
-
-Tension: ${d.unseen_tension || ''}
-
-`;
-      if (d.data_points) {
-        text += `Key Facts:\n` + d.data_points.map(dp => `- ${dp.fact} (${dp.source})`).join('\n') + `\n\n`;
-      }
-      text += (currentModalContentItem.content_markdown || currentModalContentItem.article || '');
-      copyText(text);
-    }
-
-    function copyMarkdown() {
-      if (!currentModalContentItem) return;
-      copyText(currentModalContentItem.content_markdown || currentModalContentItem.article || '');
-    }
-
-    function copyCampaignArticle() {
-      if (!currentModalContentItem) return;
-      const text = currentModalContentItem.article || currentModalContentItem.content_markdown || '';
-      copyText(text);
-      showToast('📖 Long Article copied to clipboard');
-    }
-
-    function copySingleDayPost(dayIndex) {
-      if (!currentModalContentItem) return;
-      const posts = currentModalContentItem.weekly_posts || (currentModalContentItem.campaign_pack && currentModalContentItem.campaign_pack.weekly_posts) || [];
-      const p = posts[dayIndex];
-      if (!p) return;
-      const text = `${p.post_text || ''}\n\n${p.hashtags || ''}`.trim();
-      copyText(text);
-      showToast(`📅 ${p.day} post copied to clipboard`);
-    }
-
-    function copyAllPostsText() {
-      if (!currentModalContentItem) return;
-      const posts = currentModalContentItem.weekly_posts || (currentModalContentItem.campaign_pack && currentModalContentItem.campaign_pack.weekly_posts) || [];
-      const combined = posts.map(p => `### 🗓️ ${p.day}: ${p.title || ''}\n\n${p.post_text || ''}\n\n${p.hashtags || ''}`).join('\n\n---\n\n');
-      copyText(combined);
-      showToast('📅 All 5 posts copied to clipboard');
+      updateCampaignCarousel(deckNum);
     }
 
     function copyCarouselScript(deckNum) {
-      if (!currentModalContentItem) return;
-      const c = deckNum === 1 ? (currentModalContentItem.carousel_1 || {}) : (currentModalContentItem.carousel_2 || {});
-      const slides = c.slides || (deckNum === 1 ? currentModalContentItem.slides_outline : []) || [];
-      const deckTitle = c.title || (deckNum === 1 ? 'Problem Deconstruction Deck' : 'Tactical Operator Framework Deck');
-      const script = `# ${deckTitle}\n\n` + slides.map(s => `[Slide ${s.slide || ''}: ${s.type || ''}]\nHeadline: ${s.headline || ''}\nBody: ${s.bullet || ''}\n`).join('\n');
-      copyText(script);
-      showToast(`🗂️ Carousel ${deckNum} script copied to clipboard`);
+      const item = currentModalContentItem;
+      if (!item) return;
+      const deckKey = deckNum === 1 ? 'carousel_1' : 'carousel_2';
+      const deck = item[deckKey] || (item.campaign_pack && item.campaign_pack[deckKey]) || {};
+      const slides = deck.slides || [];
+      const text = slides.map(s => `[SLIDE ${s.slide || ''} - ${s.type || ''}]\nHEADLINE: ${s.headline || ''}\nBULLET: ${s.bullet || ''}\n`).join('\n');
+      copyTextDirect(text);
     }
 
-    function copyCampaignDossier() {
-      if (!currentModalContentItem) return;
-      const d = currentModalContentItem.research_dossier || {};
-      let text = `# Research Dossier: ${currentModalContentItem.title}\n\nThesis: ${d.thesis || ''}\n\nTension: ${d.unseen_tension || ''}\n\n`;
-      if (d.data_points) {
-        text += `Key Facts:\n` + d.data_points.map(dp => `- ${dp.fact} (${dp.source})`).join('\n') + `\n\n`;
-      }
-      if (d.quotes) {
-        text += `Quotes:\n` + d.quotes.map(q => `> "${q}"`).join('\n\n') + `\n\n`;
-      }
-      copyText(text);
-      showToast('🔬 Research Dossier copied to clipboard');
+    function copyCampaignArticle() {
+      const text = document.getElementById('campaign-article-textarea').value;
+      copyTextDirect(text);
+    }
+
+    function copyAllPostsText() {
+      const item = currentModalContentItem;
+      if (!item) return;
+      const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
+      const text = posts.map(p => `=== ${p.day.toUpperCase()} (${p.theme || ''}) ===\n\n${p.body || p.headline}\n`).join('\n---\n\n');
+      copyTextDirect(text);
     }
 
     function copyFullCampaignBundle() {
-      if (!currentModalContentItem) return;
       const item = currentModalContentItem;
-      const article = item.article || item.content_markdown || '';
+      if (!item) return;
+      let bundle = `# CAMPAIGN BUNDLE: ${item.title || item.topic}\n\n`;
+      bundle += `## 1. LONG INVESTIGATIVE ARTICLE\n\n${item.article || item.content_markdown || ''}\n\n`;
+      bundle += `## 2. 5-DAY POST SERIES\n\n`;
       const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
-      const c1 = item.carousel_1 || {};
-      const c2 = item.carousel_2 || {};
-      const d = item.research_dossier || {};
-
-      let bundle = `# AUTHORITY CAMPAIGN PACK: ${item.title}
-Topic: ${item.topic || ''}
-Voice: ${item.author_voice || item.voice_profile_id || ''}
-
-================================================================================
-PART 1: LONG INVESTIGATIVE ARTICLE (2,000+ WORDS)
-================================================================================
-${article}
-
-================================================================================
-PART 2: 5-DAY FEED SERIES (MONDAY - FRIDAY)
-================================================================================
-` + posts.map(p => `### 🗓️ ${p.day}: ${p.title || ''}\n\n${p.post_text || ''}\n\n${p.hashtags || ''}`).join('\n\n---\n\n') + `
-
-================================================================================
-PART 3: CAROUSEL 1 - ${c1.title || 'PROBLEM DECONSTRUCTION DECK'}
-================================================================================
-` + (c1.slides || []).map(s => `[Slide ${s.slide}: ${s.type || ''}]\nHeadline: ${s.headline}\nBullet: ${s.bullet}\n`).join('\n') + `
-
-================================================================================
-PART 4: CAROUSEL 2 - ${c2.title || 'TACTICAL OPERATOR FRAMEWORK DECK'}
-================================================================================
-` + (c2.slides || []).map(s => `[Slide ${s.slide}: ${s.type || ''}]\nHeadline: ${s.headline}\nBullet: ${s.bullet}\n`).join('\n') + `
-
-================================================================================
-PART 5: RESEARCH DOSSIER & CITATIONS
-================================================================================
-Thesis: ${d.thesis || ''}
-Tension: ${d.unseen_tension || ''}
-
-Data Points:
-` + (d.data_points || []).map(p => `- ${p.fact} (${p.source})`).join('\n') + `
-
-Citations:
-` + (d.citations || []).map(c => `- ${c.title}: ${c.url}`).join('\n');
-
-      copyText(bundle);
-      showToast('📦 Entire Campaign Bundle copied to clipboard!');
+      bundle += posts.map(p => `[${p.day}]: ${p.body || p.headline}`).join('\n\n') + '\n\n';
+      copyTextDirect(bundle);
     }
 
-    function copyText(str) {
-      if (!str) return;
-      navigator.clipboard.writeText(str).then(() => {
-        showToast('Copied to clipboard');
+    function copyMarkdown() {
+      const text = document.getElementById('view-content-markdown').value;
+      copyTextDirect(text);
+    }
+
+    async function deleteContentItem(id) {
+      if (!confirm('Are you sure you want to delete this piece?')) return;
+      try {
+        await fetch('/api/content/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: id })
+        });
+        contentItems = contentItems.filter(x => x.id !== id);
+        updateCountersAndPills();
+        renderContentGrid();
+        showToast('Piece deleted successfully');
+      } catch (err) {
+        showToast('Error deleting item');
+      }
+    }
+
+    // Utility Helpers
+    function copyTextDirect(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!');
       }).catch(() => {
-        showToast('Copied text');
+        showToast('Failed to copy');
       });
     }
 
-    /* Dossier Modal */
-    function openDossierModal(itemId) {
-      const item = contentItems.find(c => c.id === itemId);
-      if (!item) return;
-      currentModalContentItem = item;
-
-      const d = item.research_dossier || {};
-      document.getElementById('dossier-modal-title').innerText = `🔬 Verified Dossier: ${item.title}`;
-      document.getElementById('dossier-thesis').innerText = d.thesis || item.title || 'Core investigative thesis.';
-      document.getElementById('dossier-tension').innerText = d.unseen_tension || 'Frontline operational workarounds bypass formal controls.';
-
-      // Data points
-      const dpContainer = document.getElementById('dossier-data-points');
-      if (d.data_points && d.data_points.length > 0) {
-        dpContainer.innerHTML = d.data_points.map(dp => `
-          <div style="background: rgba(7, 11, 20, 0.6); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;">
-            <div style="font-size: 13px; color: #ffffff; font-weight: 500;">📌 ${escapeHtml(dp.fact)}</div>
-            <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-              Source: <span style="color: #38bdf8;">${escapeHtml(dp.source)}</span>
-              ${dp.url ? ` • <a href="${escapeHtml(dp.url)}" target="_blank" style="color: #38bdf8; text-decoration: underline;">View Citation ↗</a>` : ''}
-            </div>
-          </div>
-        `).join('');
-      } else {
-        dpContainer.innerHTML = `<div style="font-size: 12px; color: var(--text-muted);">No structured facts extracted.</div>`;
-      }
-
-      // Quotes
-      const qContainer = document.getElementById('dossier-quotes');
-      if (d.quotes && d.quotes.length > 0) {
-        qContainer.innerHTML = d.quotes.map(q => `
-          <div class="hook-box">
-            "${escapeHtml(q)}"
-          </div>
-        `).join('');
-      } else {
-        qContainer.innerHTML = `<div style="font-size: 12px; color: var(--text-muted);">No direct quotes extracted.</div>`;
-      }
-
-      // Citations
-      const cContainer = document.getElementById('dossier-citations');
-      if (d.citations && d.citations.length > 0) {
-        cContainer.innerHTML = d.citations.map(c => `
-          <div style="font-size: 12px; color: #cbd5e1; display: flex; align-items: center; gap: 6px;">
-            <span>🔗</span>
-            ${c.url ? `<a href="${escapeHtml(c.url)}" target="_blank" style="color: #38bdf8; text-decoration: underline;">${escapeHtml(c.title || c.url)}</a>` : `<span>${escapeHtml(c.title)}</span>`}
-          </div>
-        `).join('');
-      } else {
-        cContainer.innerHTML = `<div style="font-size: 12px; color: var(--text-muted);">No citation links indexed.</div>`;
-      }
-
-      document.getElementById('dossier-modal').classList.add('active');
-    }
-
-    function synthesizeFromDossierLinks() {
-      if (!currentModalContentItem) return;
-      const d = currentModalContentItem.research_dossier || {};
-      const urls = [];
-
-      // Collect URLs from citations
-      if (Array.isArray(d.citations)) {
-        d.citations.forEach(c => {
-          const u = typeof c === 'string' ? c : (c.url || '');
-          if (u && u.startsWith('http') && !urls.includes(u)) urls.push(u);
-        });
-      }
-      // Collect URLs from data points
-      if (Array.isArray(d.data_points)) {
-        d.data_points.forEach(dp => {
-          const u = typeof dp === 'object' && dp ? dp.url : '';
-          if (u && u.startsWith('http') && !urls.includes(u)) urls.push(u);
-        });
-      }
-      // Collect from source reference if URL
-      if (currentModalContentItem.source_reference && currentModalContentItem.source_reference.startsWith('http')) {
-        const matches = currentModalContentItem.source_reference.match(/https?:\/\/[^\s,]+/g);
-        if (matches) {
-          matches.forEach(u => {
-            if (!urls.includes(u)) urls.push(u);
-          });
-        }
-      }
-
-      closeDossierModal();
-      openCreateModal();
-      switchContentSourceTab('url');
-
-      const urlInput = document.getElementById('gen-url-input');
-      if (urls.length > 0) {
-        urlInput.value = urls.join('\n');
-      } else if (currentModalContentItem.source_reference && currentModalContentItem.source_reference.startsWith('http')) {
-        urlInput.value = currentModalContentItem.source_reference;
-      }
-      const topicInput = document.getElementById('gen-topic-input');
-      if (topicInput && !topicInput.value) {
-        topicInput.value = `Synthesis: ${currentModalContentItem.topic || currentModalContentItem.title}`;
-      }
-      showToast(`Pre-populated ${urls.length || 1} researched link(s)!`);
-    }
-
-    function closeDossierModal() {
-      document.getElementById('dossier-modal').classList.remove('active');
-    }
-
-    /* Toast Utility */
     function showToast(msg) {
-      const toast = document.getElementById('toast');
-      toast.innerText = msg;
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2500);
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
     }
 
     function escapeHtml(str) {
       if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
-    // Initialize
-    loadContentPageData();
+    function strDate(iso) {
+      if (!iso) return '';
+      try { return new Date(iso).toLocaleDateString(); } catch (e) { return iso.substring(0, 10); }
+    }
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadContentPageData();
+    });
   </script>
 </body>
 </html>
@@ -4910,7 +4841,7 @@ from src.discovery.podcast_crawler import search_podcasts, search_preset_categor
 from src.discovery.rss_extractor import enrich_from_rss
 from src.crm.tracker import LeadTracker, ExecutiveTracker, CSV_PATH, JSON_PATH, EXEC_JSON_PATH
 from src.crm.db import DatabaseManager
-from src.content.engine import ResearchSynthesizer, extract_text_from_pdf, extract_text_from_url
+from src.content.engine import ResearchSynthesizer, extract_text_from_pdf, extract_text_from_docx, extract_text_from_url
 
 try:
     from youtube_search import search_youtube
@@ -5714,6 +5645,191 @@ OPERATOR QUOTES & MENTAL MODELS:
     save_local_content_item(new_item)
 
     return jsonify(new_item)
+
+
+
+@app.route("/api/content/notebook/upload", methods=["POST"])
+def notebook_upload():
+    """
+    Accepts file upload (.pdf via pypdf, .docx via docx.Document, .txt, .md),
+    extracts text, and returns { id, name, type, text, size_label }.
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded."}), 400
+    f = request.files["file"]
+    if not f.filename:
+        return jsonify({"error": "Empty filename."}), 400
+
+    filename = f.filename
+    ext = os.path.splitext(filename)[1].lower()
+    raw_text = ""
+    try:
+        if ext == ".pdf":
+            raw_text = extract_text_from_pdf(f.stream)
+        elif ext in [".docx", ".doc"]:
+            raw_text = extract_text_from_docx(f.stream)
+        elif ext in [".txt", ".md", ".json", ".csv"]:
+            raw_text = f.read().decode("utf-8", errors="ignore")
+        else:
+            raw_text = f.read().decode("utf-8", errors="ignore")
+    except Exception as e:
+        return jsonify({"error": f"Failed to extract text from file: {e}"}), 500
+
+    char_count = len((raw_text or "").strip())
+    size_label = f"{char_count:,} chars" if char_count < 100000 else f"{char_count // 1000}k chars"
+    source_id = f"src_{int(datetime.now().timestamp())}_{os.urandom(2).hex()}"
+
+    return jsonify({
+        "id": source_id,
+        "name": filename,
+        "type": ext.lstrip(".") or "file",
+        "text": raw_text,
+        "size_label": size_label,
+        "char_count": char_count
+    })
+
+
+@app.route("/api/content/notebook/scrape", methods=["POST"])
+def notebook_scrape():
+    """
+    Accepts { url }, scrapes clean article text via extract_text_from_url,
+    and returns { id, name, type: 'url', text, url, size_label }.
+    """
+    data = request.get_json() or {}
+    url = (data.get("url") or "").strip()
+    if not url:
+        return jsonify({"error": "No URL provided."}), 400
+
+    scraped = extract_text_from_url(url)
+    clean_text = scraped.get("text", "")
+    title = scraped.get("title") or url
+    char_count = len(clean_text.strip())
+    size_label = f"{char_count:,} chars"
+    source_id = f"src_{int(datetime.now().timestamp())}_{os.urandom(2).hex()}"
+
+    return jsonify({
+        "id": source_id,
+        "name": title,
+        "type": "url",
+        "text": clean_text,
+        "url": url,
+        "size_label": size_label,
+        "char_count": char_count
+    })
+
+
+@app.route("/api/content/notebook/chat", methods=["POST"])
+def notebook_chat():
+    """
+    Interactive NotebookLM Studio Chat Endpoint.
+    Accepts { messages, sources, voice_id, requested_format },
+    calls engine.chat_notebook, saves generated assets to DB,
+    and returns { reply_text, research_dossier, suggested_angles, generated_asset }.
+    """
+    data = request.get_json() or {}
+    messages = data.get("messages") or []
+    sources = data.get("sources") or []
+    voice_id = data.get("voice_id", "forensic-operator")
+    requested_format = data.get("requested_format")
+    voice_profile = get_voice_profile_by_id(voice_id)
+
+    result = synthesizer.chat_notebook(
+        messages=messages,
+        sources=sources,
+        voice_profile=voice_profile,
+        requested_format=requested_format
+    )
+
+    # If an asset was generated, persist it to DB and local content items
+    asset = result.get("generated_asset")
+    if asset and isinstance(asset, dict):
+        try:
+            item_id = f"item_{int(datetime.now().timestamp())}_{os.urandom(2).hex()}"
+            asset_type = asset.get("type", "content")
+            tier_map = {
+                "carousel": "Tier 1: Swipeable Carousel",
+                "essay": "Tier 2: In-Feed Essay",
+                "article": "Tier 3: Executive Briefing",
+                "weekly_posts": "📅 5-Day Post Series",
+                "campaign_pack": "Full Campaign Distribution Pack"
+            }
+            tier = tier_map.get(asset_type, "Synthesized Content")
+            title = asset.get("title") or (messages[-1].get("content")[:60] if messages else "NotebookLM Asset")
+
+            new_item = {
+                "id": item_id,
+                "title": title,
+                "tier": tier,
+                "topic": title,
+                "voice_profile_id": voice_id,
+                "source_type": "notebook_studio",
+                "source_reference": "NotebookLM Studio",
+                "content_markdown": asset.get("markdown") or asset.get("article") or asset.get("copy_script") or "",
+                "slides_outline": asset.get("slides") or (asset.get("carousel_1", {}).get("slides") if isinstance(asset.get("carousel_1"), dict) else []),
+                "research_dossier": result.get("research_dossier", {}),
+                "campaign_pack": asset if asset_type == "campaign_pack" else {},
+                "weekly_posts": asset.get("posts") or asset.get("weekly_posts") or [],
+                "carousel_1": asset if asset_type == "carousel" else asset.get("carousel_1", {}),
+                "carousel_2": asset.get("carousel_2", {}),
+                "article": asset.get("markdown") if asset_type == "article" else asset.get("article", ""),
+                "status": "Ready to Publish",
+                "created_at": datetime.utcnow().isoformat(),
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            if not isinstance(new_item["research_dossier"], dict):
+                new_item["research_dossier"] = {}
+            new_item["research_dossier"]["campaign_pack"] = {
+                "weekly_posts": new_item["weekly_posts"],
+                "carousel_1": new_item["carousel_1"],
+                "carousel_2": new_item["carousel_2"],
+                "article": new_item["article"]
+            }
+
+            if db.is_connected:
+                db.save_content_item(new_item)
+            save_local_content_item(new_item)
+            asset["saved_item_id"] = item_id
+        except Exception as e:
+            print(f"[!] Error auto-saving generated notebook asset: {e}")
+
+    return jsonify(result)
+
+
+@app.route("/api/content/notebook/crm-leads")
+def notebook_crm_leads():
+    """
+    Returns aggregated CRM leads (Executives & Podcasts) formatted for 1-click
+    attachment as active reference sources in NotebookLM Studio.
+    """
+    media_leads = (db.get_all_media_leads() if db.is_connected else None) or tracker.get_leads()
+    exec_leads = (db.get_all_executive_leads() if db.is_connected else None) or exec_tracker.get_leads()
+
+    results = []
+    for e in (exec_leads or []):
+        results.append({
+            "id": f"exec_{e.get('id')}",
+            "name": f"{e.get('name', 'Executive')} ({e.get('company', 'Firm')})",
+            "category": "Executive",
+            "company": e.get("company", ""),
+            "role": e.get("title", "Executive"),
+            "hook": e.get("hook", ""),
+            "notes": e.get("current_activity", "") or e.get("notes", ""),
+            "text": f"EXECUTIVE PROFILE: {e.get('name')} | Firm: {e.get('company')} | Role: {e.get('title')}\nStrategic Angle / Hook: {e.get('hook')}\nCurrent Status / Notes: {e.get('current_activity')}\nPersona: {e.get('persona', '')}\nLinkedIn: {e.get('linkedin_url', '')}"
+        })
+
+    for p in (media_leads or []):
+        results.append({
+            "id": f"media_{p.get('id')}",
+            "name": f"{p.get('name', 'Podcast')} (Host: {p.get('host', 'N/A')})",
+            "category": "Media",
+            "company": p.get("name", ""),
+            "role": p.get("genre", "Audio Podcast"),
+            "hook": p.get("rupert_angle") or p.get("pitch_angle") or "",
+            "notes": p.get("current_activity", "") or p.get("notes", ""),
+            "text": f"SHOW PROFILE: {p.get('name')} | Target Host: {p.get('host')} | Genre: {p.get('genre')}\nRupert Angle / Pitch: {p.get('rupert_angle') or p.get('pitch_angle')}\nCurrent Outreach Activity: {p.get('current_activity')}\nWebsite: {p.get('website', '')}"
+        })
+
+    return jsonify(results)
 
 
 @app.route("/api/voices", methods=["GET", "POST"])

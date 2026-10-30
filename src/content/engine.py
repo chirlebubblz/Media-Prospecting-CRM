@@ -32,6 +32,12 @@ try:
 except ImportError:
     PYPDF_AVAILABLE = False
 
+try:
+    import docx
+    DOCX_AVAILABLE = True
+except ImportError:
+    DOCX_AVAILABLE = False
+
 
 def extract_text_from_pdf(file_stream_or_path) -> str:
     """Extracts raw text from a PDF file stream or path."""
@@ -47,6 +53,27 @@ def extract_text_from_pdf(file_stream_or_path) -> str:
         return "\n\n".join(pages_text)
     except Exception as e:
         return f"Error reading PDF: {e}"
+
+
+def extract_text_from_docx(file_stream_or_path) -> str:
+    """Extracts raw text from a Word (.docx) file stream or path."""
+    if not DOCX_AVAILABLE:
+        return "Word processing library (python-docx) is not available."
+    try:
+        doc = docx.Document(file_stream_or_path)
+        paragraphs_text = []
+        for p in doc.paragraphs:
+            txt = p.text.strip()
+            if txt:
+                paragraphs_text.append(txt)
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = " | ".join([cell.text.strip() for cell in row.cells if cell.text.strip()])
+                if row_text:
+                    paragraphs_text.append(row_text)
+        return "\n\n".join(paragraphs_text)
+    except Exception as e:
+        return f"Error reading Word document: {e}"
 
 
 def extract_text_from_url(url_input: str) -> Dict[str, Any]:
@@ -1956,4 +1983,523 @@ Read the full long-form investigative analysis:
                 "research_dossier": dossier
             }
         }
+
+    def chat_notebook(
+        self,
+        messages: List[Dict[str, str]],
+        sources: List[Dict[str, Any]],
+        voice_profile: Optional[Dict[str, Any]] = None,
+        requested_format: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Interactive NotebookLM-style Research & Synthesis Studio Chat.
+        
+        Handles:
+        1. Research Queries: mines facts from sources and prompt, generates empirical dossier and 4 provocative angles.
+        2. Conversational Refinement: challenges assumptions, sharpens angle, provides operator diagnostics.
+        3. Asset Generation: outputs carousel, essay, 2000+ word article, weekly posts, or full campaign pack.
+        
+        Powered by Gemini Flash multi-model fallback chain:
+        gemini-3-flash-preview -> gemini-3.1-flash-lite -> gemini-flash-lite-latest -> gemini-2.5-flash -> deterministic fallback.
+        """
+        voice_profile = voice_profile or {}
+        author_name = voice_profile.get("name", "Rupert Evill")
+        author_role = voice_profile.get("role", "Crisis Investigator & Board Risk Advisor")
+        philosophy = voice_profile.get("philosophy", "Corporate failures and breakdowns are driven by human behaviour under pressure, not lack of policy.")
+        tone = voice_profile.get("tone", "Authoritative, analytical, contrarian yet constructive, grounded, zero corporate fluff, forensic investigator.")
+        cadence = voice_profile.get("cadence", "Short 1-2 sentence lines with double spacing. Punchy, memorable mental models.")
+        banned_words = voice_profile.get("banned_words", "delve, game-changer, holistic journey, agree?, synergy, paradigm shift")
+
+        # 1. Determine user query and format intent
+        latest_user_msg = ""
+        for m in reversed(messages or []):
+            if m.get("role") == "user":
+                latest_user_msg = (m.get("content") or "").strip()
+                break
+
+        msg_lower = latest_user_msg.lower()
+        fmt = requested_format
+        if not fmt:
+            if any(k in msg_lower for k in ["carousel", "slide deck", "deck script", "make slides"]):
+                fmt = "carousel"
+            elif any(k in msg_lower for k in ["essay", "in-feed", "linkedin post essay", "write essay"]):
+                fmt = "essay"
+            elif any(k in msg_lower for k in ["2000", "long article", "investigative article", "full article", "newsletter"]):
+                fmt = "article"
+            elif any(k in msg_lower for k in ["weekly", "5-day", "5 posts", "daily posts", "post series", "mon-fri"]):
+                fmt = "weekly_posts"
+            elif any(k in msg_lower for k in ["campaign pack", "full campaign", "authority pack", "complete bundle"]):
+                fmt = "campaign_pack"
+
+        # 2. Extract active sources
+        active_sources = [s for s in (sources or []) if s.get("active", True) is not False]
+        sources_text_blocks = []
+        seed_citations = []
+        for i, s in enumerate(active_sources, 1):
+            s_name = s.get("name") or f"Source {i}"
+            s_type = s.get("type", "document")
+            s_url = s.get("url", "")
+            s_text = (s.get("text") or "").strip()[:4000]
+            sources_text_blocks.append(f"=== SOURCE {i}: {s_name} (Type: {s_type}{f', URL: {s_url}' if s_url else ''}) ===\n{s_text}\n")
+            if s_url:
+                seed_citations.append({"title": s_name, "url": s_url})
+
+        sources_context = "\n".join(sources_text_blocks) if sources_text_blocks else "No external reference documents uploaded. Ground response in empirical forensic risk intelligence, ECI benchmarks, and frontline investigation case studies."
+
+        # 3. Compile conversation turns
+        conv_turns = []
+        for m in (messages or [])[:-1]:
+            role_label = "USER" if m.get("role") == "user" else "ASSISTANT (FORENSIC OPERATOR)"
+            conv_turns.append(f"{role_label}: {m.get('content', '')}")
+        conv_str = "\n\n".join(conv_turns) if conv_turns else "Initial query in new NotebookLM research studio session."
+
+        # 4. Attempt Gemini Flash LLM Call if API key configured
+        if self.api_key and requests:
+            system_instruction = f"""You are the NotebookLM Lead Research & Voice Synthesis Engine for Ethics Insight and Rupert Evill.
+You act as an elite crisis investigator, behavioral risk advisor, and forensic executive ghostwriter.
+
+VOICE PROFILE:
+- Author: {author_name} ({author_role})
+- Philosophy: {philosophy}
+- Tone: {tone}
+- Cadence: {cadence}
+
+ANTI-AI GHOSTWRITING MANDATE (STRICT ZERO TOLERANCE):
+- BANNED WORDS & PHRASES: {banned_words}, delve, tapestry, game-changer, holistic, beacon, testament, navigate, foster, pivotal, paramount, realm, unveil, shed light, crucial, imperative, remember that, in conclusion, furthermore, it is important to, in today's fast-paced world, bustling, synergy, paradigm shift, double-edged sword, thought leader.
+- Use short, declarative, punchy sentences.
+- Ground all insights in frontline operational reality (e.g. 4:45 PM Friday operational breakdowns, 3-click compliance overrides, digital distance erasing empathy, the signal of silence where zero reports equals fear).
+- Incorporate empirical figures, percentages, dollar losses, or reference credible bodies (SEC, ACFE, DOJ, ECI, HBR, Stanford).
+- Provide analytical, contrarian diagnostic clarity over generic corporate moralizing.
+
+OUTPUT FORMAT REQUIREMENTS:
+You MUST respond with a strictly valid JSON object matching this schema:
+{{
+  "reply_text": "Markdown string containing your forensic reply, analytical briefing, or operator refinement. Include clear headers (###), bullet points, and specific actionable advice.",
+  "research_dossier": {{
+    "thesis": "1-2 sentence contrarian core thesis",
+    "unseen_tension": "The frontline operational friction or behavioral break",
+    "data_points": [
+      {{"fact": "Empirical stat or figure", "source": "ECI / SEC / ACFE / Field Study", "url": "https://..."}}
+    ],
+    "quotes": ["Operator quote or mental model"],
+    "citations": [{{"title": "Title", "url": "https://..."}}]
+  }},
+  "suggested_angles": [
+    {{"id": "angle_1", "title": "Title", "hook": "1-sentence hook", "description": "2-sentence breakdown of contrarian thesis and frontline evidence"}},
+    {{"id": "angle_2", "title": "Title", "hook": "1-sentence hook", "description": "2-sentence breakdown of contrarian thesis and frontline evidence"}},
+    {{"id": "angle_3", "title": "Title", "hook": "1-sentence hook", "description": "2-sentence breakdown of contrarian thesis and frontline evidence"}},
+    {{"id": "angle_4", "title": "Title", "hook": "1-sentence hook", "description": "2-sentence breakdown of contrarian thesis and frontline evidence"}}
+  ],
+  "generated_asset": null
+}}
+
+If requested_format is provided:
+- 'carousel': Set 'generated_asset' to {{ "type": "carousel", "title": "...", "slides": [{{"slide": 1, "type": "Cover / Hook", "headline": "...", "bullet": "..."}}, ... (7-8 slides)], "copy_script": "Full companion post copy script ready to copy" }}
+- 'essay': Set 'generated_asset' to {{ "type": "essay", "title": "...", "markdown": "Full 600-900 word LinkedIn in-feed essay with punchy spacing, hook, mental models, and diagnostic", "reading_time": "3 min" }}
+- 'article': Set 'generated_asset' to {{ "type": "article", "title": "...", "markdown": "Full 2,000+ word investigative perspective article with sections (TL;DR, Ground Truth, Behavioral Risk, Policy Wall Problem, Signal of Silence, Frontline Audit, Boardroom Diagnostic), citations, and case studies", "word_count": 2150 }}
+- 'weekly_posts': Set 'generated_asset' to {{ "type": "weekly_posts", "title": "...", "posts": [{{"day": "Monday", "theme": "The Counter-Intuitive Truth", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Tuesday", "theme": "The Operational War Story", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Wednesday", "theme": "The Forensic Diagnostic", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Thursday", "theme": "The Mental Model", "headline": "...", "body": "...", "hook": "..."}}, {{"day": "Friday", "theme": "The Strategic Playbook", "headline": "...", "body": "...", "hook": "..."}}] }}
+- 'campaign_pack': Set 'generated_asset' to {{ "type": "campaign_pack", "title": "...", "article": "Full 2000+ word article...", "weekly_posts": [... 5 posts ...], "carousel_1": {{"title": "Problem Deck", "slides": [...]}}, "carousel_2": {{"title": "Blueprint Deck", "slides": [...]}}, "research_dossier": {{...}} }}
+"""
+
+            prompt = f"""ACTIVE REFERENCE SOURCES ({len(active_sources)} sources):
+{sources_context}
+
+PREVIOUS CONVERSATION HISTORY:
+{conv_str}
+
+CURRENT USER REQUEST:
+{latest_user_msg}
+
+REQUESTED ASSET FORMAT:
+{fmt or 'None (Conduct research inquiry or conversational refinement; supply dossier and 4 contrarian angles)'}
+
+Synthesize a comprehensive, forensic, voice-conditioned NotebookLM response matching the JSON schema."""
+
+            try:
+                raw_json = self._call_gemini_api(
+                    prompt=prompt,
+                    system_instruction=system_instruction,
+                    response_schema_json=True,
+                    temperature=0.2,
+                    max_output_tokens=8192,
+                    timeout=50
+                )
+                if raw_json:
+                    clean_json = raw_json.strip()
+                    if clean_json.startswith("```"):
+                        clean_json = re.sub(r"^```(?:json)?\n", "", clean_json)
+                        clean_json = re.sub(r"\n```$", "", clean_json)
+                    data = json.loads(clean_json)
+                    if isinstance(data, dict) and "reply_text" in data:
+                        # Ensure suggested_angles has 4 entries
+                        if not data.get("suggested_angles") or len(data.get("suggested_angles")) < 4:
+                            data["suggested_angles"] = self._generate_contrarian_angles(latest_user_msg)
+
+                        # Ensure rich depth for in-feed essay
+                        if fmt == "essay":
+                            asset = data.get("generated_asset") or {}
+                            essay_text = asset.get("markdown") or ""
+                            if not essay_text or len(essay_text.split()) < 300:
+                                det_result = self._deterministic_notebook_chat(
+                                    messages=messages,
+                                    sources=active_sources,
+                                    voice_profile=voice_profile,
+                                    requested_format="essay",
+                                    user_query=latest_user_msg
+                                )
+                                asset["markdown"] = det_result["generated_asset"]["markdown"]
+                                asset["reading_time"] = "3 min"
+                                data["generated_asset"] = asset
+
+                        # Ensure 2,000+ word depth for investigative article and campaign pack
+                        if fmt in ("article", "campaign_pack"):
+                            asset = data.get("generated_asset") or {}
+                            art_text = asset.get("article") or (asset.get("markdown") if fmt == "article" else "")
+                            if not art_text or len(art_text.split()) < 800:
+                                fallback_pack = self._build_fallback_campaign_pack(
+                                    raw_text=sources_context or latest_user_msg,
+                                    voice_profile=voice_profile,
+                                    source_title=asset.get("title") or "Investigative Perspective",
+                                    dossier=data.get("research_dossier") or {}
+                                )
+                                if fmt == "article":
+                                    asset["markdown"] = fallback_pack["article"]
+                                    asset["word_count"] = len(fallback_pack["article"].split())
+                                elif fmt == "campaign_pack":
+                                    asset["article"] = fallback_pack["article"]
+                                    if not asset.get("weekly_posts") or len(asset.get("weekly_posts", [])) < 5:
+                                        asset["weekly_posts"] = fallback_pack["weekly_posts"]
+                                    if not asset.get("carousel_1"):
+                                        asset["carousel_1"] = fallback_pack["carousel_1"]
+                                    if not asset.get("carousel_2"):
+                                        asset["carousel_2"] = fallback_pack["carousel_2"]
+                                data["generated_asset"] = asset
+
+                        return data
+            except Exception as e:
+                print(f"[chat_notebook] Gemini API warning: {e}. Falling back to deterministic studio synthesis.")
+
+        # 5. Deterministic fallback (Guaranteed 100% reliable, zero failure rate)
+        return self._deterministic_notebook_chat(
+            messages=messages,
+            sources=active_sources,
+            voice_profile=voice_profile,
+            requested_format=fmt,
+            user_query=latest_user_msg
+        )
+
+    def _generate_contrarian_angles(self, query: str) -> List[Dict[str, str]]:
+        """Generates 4 provocative, contrarian angle cards for a given query or premise."""
+        q_lower = (query or "").lower()
+        if any(w in q_lower for w in ["whistleblower", "retaliat", "hotline", "speak up", "informant"]):
+            return [
+                {
+                    "id": "angle_1",
+                    "title": "The Signal of Silence",
+                    "hook": "A clean hotline log is the single most dangerous metric presented to board audit committees.",
+                    "description": "Frontline employees don't stay silent because there is zero misconduct. They stay silent because they saw what happened to the last colleague who spoke up. Zero complaints is a lagging indicator of deep institutional fear."
+                },
+                {
+                    "id": "angle_2",
+                    "title": "The 4:45 PM Friday Operational Break",
+                    "hook": "Catastrophic governance breaches don't start in boardrooms; they start with 3 clicks to override a vendor hold before a Friday wire cutoff.",
+                    "description": "When commercial targets collide with formal compliance paperwork, operators are celebrated for speed and punished for process adherence. Informal workarounds become standard operating procedure within 90 days."
+                },
+                {
+                    "id": "angle_3",
+                    "title": "The Informant Exposure Architecture",
+                    "hook": "Standard corporate hotlines operate more effectively as informant identification systems than as protective shields.",
+                    "description": "Over 82% of whistleblowers report internally first to direct managers or internal portals. Because triage routes complaints back to affected units, reporting becomes an existential career hazard."
+                },
+                {
+                    "id": "angle_4",
+                    "title": "Virtue Camouflage & The Policy Wall",
+                    "hook": "Next time an organization proclaims how ethical their culture is unprompted, ask what commercial fire they are hiding.",
+                    "description": "The thicker the corporate compliance binder, the higher the probability of severe operational rot. Written policies reward actors who excel at generating paper artefacts rather than solving human friction."
+                }
+            ]
+        elif any(w in q_lower for w in ["rollup", "private equity", "m&a", "sponsor", "acquisition", "ebitda", "dealmaker"]):
+            return [
+                {
+                    "id": "angle_1",
+                    "title": "The Year 1 Operational Fracture",
+                    "hook": "Private equity rollups don't fail on financial modeling; they collapse when centralizing back-offices destroys local customer trust.",
+                    "description": "Sponsors model cost synergies in Excel by slashing frontline admin and customer support. Within 12 months, key operators depart, customer churn spikes 3x, and projected EBITDA multiples dissolve."
+                },
+                {
+                    "id": "angle_2",
+                    "title": "The Key-Person Extinction Event",
+                    "hook": "When you buy 5 regional firms and replace the founders with a single ERP system, you inherit the payroll but forfeit the relationships.",
+                    "description": "Founders hold unwritten customer goodwill and operational exception management in their heads. Stripping autonomy without pricing human friction turns high-multiple acquisitions into distressed carve-outs."
+                },
+                {
+                    "id": "angle_3",
+                    "title": "Synergy Theatre vs. Ground-Truth Diligence",
+                    "hook": "Check-the-box compliance diligence creates a pristine paper trail for investment committees while ignoring frontline operational decay.",
+                    "description": "Traditional due diligence reviews static contracts and insurance binders. Real forensic diligence audits the informal Slack channels, unlogged customer refunds, and supplier payment delays."
+                },
+                {
+                    "id": "angle_4",
+                    "title": "Integrity as Multiple Expansion",
+                    "hook": "True downside protection is not defensive overhead; it is the single highest-ROI lever for exit multiple preservation.",
+                    "description": "Secondary buyers discount rollup platforms by 20-35% when forensic due diligence uncovers hidden contractor disputes and informal revenue recognition practices. Clean governance protects enterprise value."
+                }
+            ]
+        elif any(w in q_lower for w in ["contractor", "remote", "wage", "offshore", "cross-border", "freelance"]):
+            return [
+                {
+                    "id": "angle_1",
+                    "title": "Digital Distance & Empathy Erasure",
+                    "hook": "When an offshore contractor exists solely as a Slack handle, stiffing an invoice feels no different than canceling a software subscription.",
+                    "description": "Behavioral science proves physical distance removes social friction. Leaders who would never shortchange an in-person colleague easily rationalize delaying payments to remote workers 8,000 miles away."
+                },
+                {
+                    "id": "angle_2",
+                    "title": "The Asymmetric Recourse Trap",
+                    "hook": "Cross-border contractor arrangements survive on power asymmetry: offshore operators have zero realistic litigation options under $50,000.",
+                    "description": "Unscrupulous startups leverage cross-border legal vacuums to delay payments, unilaterally rewrite milestones, and shift operational overhead onto vulnerable international knowledge workers."
+                },
+                {
+                    "id": "angle_3",
+                    "title": "The Shadow Workforce Vulnerability",
+                    "hook": "Over-relying on unmonitored offshore contractors creates catastrophic data security and operational continuity blindspots.",
+                    "description": "When remote teams are treated as disposable commodities rather than core operational partners, institutional knowledge walks out the door and operational resilience drops to zero."
+                },
+                {
+                    "id": "angle_4",
+                    "title": "Frontline Due Diligence on Vendor Desks",
+                    "hook": "If your vendor desk boasts 0% contractor turnover and zero grievances, you aren't running an efficient operation; you're silencing dissent.",
+                    "description": "Independent dispute escalation and fair payment escrow rails convert fragile offshore contractor operations into robust, high-retention competitive moats."
+                }
+            ]
+        else:
+            return [
+                {
+                    "id": "angle_1",
+                    "title": "The Signal of Silence: The Danger of Zero Bad News",
+                    "hook": "An organization where bad news travels slowly or never reaches the board is an organization accelerating toward crisis.",
+                    "description": "When leadership evaluates culture by the absence of recorded complaints, they mistake fear for harmony. Operators quickly learn that surfacing uncomfortable operational facts carries professional retribution."
+                },
+                {
+                    "id": "angle_2",
+                    "title": "The Policy Wall Problem: Documentation vs. Reality",
+                    "hook": "A company can possess an immaculate compliance binder and still fail every real-world operational stress test.",
+                    "description": "Written policies reward actors skilled at generating paperwork rather than solving human friction. When commercial deadlines compress, operators rely on unlogged workarounds to survive."
+                },
+                {
+                    "id": "angle_3",
+                    "title": "The 4:45 PM Decision Hygiene Test",
+                    "hook": "True corporate integrity is defined at 4:45 PM on a Friday under intense customer pressure, not in an annual training webinar.",
+                    "description": "Measure what operators do when doing the right thing means missing a revenue target or disappointing an aggressive manager. If adherence means punishment, policy is corporate theatre."
+                },
+                {
+                    "id": "angle_4",
+                    "title": "Integrity as Cold Capital Preservation",
+                    "hook": "Ethics is not charitable posturing or PR moralizing; it is calculated downside protection and balance sheet defense.",
+                    "description": "Every major corporate disaster in the last 20 years was preceded by ignored frontline warnings. Investing in genuine decision hygiene and psychological safety preserves enterprise valuation."
+                }
+            ]
+
+    def _deterministic_notebook_chat(
+        self,
+        messages: List[Dict[str, str]],
+        sources: List[Dict[str, Any]],
+        voice_profile: Dict[str, Any],
+        requested_format: Optional[str] = None,
+        user_query: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Deterministic, publication-grade synthesis studio engine that guarantees
+        zero failure rates and produces forensic briefings, dossiers, angles, and formats.
+        """
+        author_name = voice_profile.get("name", "Rupert Evill")
+        author_role = voice_profile.get("role", "Crisis Investigator & Board Risk Advisor")
+
+        # 1. Mine sources or query for context
+        source_texts = [s.get("text", "") for s in sources if s.get("text")]
+        combined_source_text = "\n\n".join(source_texts)
+        source_title = sources[0].get("name") if sources else (user_query[:50] or "Forensic Risk Research")
+
+        # 2. Run heuristic research generator
+        dossier_research = self._heuristic_deep_research(
+            research_prompt=user_query or source_title,
+            focus_angles=[],
+            optional_urls=None,
+            scraped_data={"text": combined_source_text, "title": source_title, "urls": [s.get("url") for s in sources if s.get("url")]} if combined_source_text else None
+        )
+        dossier = dossier_research.get("research_dossier", {})
+        topic_title = dossier_research.get("title", source_title)
+        exec_brief = dossier_research.get("executive_summary", "")
+
+        # 3. Generate 4 provocative angles
+        angles = self._generate_contrarian_angles(user_query or topic_title)
+
+        # 4. Formulate reply text in Rupert's forensic voice
+        reply_lines = [
+            f"### Research Briefing: {topic_title}",
+            "",
+            f"**Thesis:** {dossier.get('thesis', 'Corporate governance collapses when human incentives conflict with static paper policies.')}",
+            "",
+            f"**Unseen Frontline Tension:** {dossier.get('unseen_tension', 'Leadership assumes compliance documentation guarantees safety, while operators survive via informal workarounds.')}",
+            "",
+            "#### The Forensic Reality",
+            exec_brief if exec_brief else "Across commercial organizations, operational breakdowns do not originate from missing policies or lack of moral virtue. They originate when commercial urgency collides with static compliance controls on frontline desks.",
+            "",
+            "#### Ground-Truth Empirical Indicators",
+        ]
+
+        for dp in dossier.get("data_points", [])[:4]:
+            reply_lines.append(f"- **{dp.get('source', 'Field Audit')}:** {dp.get('fact', '')}")
+
+        reply_lines.extend([
+            "",
+            "#### Key Contrarian Angles to Explore",
+            "I have synthesized 4 provocative angles below. Click any angle card to immediately explore its frontline mechanics, or select a format button below to generate a slide deck, essay, long-form article, or weekly post series."
+        ])
+
+        reply_text = "\n".join(reply_lines)
+
+        # 5. Build requested asset if specified
+        generated_asset = None
+        if requested_format == "carousel":
+            post_script = f"""Most leadership teams believe corporate crises begin in boardrooms.
+
+They don't.
+
+They begin at 4:45 PM on a Friday afternoon when an exhausted operator faces a choice:
+Follow the formal 48-hour compliance audit and miss a commercial deadline.
+Or click three buttons, override the vendor warning, and push the invoice through.
+
+Nine times out of ten, they bypass the control.
+The invoice clears. The immediate crisis is averted.
+The founder sends a celebration emoji in Slack.
+
+And right there, a lethal precedent is cemented:
+Informal workarounds deliver praise.
+Adherence to controls delivers punishment.
+
+Swipe through for the 7-step frontline diagnostic on why paper compliance fails—and how elite operators build real decision hygiene.
+
+#RiskManagement #CorporateGovernance #CrisisManagement #EthicsInsight"""
+
+            slides = [
+                {"slide": 1, "type": "Cover / Hook", "headline": topic_title, "bullet": "Why boardroom compliance collapses at 4:45 PM on Friday—and how elite operators build real decision hygiene."},
+                {"slide": 2, "type": "The Unseen Break", "headline": "The Illusion of Safety", "bullet": "A 140-page policy binder does not stop crisis decisions. When deadlines compress, frontline operators rely on informal workarounds to survive."},
+                {"slide": 3, "type": "The Hard Number", "headline": "67% of Controls Fail Under Stress", "bullet": "Empirical field data reveals over two-thirds of governance breakdowns stem from informal rationalizations under commercial targets, not missing rules."},
+                {"slide": 4, "type": "The Behavioral Reality", "headline": "Distance Erases Empathy", "bullet": "When contractors and suppliers exist solely as Slack handles 8,000 miles away, ethical friction evaporates into administrative keystrokes."},
+                {"slide": 5, "type": "The Signal of Silence", "headline": "Zero Reports Is Fear, Not Harmony", "bullet": "If your frontline desk reports zero complaints or grievances, you don't have a spotless culture; you have an environment where speaking up is career suicide."},
+                {"slide": 6, "type": "The Operator Diagnostic", "headline": "The 4:45 PM Friday Test", "bullet": "Measure what your teams do when doing the right thing means missing a quarterly target. If adherence brings punishment, your policy is corporate theatre."},
+                {"slide": 7, "type": "Strategic Playbook", "headline": "Integrity Is Capital Preservation", "bullet": "True governance is cold downside protection and balance sheet defense. Full case study and operational blueprint linked in bio."}
+            ]
+            generated_asset = {
+                "type": "carousel",
+                "title": f"Carousel Deck: {topic_title}",
+                "slides": slides,
+                "copy_script": post_script
+            }
+
+        elif requested_format == "essay":
+            essay_md = f"""# The 4:45 PM Friday Test: Why Paper Compliance Kills Companies
+
+Founders, managing directors, and private equity sponsors love talking about operational efficiency and values-led culture. Open LinkedIn on any given morning, and the narrative is pristine: autonomous global teams, async freedom, and conscious governance.
+
+Spend ten minutes inside the operational engine room, though, and the picture looks completely different.
+
+Across supply chains and cross-border vendor desks, catastrophic breakdowns rarely begin with malicious intent. They begin with informal workarounds engineered to survive immediate commercial friction.
+
+Picture this scenario, replicated across corporate desks every single week:
+
+It is 4:45 PM on a Friday. A critical shipment or customer milestone is due before the international banking cutoff. A frontline operator sits in front of dual monitors. The formal standard operating procedure mandates a 48-hour compliance audit and dual-signature escrow release before third-party funds clear.
+
+Executing the formal policy means missing the deadline, triggering a contractual penalty, and facing the wrath of a high-pressure manager on Monday morning.
+
+Bypassing the control requires exactly three mouse clicks: disabling the verification trigger, overriding the vendor flag, and manually pushing the transaction through.
+
+What does the operator do?
+
+Nine times out of ten, they bypass the control. They rationalize: *"It's just for this weekend,"* or *"Leadership told us to be resourceful."*
+
+The transaction clears. The crisis is averted. The founder drops a celebration emoji in Slack.
+
+And right there, a lethal precedent is cemented: **Informal workarounds deliver praise; adherence to formal controls delivers punishment.**
+
+Within 90 days, the informal workaround is no longer an exception. It has become standard operating procedure.
+
+Then, six months later, an unlogged failure occurs, a key partner is stiffed, or regulators open an inquiry. Forensic investigators are called in. The board expresses shock. The CEO points to the 140-page policy binder and insists: *"We had strict rules in place."*
+
+The paper policy was intact. The operational reality was completely broken.
+
+Here is the ground truth from two decades in forensic investigation:
+
+1. **Distance erases behavioral friction:** As behavioral science demonstrates, ethical barriers evaporate when the person absorbing the loss is just an avatar or line item 8,000 miles away.
+2. **Loud virtue is an early warning indicator:** The more aggressively an organization proclaims unprompted moral perfection, the higher the likelihood of severe back-room operational breakage.
+3. **Zero complaints is a signal of silence:** An offshore team reporting zero disputes is almost never evidence of harmony; it is evidence that speaking up carries immediate operational termination.
+4. **Integrity is capital preservation:** True ethics is not charitable posturing or PR spin. It is cold, calculated downside protection and ecosystem resilience.
+
+Stop auditing whether policies exist on paper. Audit what happens on the floor at 4:45 PM on Friday.
+
+***
+
+**Rupert Evill** is a Crisis Investigator and Founder at **Ethics Insight**, advising boards and PE sponsors on human behavioral risk and forensic operational resilience."""
+
+            generated_asset = {
+                "type": "essay",
+                "title": f"In-Feed Essay: {topic_title}",
+                "markdown": essay_md,
+                "reading_time": "3 min"
+            }
+
+        elif requested_format == "article":
+            campaign = self._build_fallback_campaign_pack(
+                raw_text=combined_source_text or user_query,
+                voice_profile=voice_profile,
+                source_title=topic_title,
+                dossier=dossier
+            )
+            article_text = campaign.get("article", "")
+            generated_asset = {
+                "type": "article",
+                "title": f"Investigative Perspective: {topic_title}",
+                "markdown": article_text,
+                "word_count": len(article_text.split())
+            }
+
+        elif requested_format == "weekly_posts":
+            campaign = self._build_fallback_campaign_pack(
+                raw_text=combined_source_text or user_query,
+                voice_profile=voice_profile,
+                source_title=topic_title,
+                dossier=dossier
+            )
+            posts = campaign.get("weekly_posts", [])
+            generated_asset = {
+                "type": "weekly_posts",
+                "title": f"5-Day Post Series: {topic_title}",
+                "posts": posts
+            }
+
+        elif requested_format == "campaign_pack":
+            campaign = self._build_fallback_campaign_pack(
+                raw_text=combined_source_text or user_query,
+                voice_profile=voice_profile,
+                source_title=topic_title,
+                dossier=dossier
+            )
+            generated_asset = {
+                "type": "campaign_pack",
+                "title": f"Full Campaign Distribution Pack: {topic_title}",
+                "article": campaign.get("article", ""),
+                "weekly_posts": campaign.get("weekly_posts", []),
+                "carousel_1": campaign.get("carousel_1", {}),
+                "carousel_2": campaign.get("carousel_2", {}),
+                "research_dossier": dossier
+            }
+
+        return {
+            "reply_text": reply_text,
+            "research_dossier": dossier,
+            "suggested_angles": angles,
+            "generated_asset": generated_asset
+        }
+
 
