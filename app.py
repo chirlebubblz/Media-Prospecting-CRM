@@ -3060,10 +3060,13 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Filter & Search Toolbar -->
     <div class="filter-toolbar">
-      <div class="search-input-wrap">
+      <div class="search-input-wrap" style="position: relative; display: flex; align-items: center;">
         <span class="search-icon">🔍</span>
-        <input type="text" id="content-search-input" class="search-input" placeholder="Search content pieces by title, thesis, or topic..." oninput="handleContentSearch()">
-        <button id="search-clear-btn" class="search-clear-btn" onclick="clearContentSearch()" style="display: none;">✕</button>
+        <input type="text" id="content-search-input" class="search-input" style="padding-right: 140px;" placeholder="Type a research question, premise, or keyword (press Enter to research)..." oninput="handleContentSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault(); executeResearchFromMainBar();}">
+        <button id="search-clear-btn" class="search-clear-btn" onclick="clearContentSearch()" style="display: none; right: 135px;">✕</button>
+        <button type="button" class="btn btn-xs" onclick="executeResearchFromMainBar()" style="position: absolute; right: 6px; background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border: 1px solid #38bdf8; font-weight: 700; padding: 6px 14px; border-radius: 6px; box-shadow: 0 0 10px rgba(14, 165, 233, 0.4); cursor: pointer;" title="Run Deep Research on this question or premise">
+          <span>🔬 Research This</span>
+        </button>
       </div>
 
       <div class="filter-controls">
@@ -3770,17 +3773,21 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
       if (filtered.length === 0) {
         if (searchQuery.trim()) {
-          const qEsc = escapeHtml(searchQuery.trim());
+          const qRaw = searchQuery.trim();
           container.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: rgba(14, 165, 233, 0.05); border: 1px dashed rgba(56, 189, 248, 0.4); border-radius: 12px;">
               <div style="font-size: 34px; margin-bottom: 10px;">🔬</div>
-              <div style="font-size: 16px; font-weight: 700; color: #ffffff;">No saved content matches "${qEsc}"</div>
-              <div style="font-size: 13px; color: var(--text-muted); margin: 6px 0 16px 0;">Turn this query into a NotebookLM-style investigative intelligence dossier.</div>
-              <button class="btn btn-primary" onclick="launchResearchFromSearch('${qEsc}')" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);">
-                <span>🔬 Run Deep Research on "${qEsc}"</span>
+              <div style="font-size: 16px; font-weight: 700; color: #ffffff;" id="empty-search-header-msg"></div>
+              <div style="font-size: 13px; color: var(--text-muted); margin: 6px 0 16px 0;">Turn this question or premise into an autonomous deep research dossier.</div>
+              <button type="button" class="btn btn-primary" id="btn-empty-research-action" style="background: linear-gradient(135deg, #0284c7, #0ea5e9); color: #ffffff; border-color: #38bdf8; font-weight: 700; box-shadow: 0 0 15px rgba(14, 165, 233, 0.35); padding: 10px 22px;">
+                <span>🔬 Run Deep Research on this Topic</span>
               </button>
             </div>
           `;
+          const msgEl = document.getElementById('empty-search-header-msg');
+          if (msgEl) msgEl.innerText = 'No saved content matches: ' + qRaw;
+          const btnEl = document.getElementById('btn-empty-research-action');
+          if (btnEl) btnEl.onclick = () => launchResearchFromSearch(qRaw);
         } else {
           container.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; background: var(--bg-surface); border: 1px dashed var(--border); border-radius: 12px;">
@@ -3936,6 +3943,16 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         p.value = current + ' -- Focus: ' + cleanAngle;
       }
       p.focus();
+    }
+
+    function executeResearchFromMainBar() {
+      const input = document.getElementById('content-search-input');
+      const val = (input ? input.value : searchQuery).trim();
+      if (!val) {
+        openDeepResearchModal();
+      } else {
+        launchResearchFromSearch(val);
+      }
     }
 
     function launchResearchFromSearch(query) {
