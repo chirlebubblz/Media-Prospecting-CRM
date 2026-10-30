@@ -3980,7 +3980,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       document.getElementById('voice-philosophy-input').value = preset.philosophy || '';
       
       const sampleText = Array.isArray(preset.sample_texts) 
-        ? preset.sample_texts.join('\n\n') 
+        ? preset.sample_texts.join(String.fromCharCode(10, 10)) 
         : (preset.sample_writing || preset.sample_texts || '');
       document.getElementById('voice-samples-input').value = sampleText;
       document.getElementById('voice-banned-input').value = preset.banned_words || '';
@@ -4007,7 +4007,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       const samplesRaw = document.getElementById('voice-samples-input').value.trim();
       const bannedWords = document.getElementById('voice-banned-input').value.trim();
 
-      const sampleTexts = samplesRaw ? samplesRaw.split('\n\n').map(s => s.trim()).filter(Boolean) : [];
+      const sampleTexts = samplesRaw ? samplesRaw.split(String.fromCharCode(10, 10)).map(s => s.trim()).filter(Boolean) : [];
 
       const payload = {
         id: voiceId,
@@ -4289,7 +4289,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       btn.disabled = true;
       btn.innerText = 'Scraping articles...';
 
-      const urls = rawUrls.split(/[\n,]+/).map(u => u.trim()).filter(u => u.startsWith('http'));
+      const urls = rawUrls.split(/[\\r\\n,]+/).map(u => u.trim()).filter(u => u.startsWith('http'));
       if (urls.length === 0) {
         showToast('No valid http/https URLs found');
         btn.disabled = false;
@@ -4436,12 +4436,12 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     }
 
     function sendStarterPrompt(promptText) {
-      submitNotebookChat(promptText);
+      return submitNotebookChat(promptText);
     }
 
     function selectContrarianAngle(angleTitle) {
       const text = `Refine and expand on Angle: "${angleTitle}". Challenge conventional compliance assumptions and detail the frontline operational proof points and diagnostics.`;
-      submitNotebookChat(text);
+      return submitNotebookChat(text);
     }
 
     function triggerFormatGeneration(formatType) {
@@ -4453,7 +4453,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         campaign_pack: 'Generate the entire full authority campaign pack (1 article, 5 posts, 2 carousels, citations)'
       };
       const text = formatLabels[formatType] || `Generate asset in format: ${formatType}`;
-      submitNotebookChat(text, formatType);
+      return submitNotebookChat(text, formatType);
     }
 
     async function submitNotebookChat(customQuery = null, requestedFormat = null) {
@@ -4483,7 +4483,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       loadingCard.innerHTML = `
         <div style="display: flex; align-items: center; gap: 10px; color: #38bdf8; font-weight: 700; font-size: 13.5px;">
           <span style="font-size: 20px; animation: spin 1s infinite linear;">⚡</span>
-          <span>Gemini Flash is analyzing active sources & synthesizing forensic intelligence...</span>
+          <span>Forensic Intelligence Engine researching & synthesizing live sources...</span>
         </div>
       `;
       streamContainer.appendChild(loadingCard);
@@ -4508,6 +4508,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
           })
         });
 
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Server returned ${res.status}: ${res.statusText}`);
+        }
+
         const data = await res.json();
         const loadingEl = document.getElementById('studio-loading-card');
         if (loadingEl) loadingEl.remove();
@@ -4531,12 +4536,14 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
           }).catch(() => {});
         }
       } catch (err) {
-        console.error(err);
+        console.error('Notebook chat error:', err);
+        const errMsg = (err && err.message) ? err.message : 'Error connecting to synthesis engine. Please try again.';
+        showToast('Error: ' + errMsg);
         const loadingEl = document.getElementById('studio-loading-card');
         if (loadingEl) loadingEl.remove();
         notebookChatMessages.push({
           role: 'assistant',
-          content: 'Error connecting to synthesis engine. Please try again.',
+          content: '⚠️ Error: ' + errMsg,
           dossier: {},
           angles: [],
           asset: null
@@ -4550,6 +4557,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     function renderChatMessages() {
       const container = document.getElementById('chat-messages-container');
       if (!container) return;
+      if (!notebookChatMessages || notebookChatMessages.length === 0) return;
 
       container.innerHTML = notebookChatMessages.map((msg, idx) => {
         if (msg.role === 'user') {
@@ -4774,7 +4782,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     function copyAllPostsFromAsset(msgIdx) {
       const msg = notebookChatMessages[msgIdx];
       if (!msg || !msg.asset || !msg.asset.posts) return;
-      const allText = msg.asset.posts.map(p => `=== ${p.day.toUpperCase()} (${p.theme || ''}) ===\n\n${p.body || p.headline}\n`).join('\n---\n\n');
+      const allText = msg.asset.posts.map(p => `=== ${p.day.toUpperCase()} (${p.theme || ''}) ===\n\n${p.body || p.headline}\n`).join('\\n---\\n\\n');
       copyTextDirect(allText);
     }
 
@@ -4801,8 +4809,8 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
       html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
       html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
-      html = html.replace(/\n\n/g, '</p><p>');
-      html = html.replace(/\n/g, '<br>');
+      html = html.replace(/\\n\\n/g, '</p><p>');
+      html = html.replace(/\\n/g, '<br>');
       return `<p>${html}</p>`;
     }
 
@@ -5016,7 +5024,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       const deckKey = deckNum === 1 ? 'carousel_1' : 'carousel_2';
       const deck = item[deckKey] || (item.campaign_pack && item.campaign_pack[deckKey]) || {};
       const slides = deck.slides || [];
-      const text = slides.map(s => `[SLIDE ${s.slide || ''} - ${s.type || ''}]\nHEADLINE: ${s.headline || ''}\nBULLET: ${s.bullet || ''}\n`).join('\n');
+      const text = slides.map(s => `[SLIDE ${s.slide || ''} - ${s.type || ''}]\nHEADLINE: ${s.headline || ''}\nBULLET: ${s.bullet || ''}\n`).join('\\n');
       copyTextDirect(text);
     }
 
@@ -5029,7 +5037,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       const item = currentModalContentItem;
       if (!item) return;
       const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
-      const text = posts.map(p => `=== ${p.day.toUpperCase()} (${p.theme || ''}) ===\n\n${p.body || p.headline}\n`).join('\n---\n\n');
+      const text = posts.map(p => `=== ${p.day.toUpperCase()} (${p.theme || ''}) ===\n\n${p.body || p.headline}\n`).join('\\n---\\n\\n');
       copyTextDirect(text);
     }
 
@@ -5040,7 +5048,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       bundle += `## 1. LONG INVESTIGATIVE ARTICLE\n\n${item.article || item.content_markdown || ''}\n\n`;
       bundle += `## 2. 5-DAY POST SERIES\n\n`;
       const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
-      bundle += posts.map(p => `[${p.day}]: ${p.body || p.headline}`).join('\n\n') + '\n\n';
+      bundle += posts.map(p => `[${p.day}]: ${p.body || p.headline}`).join('\\n\\n') + '\\n\\n';
       copyTextDirect(bundle);
     }
 
