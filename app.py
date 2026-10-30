@@ -1576,6 +1576,7 @@ CRM_TEMPLATE = """<!DOCTYPE html>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
+              <a href="/content?source_lead=${encodeURIComponent(lead.id)}&pipeline=media" class="btn-xs" style="text-decoration:none; color:#38bdf8; border:1px solid rgba(56,189,248,0.4); display:inline-flex; align-items:center; gap:3px;" title="Synthesize Content with Gemini">📝 Synthesize Content</a>
               <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'media')" title="Edit show details">✏️ Edit</button>
               <select class="status-select ${statusClass}" onchange="updatePodcastStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_MEDIA.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
@@ -1634,6 +1635,7 @@ CRM_TEMPLATE = """<!DOCTYPE html>
 
           <!-- Show Links Toolbar -->
           <div class="links-toolbar">
+            <a href="/content?source_lead=${encodeURIComponent(lead.id)}&pipeline=media" class="link-pill" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">📝 Synthesize</a>
             ${lead.website ? `<a href="${lead.website}" target="_blank" class="link-pill">🌐 Website</a>` : ''}
             ${lead.youtube_url ? `<a href="${lead.youtube_url}" target="_blank" class="link-pill pill-yt">▶️ YouTube</a>` : ''}
             ${lead.linkedin_url ? `<a href="${lead.linkedin_url}" target="_blank" class="link-pill pill-li">💼 LinkedIn</a>` : ''}
@@ -1676,6 +1678,7 @@ CRM_TEMPLATE = """<!DOCTYPE html>
               </div>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
+              <a href="/content?source_lead=${encodeURIComponent(lead.id)}&pipeline=exec" class="btn-xs" style="text-decoration:none; color:#38bdf8; border:1px solid rgba(56,189,248,0.4); display:inline-flex; align-items:center; gap:3px;" title="Synthesize Content with Gemini">📝 Synthesize Content</a>
               <button class="btn-xs btn-edit" onclick="openEditLeadModal('${escapeHtml(lead.id)}', 'exec')" title="Edit lead details">✏️ Edit</button>
               <select class="status-select ${statusClass}" onchange="updateExecutiveStatus('${escapeHtml(lead.id)}', this.value)">
                 ${STATUS_OPTIONS_EXEC.map(opt => `<option value="${escapeHtml(opt)}" ${lead.status === opt ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join('')}
@@ -1688,6 +1691,7 @@ CRM_TEMPLATE = """<!DOCTYPE html>
 
           <!-- Contact Toolbar -->
           <div class="links-toolbar">
+            <a href="/content?source_lead=${encodeURIComponent(lead.id)}&pipeline=exec" class="link-pill" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">📝 Synthesize</a>
             ${lead.linkedin_url ? `<a href="${lead.linkedin_url}" target="_blank" class="link-pill pill-li">💼 View LinkedIn Profile</a>` : `<span style="font-size: 11px; color: var(--text-muted);">LinkedIn URL not mapped</span>`}
             ${lead.email ? `<a href="mailto:${lead.email}" class="link-pill">✉️ ${escapeHtml(lead.email)}</a>` : ''}
           </div>
@@ -2605,6 +2609,116 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     .tier-badge.t1 { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
     .tier-badge.t2 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
     .tier-badge.t3 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .tier-badge.campaign { 
+      background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(168, 85, 247, 0.25)); 
+      color: #fb7185; 
+      border: 1px solid rgba(244, 63, 94, 0.5); 
+    }
+    .quick-pill.pill-pink.active {
+      background: rgba(244, 63, 94, 0.25);
+      border-color: #f43f5e;
+      color: #fda4af;
+    }
+
+    /* Campaign Tabbed Navigation */
+    .campaign-tabs-strip {
+      display: flex;
+      gap: 6px;
+      background: rgba(7, 11, 20, 0.7);
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-top: 10px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+    }
+    .campaign-tab-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .campaign-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .campaign-tab-btn.active {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: #a855f7;
+      color: #e9d5ff;
+    }
+    .campaign-post-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .campaign-post-card:hover {
+      border-color: rgba(168, 85, 247, 0.4);
+    }
+    .campaign-post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .campaign-post-day {
+      font-size: 13px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .campaign-post-title {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .campaign-post-body {
+      font-size: 13px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      font-family: inherit;
+      background: rgba(7, 11, 20, 0.4);
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .campaign-post-tags {
+      margin-top: 8px;
+      font-size: 11.5px;
+      color: #a855f7;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .campaign-word-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d399;
+      border-radius: 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
 
     .content-card-title {
       font-size: 16px;
@@ -2877,6 +2991,10 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         <div class="brand-title" style="display: flex; align-items: center; gap: 8px;">
           <span>Content Engine</span>
           <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4);">Voice Cloning Studio</span>
+          <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981; display: inline-block;"></span>
+            ⚡ Gemini 2.5 Flash Connected
+          </span>
         </div>
         <div class="brand-sub">Research Dossiers & Author Voice Cloning</div>
       </div>
@@ -2913,6 +3031,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         <div class="kpi-value" id="kpi-t3-count" style="color: #38bdf8;">0</div>
         <div class="kpi-sub">Newsletter / Articles</div>
       </div>
+      <div class="kpi-card" onclick="setQuickTierFilter('Campaign')">
+        <div class="kpi-label">📦 Authority Campaign Packs</div>
+        <div class="kpi-value" id="kpi-campaign-count" style="color: #f43f5e;">0</div>
+        <div class="kpi-sub">1 Article + 5 Posts + 2 Decks</div>
+      </div>
       <div class="kpi-card">
         <div class="kpi-label">Research Citations</div>
         <div class="kpi-value" id="kpi-facts-count" style="color: #f59e0b;">0</div>
@@ -2930,7 +3053,8 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
       <div class="filter-controls">
         <select id="tier-filter-select" class="select-filter" onchange="handleFilterChange()">
-          <option value="ALL">All Tiers</option>
+          <option value="ALL">All Formats</option>
+          <option value="Campaign">📦 Full Authority Campaign Packs</option>
           <option value="Tier 1">Tier 1: Swipeable Carousel</option>
           <option value="Tier 2">Tier 2: In-Feed Essay</option>
           <option value="Tier 3">Tier 3: Executive Briefing</option>
@@ -2953,7 +3077,8 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     <!-- Quick Filter Pills -->
     <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;" id="quick-filter-pills">
-      <span class="quick-pill active" id="qp-all" onclick="setQuickTierFilter('ALL')">All Tiers <span id="pill-all-count">(0)</span></span>
+      <span class="quick-pill active" id="qp-all" onclick="setQuickTierFilter('ALL')">All Formats <span id="pill-all-count">(0)</span></span>
+      <span class="quick-pill pill-pink" id="qp-campaign" onclick="setQuickTierFilter('Campaign')">📦 Campaign Packs <span id="pill-campaign-count">(0)</span></span>
       <span class="quick-pill pill-purple" id="qp-t1" onclick="setQuickTierFilter('Tier 1')">Tier 1: Carousels <span id="pill-t1-count">(0)</span></span>
       <span class="quick-pill pill-emerald" id="qp-t2" onclick="setQuickTierFilter('Tier 2')">Tier 2: Essays <span id="pill-t2-count">(0)</span></span>
       <span class="quick-pill" id="qp-t3" onclick="setQuickTierFilter('Tier 3')">Tier 3: Briefings <span id="pill-t3-count">(0)</span></span>
@@ -2970,48 +3095,146 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
   <div class="modal-overlay" id="content-view-modal">
     <div class="modal-card modal-card-xl">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
           <span id="view-content-tier-badge" class="tier-badge t1">Tier 1</span>
           <div class="modal-title" id="view-content-title">Content Title</div>
         </div>
         <button class="close-btn" onclick="closeContentViewModal()">&times;</button>
       </div>
 
-      <!-- Quick Action Copy Bar -->
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
-        <div style="font-size: 12px; color: var(--text-muted);">
-          Source: <span id="view-content-source-label" style="color: #ffffff; font-weight: 600;">Document</span>
+      <!-- Campaign Pack Tab Navigation (Only visible for Campaign Packs) -->
+      <div class="campaign-tabs-strip" id="campaign-tabs-strip" style="display: none;">
+        <button class="campaign-tab-btn active" id="camp-tab-btn-article" onclick="switchCampaignTab('article')">📖 Long Article (2,000+ words)</button>
+        <button class="campaign-tab-btn" id="camp-tab-btn-posts" onclick="switchCampaignTab('posts')">📅 5-Day Post Series (Mon-Fri)</button>
+        <button class="campaign-tab-btn" id="camp-tab-btn-c1" onclick="switchCampaignTab('c1')">🗂️ Carousel 1: Problem Deck</button>
+        <button class="campaign-tab-btn" id="camp-tab-btn-c2" onclick="switchCampaignTab('c2')">🗂️ Carousel 2: Framework Deck</button>
+        <button class="campaign-tab-btn" id="camp-tab-btn-dossier" onclick="switchCampaignTab('dossier')">🔬 Research Dossier</button>
+        <button class="campaign-tab-btn" onclick="copyFullCampaignBundle()" style="margin-left: auto; background: linear-gradient(135deg, rgba(244, 63, 94, 0.25), rgba(168, 85, 247, 0.25)); border-color: rgba(244, 63, 94, 0.5); color: #fb7185;">📋 Copy Entire Campaign Bundle</button>
+      </div>
+
+      <!-- Campaign View: Long Article -->
+      <div id="campaign-article-panel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="campaign-word-badge" id="article-word-count-badge">📖 2,150 words</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Modeled after master reference investigative articles</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-primary btn-xs" onclick="copyCampaignArticle()">📋 Copy Long Article</button>
+            <button class="btn btn-xs" onclick="copyMarkdown()">⬇️ Copy Raw Markdown</button>
+          </div>
         </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-primary btn-xs" onclick="copyFullPost()">📋 Copy Full Post</button>
-          <button class="btn btn-xs" id="btn-copy-slide-script" onclick="copySlideScript()" style="display: none;">📑 Copy Slide Script</button>
-          <button class="btn btn-xs" onclick="copyLinkedInPost()">💼 Copy for LinkedIn</button>
-          <button class="btn btn-xs" onclick="copyBriefing()">📄 Copy Briefing</button>
-          <button class="btn btn-xs" onclick="copyMarkdown()">⬇️ Copy Markdown</button>
+        <textarea id="campaign-article-textarea" class="form-input" style="height: 380px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
+      </div>
+
+      <!-- Campaign View: 5-Day Post Series -->
+      <div id="campaign-posts-panel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
+          <div style="font-size: 12px; color: var(--text-muted);">
+            5 Strategic Daily Feed Posts (Mon-Fri) designed for mobile dwell time and comment engagement.
+          </div>
+          <button class="btn btn-primary btn-xs" onclick="copyAllPostsText()">📋 Copy All 5 Posts</button>
+        </div>
+        <div id="campaign-posts-list" style="max-height: 420px; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; gap: 12px;">
+          <!-- Injected via JavaScript -->
         </div>
       </div>
 
-      <!-- Slide Deck Viewer (For Carousels) -->
-      <div class="slide-deck-viewer" id="slide-deck-container" style="display: none;">
-        <div class="slide-deck-nav">
-          <button class="btn btn-xs" onclick="navigateSlide(-1)">◀ Prev Slide</button>
-          <span id="slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 5</span>
-          <button class="btn btn-xs" onclick="navigateSlide(1)">Next Slide ▶</button>
+      <!-- Campaign View: Carousel 1 -->
+      <div id="campaign-c1-panel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
+          <div>
+            <span style="font-weight: 700; color: #ffffff; font-size: 13px;">Carousel 1: Problem Deconstruction Deck</span>
+            <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 8px;">7-8 Slides: Hook, Safety Mirage, Hard Number, Operational Break, Board Questions</span>
+          </div>
+          <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(1)">📑 Copy Problem Deck Script</button>
         </div>
-        <div class="slide-card-presentation">
-          <span class="slide-number-pill" id="slide-current-number">#1</span>
-          <div class="slide-headline-text" id="slide-current-headline">Headline</div>
-          <div class="slide-bullet-text" id="slide-current-bullet">Bullet text</div>
+        <div class="slide-deck-viewer" style="display: flex;">
+          <div class="slide-deck-nav">
+            <button class="btn btn-xs" onclick="navigateCarousel(1, -1)">◀ Prev Slide</button>
+            <span id="c1-slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 7</span>
+            <button class="btn btn-xs" onclick="navigateCarousel(1, 1)">Next Slide ▶</button>
+          </div>
+          <div class="slide-card-presentation">
+            <span class="slide-number-pill" id="c1-slide-number">#1</span>
+            <div class="slide-headline-text" id="c1-slide-headline">Headline</div>
+            <div class="slide-bullet-text" id="c1-slide-bullet">Bullet text</div>
+          </div>
         </div>
       </div>
 
-      <!-- Content Markdown Reader -->
-      <div class="form-group" style="margin-top: 14px;">
-        <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
-          <span>Formatted Content / Copy:</span>
-          <span style="font-size: 11px; color: var(--text-muted);">Ready to paste directly into LinkedIn or newsletter</span>
-        </label>
-        <textarea id="view-content-markdown" class="form-input" style="height: 320px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
+      <!-- Campaign View: Carousel 2 -->
+      <div id="campaign-c2-panel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
+          <div>
+            <span style="font-weight: 700; color: #ffffff; font-size: 13px;">Carousel 2: Tactical Operator Framework Deck</span>
+            <span style="font-size: 11.5px; color: var(--text-muted); margin-left: 8px;">7-8 Slides: Step-by-Step Operator Blueprint & Boardroom Diagnostic Checklist</span>
+          </div>
+          <button class="btn btn-primary btn-xs" onclick="copyCarouselScript(2)">📑 Copy Framework Deck Script</button>
+        </div>
+        <div class="slide-deck-viewer" style="display: flex;">
+          <div class="slide-deck-nav">
+            <button class="btn btn-xs" onclick="navigateCarousel(2, -1)">◀ Prev Slide</button>
+            <span id="c2-slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 7</span>
+            <button class="btn btn-xs" onclick="navigateCarousel(2, 1)">Next Slide ▶</button>
+          </div>
+          <div class="slide-card-presentation">
+            <span class="slide-number-pill" id="c2-slide-number">#1</span>
+            <div class="slide-headline-text" id="c2-slide-headline">Headline</div>
+            <div class="slide-bullet-text" id="c2-slide-bullet">Bullet text</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campaign View: Research Dossier -->
+      <div id="campaign-dossier-panel" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; gap: 8px;">
+          <div style="font-size: 12px; color: var(--text-muted);">Empirical Evidence, Statistics, Forensic Quotes & Verified Citations</div>
+          <button class="btn btn-primary btn-xs" onclick="copyCampaignDossier()">📋 Copy Dossier</button>
+        </div>
+        <div id="campaign-dossier-content" style="max-height: 400px; overflow-y: auto; background: rgba(7, 11, 20, 0.4); padding: 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px;">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Standard Single Tier View (For Tier 1 / 2 / 3 items) -->
+      <div id="standard-content-view">
+        <!-- Quick Action Copy Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(7, 11, 20, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
+          <div style="font-size: 12px; color: var(--text-muted);">
+            Source: <span id="view-content-source-label" style="color: #ffffff; font-weight: 600;">Document</span>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-xs" onclick="copyFullPost()">📋 Copy Full Post</button>
+            <button class="btn btn-xs" id="btn-copy-slide-script" onclick="copySlideScript()" style="display: none;">📑 Copy Slide Script</button>
+            <button class="btn btn-xs" onclick="copyLinkedInPost()">💼 Copy for LinkedIn</button>
+            <button class="btn btn-xs" onclick="copyBriefing()">📄 Copy Briefing</button>
+            <button class="btn btn-xs" onclick="copyMarkdown()">⬇️ Copy Markdown</button>
+          </div>
+        </div>
+
+        <!-- Slide Deck Viewer (For Carousels) -->
+        <div class="slide-deck-viewer" id="slide-deck-container" style="display: none;">
+          <div class="slide-deck-nav">
+            <button class="btn btn-xs" onclick="navigateSlide(-1)">◀ Prev Slide</button>
+            <span id="slide-counter-text" style="font-size: 12.5px; font-weight: 700; color: #38bdf8;">Slide 1 of 5</span>
+            <button class="btn btn-xs" onclick="navigateSlide(1)">Next Slide ▶</button>
+          </div>
+          <div class="slide-card-presentation">
+            <span class="slide-number-pill" id="slide-current-number">#1</span>
+            <div class="slide-headline-text" id="slide-current-headline">Headline</div>
+            <div class="slide-bullet-text" id="slide-current-bullet">Bullet text</div>
+          </div>
+        </div>
+
+        <!-- Content Markdown Reader -->
+        <div class="form-group" style="margin-top: 14px;">
+          <label class="form-label" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Formatted Content / Copy:</span>
+            <span style="font-size: 11px; color: var(--text-muted);">Ready to paste directly into LinkedIn or newsletter</span>
+          </label>
+          <textarea id="view-content-markdown" class="form-input" style="height: 320px; font-family: inherit; font-size: 13px; line-height: 1.6;" readonly></textarea>
+        </div>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 14px;">
@@ -3052,7 +3275,10 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; margin-top: 10px;">
+        <button class="btn btn-emerald" id="dossier-synthesize-btn" onclick="synthesizeFromDossierLinks()">
+          ✨ Synthesize New Post from These Links
+        </button>
         <button class="btn" onclick="closeDossierModal()">Close</button>
       </div>
     </div>
@@ -3094,8 +3320,18 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       <!-- URL Tab Panel -->
       <div id="panel-src-url" style="display: none;">
         <div class="form-group">
-          <label class="form-label">Article, Report, or Substack URL *</label>
-          <input type="url" id="gen-url-input" class="form-input" placeholder="https://www.wsj.com/... or https://subdomain.substack.com/p/...">
+          <label class="form-label">Article, Report, or Research URLs (Single or Multi-URL) *</label>
+          <textarea id="gen-url-input" class="form-input" rows="3" placeholder="Paste one or more article/research URLs (one per line)..."></textarea>
+          <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 4px;">Paste multiple links separated by newlines or commas. Gemini 2.5 Flash ingests and cross-references each into a synthesized dossier.</div>
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" style="margin: 0; font-size: 11.5px; color: #38bdf8;">📌 Quick-Insert Researched Links:</label>
+            <span style="font-size: 10.5px; color: var(--text-muted);">Click any pill to append to URL box</span>
+          </div>
+          <div id="researched-links-pills" style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 110px; overflow-y: auto; padding: 4px 0;">
+            <span style="font-size: 11px; color: var(--text-muted);">Loading links...</span>
+          </div>
         </div>
       </div>
 
@@ -3128,8 +3364,9 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       <div class="form-row-2col">
         <div class="form-group">
           <label class="form-label">Content Tier Format *</label>
-          <select id="gen-tier-select" class="form-input">
-            <option value="Tier 1: Short-Form Carousel" selected>Tier 1: Swipeable Carousel & Companion Post</option>
+          <select id="gen-tier-select" class="form-input" style="font-weight: 600;">
+            <option value="Full Campaign Distribution Pack" selected>📦 Full Campaign Distribution Pack (1 Long Article + 5 Daily Posts + 2 Carousels)</option>
+            <option value="Tier 1: Short-Form Carousel">Tier 1: Swipeable Carousel & Companion Post</option>
             <option value="Tier 2: In-Feed Long-Form Essay">Tier 2: In-Feed Long-Form Essay</option>
             <option value="Tier 3: LinkedIn Article">Tier 3: Executive Briefing / Article</option>
           </select>
@@ -3179,7 +3416,56 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     let sortOrder = 'newest';
     let currentModalContentItem = null;
     let currentSlideIndex = 0;
+    let currentC1Index = 0;
+    let currentC2Index = 0;
+    let currentCampaignTab = 'article';
     let currentSourceTab = 'pdf';
+    let researchedLinks = [];
+
+    async function loadResearchedLinks() {
+      try {
+        const res = await fetch('/api/content/researched-links');
+        researchedLinks = await res.json();
+        renderResearchedLinksPills();
+      } catch (e) {
+        console.error('Failed to load researched links', e);
+      }
+    }
+
+    function renderResearchedLinksPills() {
+      const container = document.getElementById('researched-links-pills');
+      if (!container) return;
+      if (!researchedLinks || researchedLinks.length === 0) {
+        container.innerHTML = '<span style="font-size: 11px; color: var(--text-muted);">No researched links saved in dossiers yet.</span>';
+        return;
+      }
+      container.innerHTML = researchedLinks.slice(0, 16).map(l => {
+        let hostname = '';
+        try { hostname = new URL(l.url).hostname.replace('www.', ''); } catch (e) { hostname = l.url; }
+        const displayTitle = l.title && l.title !== l.url ? l.title : hostname;
+        const truncated = displayTitle.length > 30 ? displayTitle.substring(0, 28) + '…' : displayTitle;
+        return `
+          <button type="button" class="btn-xs" style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); color: #7dd3fc; border-radius: 12px; padding: 3px 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 11px;" onclick="appendResearchedUrl('${escapeHtml(l.url)}')" title="${escapeHtml(l.title || l.url)}">
+            <span>🔗 ${escapeHtml(truncated)}</span>
+            <span style="opacity: 0.6; font-size: 9px;">+Add</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function appendResearchedUrl(url) {
+      const textarea = document.getElementById('gen-url-input');
+      if (!textarea) return;
+      const current = textarea.value.trim();
+      const existing = current ? current.split('\n').map(u => u.trim()).filter(Boolean) : [];
+      if (!existing.includes(url)) {
+        existing.push(url);
+        textarea.value = existing.join('\n');
+        showToast('Link added to synthesis list');
+      } else {
+        showToast('Link already in list');
+      }
+    }
 
     async function loadContentPageData() {
       try {
@@ -3198,6 +3484,25 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         updateCountersAndPills();
         populateLeadDropdown();
         renderContentGrid();
+        loadResearchedLinks();
+
+        // Check if navigated from CRM with source_lead
+        const urlParams = new URLSearchParams(window.location.search);
+        const sourceLead = urlParams.get('source_lead');
+        const pipeline = urlParams.get('pipeline') || 'media';
+        if (sourceLead) {
+          openCreateModal();
+          switchContentSourceTab('lead');
+          const pipeSelect = document.getElementById('gen-lead-pipeline');
+          if (pipeSelect) {
+            pipeSelect.value = pipeline;
+            populateLeadDropdown();
+          }
+          const leadSelect = document.getElementById('gen-lead-id');
+          if (leadSelect) {
+            leadSelect.value = sourceLead;
+          }
+        }
       } catch (err) {
         console.error('Error loading content data:', err);
         showToast('Error loading content data');
@@ -3206,18 +3511,23 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
     function updateCountersAndPills() {
       const total = contentItems.length;
+      const tCamp = contentItems.filter(c => (c.tier || '').toLowerCase().includes('campaign') || !!c.campaign_pack).length;
       const t1 = contentItems.filter(c => (c.tier || '').includes('Tier 1')).length;
       const t2 = contentItems.filter(c => (c.tier || '').includes('Tier 2')).length;
-      const t3 = contentItems.filter(c => (c.tier || '').includes('Tier 3') || (c.tier || '').toLowerCase().includes('article')).length;
+      const t3 = contentItems.filter(c => ((c.tier || '').includes('Tier 3') || (c.tier || '').toLowerCase().includes('article')) && !(c.tier || '').toLowerCase().includes('campaign')).length;
       const facts = contentItems.reduce((acc, c) => acc + ((c.research_dossier && c.research_dossier.data_points) ? c.research_dossier.data_points.length : 0), 0);
 
       document.getElementById('kpi-total-content').innerText = total;
+      const kpiCamp = document.getElementById('kpi-campaign-count');
+      if (kpiCamp) kpiCamp.innerText = tCamp;
       document.getElementById('kpi-t1-count').innerText = t1;
       document.getElementById('kpi-t2-count').innerText = t2;
       document.getElementById('kpi-t3-count').innerText = t3;
       document.getElementById('kpi-facts-count').innerText = facts;
 
       document.getElementById('pill-all-count').innerText = `(${total})`;
+      const pillCamp = document.getElementById('pill-campaign-count');
+      if (pillCamp) pillCamp.innerText = `(${tCamp})`;
       document.getElementById('pill-t1-count').innerText = `(${t1})`;
       document.getElementById('pill-t2-count').innerText = `(${t2})`;
       document.getElementById('pill-t3-count').innerText = `(${t3})`;
@@ -3270,17 +3580,20 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       }
 
       container.innerHTML = filtered.map(item => {
-        const isT1 = (item.tier || '').includes('Tier 1');
-        const isT2 = (item.tier || '').includes('Tier 2');
-        const tierClass = isT1 ? 't1' : (isT2 ? 't2' : 't3');
+        const isCamp = (item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack;
+        const isT1 = !isCamp && (item.tier || '').includes('Tier 1');
+        const isT2 = !isCamp && (item.tier || '').includes('Tier 2');
+        const tierClass = isCamp ? 'campaign' : (isT1 ? 't1' : (isT2 ? 't2' : 't3'));
+        const tierLabel = isCamp ? '📦 Campaign Pack' : (item.tier || 'Content');
         const factsCount = (item.research_dossier && item.research_dossier.data_points) ? item.research_dossier.data_points.length : 0;
         const citesCount = (item.research_dossier && item.research_dossier.citations) ? item.research_dossier.citations.length : 0;
         const slidesCount = Array.isArray(item.slides_outline) ? item.slides_outline.length : 0;
+        const wordCount = (item.article || item.content_markdown || '').trim().split(/\s+/).filter(Boolean).length;
 
         return `
           <div class="content-card">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-              <span class="tier-badge ${tierClass}">${escapeHtml(item.tier || 'Content')}</span>
+              <span class="tier-badge ${tierClass}">${escapeHtml(tierLabel)}</span>
               <span style="font-size: 11px; padding: 2px 8px; border-radius: 12px; background: var(--tag-bg); color: #94a3b8; border: 1px solid var(--border);">${escapeHtml(item.topic || 'General')}</span>
             </div>
 
@@ -3291,11 +3604,11 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
             <div style="font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
               <span>Source:</span>
               <span style="color: #cbd5e1; font-weight: 600;">${escapeHtml(item.source_reference || item.source_type || 'Internal')}</span>
-              ${isT1 && slidesCount ? `<span>• 📑 ${slidesCount} Slides</span>` : ''}
+              ${isCamp ? `<span style="color: #fb7185; font-weight: 600;">• 📖 ${wordCount} Words</span><span style="color: #38bdf8; font-weight: 600;">• 📅 5 Posts</span><span style="color: #c084fc; font-weight: 600;">• 🗂️ 2 Decks</span>` : (isT1 && slidesCount ? `<span>• 📑 ${slidesCount} Slides</span>` : '')}
             </div>
 
             <div class="content-card-excerpt">
-              ${escapeHtml(item.content_markdown || '')}
+              ${escapeHtml(item.content_markdown || item.article || '')}
             </div>
 
             <div class="dossier-stats-strip">
@@ -3350,6 +3663,10 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     function updatePillsState() {
       document.querySelectorAll('#quick-filter-pills .quick-pill').forEach(p => p.classList.remove('active'));
       if (tierFilter === 'ALL') document.getElementById('qp-all').classList.add('active');
+      else if (tierFilter.toLowerCase().includes('campaign')) {
+        const p = document.getElementById('qp-campaign');
+        if (p) p.classList.add('active');
+      }
       else if (tierFilter.includes('Tier 1')) document.getElementById('qp-t1').classList.add('active');
       else if (tierFilter.includes('Tier 2')) document.getElementById('qp-t2').classList.add('active');
       else if (tierFilter.includes('Tier 3')) document.getElementById('qp-t3').classList.add('active');
@@ -3495,6 +3812,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
         closeNewContentModal();
         updateCountersAndPills();
         renderContentGrid();
+        loadResearchedLinks();
         showToast('✨ Voice-conditioned content generated successfully!');
         openContentViewModal(createdItem.id);
       } catch (err) {
@@ -3532,25 +3850,77 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
 
       document.getElementById('view-content-title').innerText = item.title || 'Untitled Post';
       const badge = document.getElementById('view-content-tier-badge');
-      const isT1 = (item.tier || '').includes('Tier 1');
-      const isT2 = (item.tier || '').includes('Tier 2');
-      badge.className = `tier-badge ${isT1 ? 't1' : (isT2 ? 't2' : 't3')}`;
-      badge.innerText = item.tier || 'Content';
+      const isCamp = (item.tier || '').toLowerCase().includes('campaign') || !!item.campaign_pack;
+      const isT1 = !isCamp && (item.tier || '').includes('Tier 1');
+      const isT2 = !isCamp && (item.tier || '').includes('Tier 2');
+      badge.className = `tier-badge ${isCamp ? 'campaign' : (isT1 ? 't1' : (isT2 ? 't2' : 't3'))}`;
+      badge.innerText = isCamp ? '📦 Full Campaign Pack' : (item.tier || 'Content');
 
       document.getElementById('view-content-source-label').innerText = `${item.source_reference || item.source_type} (${item.topic})`;
-      document.getElementById('view-content-markdown').value = item.content_markdown || '';
 
-      const slideContainer = document.getElementById('slide-deck-container');
-      const copyScriptBtn = document.getElementById('btn-copy-slide-script');
+      const campTabs = document.getElementById('campaign-tabs-strip');
+      const stdView = document.getElementById('standard-content-view');
 
-      if (isT1 && Array.isArray(item.slides_outline) && item.slides_outline.length > 0) {
-        slideContainer.style.display = 'flex';
-        copyScriptBtn.style.display = 'inline-flex';
-        currentSlideIndex = 0;
-        updateSlideView();
+      if (isCamp) {
+        campTabs.style.display = 'flex';
+        stdView.style.display = 'none';
+
+        // Prepare Campaign View Data
+        const articleText = item.article || item.content_markdown || '';
+        document.getElementById('campaign-article-textarea').value = articleText;
+        const words = articleText.trim().split(/\s+/).filter(Boolean).length;
+        document.getElementById('article-word-count-badge').innerText = `📖 ${words.toLocaleString()} words`;
+
+        // Render 5-Day Posts
+        const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
+        const postsContainer = document.getElementById('campaign-posts-list');
+        if (posts.length > 0) {
+          postsContainer.innerHTML = posts.map((p, idx) => `
+            <div class="campaign-post-card">
+              <div class="campaign-post-header">
+                <div>
+                  <span class="campaign-post-day">🗓️ ${escapeHtml(p.day)}: ${escapeHtml(p.title || '')}</span>
+                </div>
+                <button class="btn btn-primary btn-xs" onclick="copySingleDayPost(${idx})">📋 Copy ${escapeHtml(p.day)} Post</button>
+              </div>
+              <div class="campaign-post-body">${escapeHtml(p.post_text || '')}</div>
+              ${p.hashtags ? `<div class="campaign-post-tags">${escapeHtml(p.hashtags)}</div>` : ''}
+            </div>
+          `).join('');
+        } else {
+          postsContainer.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 12px;">No weekly posts generated.</div>';
+        }
+
+        // Render Carousels
+        currentC1Index = 0;
+        updateCarouselView(1);
+        currentC2Index = 0;
+        updateCarouselView(2);
+
+        // Render Dossier
+        renderCampaignDossier(item);
+
+        // Switch to Article view by default
+        switchCampaignTab('article');
       } else {
-        slideContainer.style.display = 'none';
-        copyScriptBtn.style.display = 'none';
+        campTabs.style.display = 'none';
+        stdView.style.display = 'block';
+        hideAllCampaignPanels();
+
+        document.getElementById('view-content-markdown').value = item.content_markdown || '';
+
+        const slideContainer = document.getElementById('slide-deck-container');
+        const copyScriptBtn = document.getElementById('btn-copy-slide-script');
+
+        if (isT1 && Array.isArray(item.slides_outline) && item.slides_outline.length > 0) {
+          slideContainer.style.display = 'flex';
+          copyScriptBtn.style.display = 'inline-flex';
+          currentSlideIndex = 0;
+          updateSlideView();
+        } else {
+          slideContainer.style.display = 'none';
+          copyScriptBtn.style.display = 'none';
+        }
       }
 
       document.getElementById('content-view-modal').classList.add('active');
@@ -3559,6 +3929,113 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     function closeContentViewModal() {
       document.getElementById('content-view-modal').classList.remove('active');
       currentModalContentItem = null;
+    }
+
+    function hideAllCampaignPanels() {
+      ['article', 'posts', 'c1', 'c2', 'dossier'].forEach(tab => {
+        const el = document.getElementById(`campaign-${tab}-panel`);
+        if (el) el.style.display = 'none';
+      });
+    }
+
+    function switchCampaignTab(tab) {
+      currentCampaignTab = tab;
+      document.querySelectorAll('#campaign-tabs-strip .campaign-tab-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`camp-tab-btn-${tab}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      hideAllCampaignPanels();
+      const targetPanel = document.getElementById(`campaign-${tab}-panel`);
+      if (targetPanel) targetPanel.style.display = 'block';
+    }
+
+    function navigateCarousel(deckNum, delta) {
+      if (!currentModalContentItem) return;
+      const c = deckNum === 1 ? (currentModalContentItem.carousel_1 || {}) : (currentModalContentItem.carousel_2 || {});
+      const slides = c.slides || (deckNum === 1 ? currentModalContentItem.slides_outline : []) || [];
+      if (!slides.length) return;
+
+      if (deckNum === 1) {
+        currentC1Index = Math.max(0, Math.min(slides.length - 1, currentC1Index + delta));
+        updateCarouselView(1);
+      } else {
+        currentC2Index = Math.max(0, Math.min(slides.length - 1, currentC2Index + delta));
+        updateCarouselView(2);
+      }
+    }
+
+    function updateCarouselView(deckNum) {
+      if (!currentModalContentItem) return;
+      const c = deckNum === 1 ? (currentModalContentItem.carousel_1 || {}) : (currentModalContentItem.carousel_2 || {});
+      const slides = c.slides || (deckNum === 1 ? currentModalContentItem.slides_outline : []) || [];
+      const idx = deckNum === 1 ? currentC1Index : currentC2Index;
+      const prefix = deckNum === 1 ? 'c1' : 'c2';
+
+      if (!slides.length) {
+        document.getElementById(`${prefix}-slide-counter-text`).innerText = 'No slides';
+        document.getElementById(`${prefix}-slide-number`).innerText = '#0';
+        document.getElementById(`${prefix}-slide-headline`).innerText = 'No slides available';
+        document.getElementById(`${prefix}-slide-bullet`).innerText = '';
+        return;
+      }
+
+      const s = slides[idx] || slides[0];
+      document.getElementById(`${prefix}-slide-counter-text`).innerText = `Slide ${idx + 1} of ${slides.length}`;
+      document.getElementById(`${prefix}-slide-number`).innerText = `#${s.slide || (idx + 1)}`;
+      document.getElementById(`${prefix}-slide-headline`).innerText = s.headline || '';
+      document.getElementById(`${prefix}-slide-bullet`).innerText = s.bullet || '';
+    }
+
+    function renderCampaignDossier(item) {
+      const container = document.getElementById('campaign-dossier-content');
+      const d = item.research_dossier || {};
+      const dp = d.data_points || [];
+      const quotes = d.quotes || [];
+      const cites = d.citations || [];
+
+      let html = `
+        <div style="background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px;">
+          <div style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Core Investigative Thesis</div>
+          <div style="font-size: 13.5px; font-weight: 600; color: #ffffff; margin-top: 4px;">${escapeHtml(d.thesis || item.title)}</div>
+          <div style="font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; margin-top: 10px;">Unseen Frontline Tension</div>
+          <div style="font-size: 12.5px; color: #cbd5e1; margin-top: 3px;">${escapeHtml(d.unseen_tension || 'Frontline operational workarounds bypass formal controls.')}</div>
+        </div>
+
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">📊 Verified Facts & Empirical Proof:</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            ${dp.length > 0 ? dp.map(p => `
+              <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-size: 12px;">
+                <span style="color: #ffffff;">📌 ${escapeHtml(p.fact || '')}</span>
+                <div style="font-size: 10.5px; color: var(--text-muted); margin-top: 3px;">Source: <span style="color: #38bdf8;">${escapeHtml(p.source || 'Study')}</span>${p.url ? ` • <a href="${escapeHtml(p.url)}" target="_blank" style="color: #38bdf8;">Link ↗</a>` : ''}</div>
+              </div>
+            `).join('') : '<div style="font-size: 11px; color: var(--text-muted);">No data points recorded.</div>'}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">💬 Forensic Quotes & Mental Models:</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            ${quotes.length > 0 ? quotes.map(q => `
+              <div style="background: rgba(168, 85, 247, 0.08); border-left: 3px solid #a855f7; padding: 6px 12px; font-size: 12px; color: #e2e8f0; font-style: italic;">
+                "${escapeHtml(q)}"
+              </div>
+            `).join('') : '<div style="font-size: 11px; color: var(--text-muted);">No quotes extracted.</div>'}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #ffffff; margin-bottom: 6px;">🔗 Citations:</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            ${cites.length > 0 ? cites.map(c => `
+              <span style="font-size: 11px; background: rgba(7, 11, 20, 0.7); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; color: #94a3b8;">
+                🔗 ${escapeHtml(c.title || c.url || 'Citation')} ${c.url ? `<a href="${escapeHtml(c.url)}" target="_blank" style="color: #38bdf8; margin-left: 4px;">↗</a>` : ''}
+              </span>
+            `).join('') : '<span style="font-size: 11px; color: var(--text-muted);">No citations listed.</span>'}
+          </div>
+        </div>
+      `;
+      container.innerHTML = html;
     }
 
     function navigateSlide(delta) {
@@ -3583,7 +4060,7 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
     /* Copy Actions */
     function copyFullPost() {
       if (!currentModalContentItem) return;
-      copyText(currentModalContentItem.content_markdown || '');
+      copyText(currentModalContentItem.content_markdown || currentModalContentItem.article || '');
     }
 
     function copySlideScript() {
@@ -3591,13 +4068,13 @@ CONTENT_TEMPLATE = """<!DOCTYPE html>
       const script = currentModalContentItem.slides_outline.map(s => `[Slide ${s.slide}]
 ${s.headline}
 ${s.bullet}
-`).join('\\n');
+`).join('\n');
       copyText(script);
     }
 
     function copyLinkedInPost() {
       if (!currentModalContentItem) return;
-      copyText(currentModalContentItem.content_markdown || '');
+      copyText(currentModalContentItem.content_markdown || currentModalContentItem.article || '');
     }
 
     function copyBriefing() {
@@ -3611,15 +4088,113 @@ Tension: ${d.unseen_tension || ''}
 
 `;
       if (d.data_points) {
-        text += `Key Facts:\n` + d.data_points.map(dp => `- ${dp.fact} (${dp.source})`).join('\\n') + `\n\n`;
+        text += `Key Facts:\n` + d.data_points.map(dp => `- ${dp.fact} (${dp.source})`).join('\n') + `\n\n`;
       }
-      text += currentModalContentItem.content_markdown || '';
+      text += (currentModalContentItem.content_markdown || currentModalContentItem.article || '');
       copyText(text);
     }
 
     function copyMarkdown() {
       if (!currentModalContentItem) return;
-      copyText(currentModalContentItem.content_markdown || '');
+      copyText(currentModalContentItem.content_markdown || currentModalContentItem.article || '');
+    }
+
+    function copyCampaignArticle() {
+      if (!currentModalContentItem) return;
+      const text = currentModalContentItem.article || currentModalContentItem.content_markdown || '';
+      copyText(text);
+      showToast('📖 Long Article copied to clipboard');
+    }
+
+    function copySingleDayPost(dayIndex) {
+      if (!currentModalContentItem) return;
+      const posts = currentModalContentItem.weekly_posts || (currentModalContentItem.campaign_pack && currentModalContentItem.campaign_pack.weekly_posts) || [];
+      const p = posts[dayIndex];
+      if (!p) return;
+      const text = `${p.post_text || ''}\n\n${p.hashtags || ''}`.trim();
+      copyText(text);
+      showToast(`📅 ${p.day} post copied to clipboard`);
+    }
+
+    function copyAllPostsText() {
+      if (!currentModalContentItem) return;
+      const posts = currentModalContentItem.weekly_posts || (currentModalContentItem.campaign_pack && currentModalContentItem.campaign_pack.weekly_posts) || [];
+      const combined = posts.map(p => `### 🗓️ ${p.day}: ${p.title || ''}\n\n${p.post_text || ''}\n\n${p.hashtags || ''}`).join('\n\n---\n\n');
+      copyText(combined);
+      showToast('📅 All 5 posts copied to clipboard');
+    }
+
+    function copyCarouselScript(deckNum) {
+      if (!currentModalContentItem) return;
+      const c = deckNum === 1 ? (currentModalContentItem.carousel_1 || {}) : (currentModalContentItem.carousel_2 || {});
+      const slides = c.slides || (deckNum === 1 ? currentModalContentItem.slides_outline : []) || [];
+      const deckTitle = c.title || (deckNum === 1 ? 'Problem Deconstruction Deck' : 'Tactical Operator Framework Deck');
+      const script = `# ${deckTitle}\n\n` + slides.map(s => `[Slide ${s.slide || ''}: ${s.type || ''}]\nHeadline: ${s.headline || ''}\nBody: ${s.bullet || ''}\n`).join('\n');
+      copyText(script);
+      showToast(`🗂️ Carousel ${deckNum} script copied to clipboard`);
+    }
+
+    function copyCampaignDossier() {
+      if (!currentModalContentItem) return;
+      const d = currentModalContentItem.research_dossier || {};
+      let text = `# Research Dossier: ${currentModalContentItem.title}\n\nThesis: ${d.thesis || ''}\n\nTension: ${d.unseen_tension || ''}\n\n`;
+      if (d.data_points) {
+        text += `Key Facts:\n` + d.data_points.map(dp => `- ${dp.fact} (${dp.source})`).join('\n') + `\n\n`;
+      }
+      if (d.quotes) {
+        text += `Quotes:\n` + d.quotes.map(q => `> "${q}"`).join('\n\n') + `\n\n`;
+      }
+      copyText(text);
+      showToast('🔬 Research Dossier copied to clipboard');
+    }
+
+    function copyFullCampaignBundle() {
+      if (!currentModalContentItem) return;
+      const item = currentModalContentItem;
+      const article = item.article || item.content_markdown || '';
+      const posts = item.weekly_posts || (item.campaign_pack && item.campaign_pack.weekly_posts) || [];
+      const c1 = item.carousel_1 || {};
+      const c2 = item.carousel_2 || {};
+      const d = item.research_dossier || {};
+
+      let bundle = `# AUTHORITY CAMPAIGN PACK: ${item.title}
+Topic: ${item.topic || ''}
+Voice: ${item.author_voice || item.voice_profile_id || ''}
+
+================================================================================
+PART 1: LONG INVESTIGATIVE ARTICLE (2,000+ WORDS)
+================================================================================
+${article}
+
+================================================================================
+PART 2: 5-DAY FEED SERIES (MONDAY - FRIDAY)
+================================================================================
+` + posts.map(p => `### 🗓️ ${p.day}: ${p.title || ''}\n\n${p.post_text || ''}\n\n${p.hashtags || ''}`).join('\n\n---\n\n') + `
+
+================================================================================
+PART 3: CAROUSEL 1 - ${c1.title || 'PROBLEM DECONSTRUCTION DECK'}
+================================================================================
+` + (c1.slides || []).map(s => `[Slide ${s.slide}: ${s.type || ''}]\nHeadline: ${s.headline}\nBullet: ${s.bullet}\n`).join('\n') + `
+
+================================================================================
+PART 4: CAROUSEL 2 - ${c2.title || 'TACTICAL OPERATOR FRAMEWORK DECK'}
+================================================================================
+` + (c2.slides || []).map(s => `[Slide ${s.slide}: ${s.type || ''}]\nHeadline: ${s.headline}\nBullet: ${s.bullet}\n`).join('\n') + `
+
+================================================================================
+PART 5: RESEARCH DOSSIER & CITATIONS
+================================================================================
+Thesis: ${d.thesis || ''}
+Tension: ${d.unseen_tension || ''}
+
+Data Points:
+` + (d.data_points || []).map(p => `- ${p.fact} (${p.source})`).join('\n') + `
+
+Citations:
+` + (d.citations || []).map(c => `- ${c.title}: ${c.url}`).join('\n');
+
+      copyText(bundle);
+      showToast('📦 Entire Campaign Bundle copied to clipboard!');
     }
 
     function copyText(str) {
@@ -3635,6 +4210,7 @@ Tension: ${d.unseen_tension || ''}
     function openDossierModal(itemId) {
       const item = contentItems.find(c => c.id === itemId);
       if (!item) return;
+      currentModalContentItem = item;
 
       const d = item.research_dossier || {};
       document.getElementById('dossier-modal-title').innerText = `🔬 Verified Dossier: ${item.title}`;
@@ -3683,6 +4259,52 @@ Tension: ${d.unseen_tension || ''}
       }
 
       document.getElementById('dossier-modal').classList.add('active');
+    }
+
+    function synthesizeFromDossierLinks() {
+      if (!currentModalContentItem) return;
+      const d = currentModalContentItem.research_dossier || {};
+      const urls = [];
+
+      // Collect URLs from citations
+      if (Array.isArray(d.citations)) {
+        d.citations.forEach(c => {
+          const u = typeof c === 'string' ? c : (c.url || '');
+          if (u && u.startsWith('http') && !urls.includes(u)) urls.push(u);
+        });
+      }
+      // Collect URLs from data points
+      if (Array.isArray(d.data_points)) {
+        d.data_points.forEach(dp => {
+          const u = typeof dp === 'object' && dp ? dp.url : '';
+          if (u && u.startsWith('http') && !urls.includes(u)) urls.push(u);
+        });
+      }
+      // Collect from source reference if URL
+      if (currentModalContentItem.source_reference && currentModalContentItem.source_reference.startsWith('http')) {
+        const matches = currentModalContentItem.source_reference.match(/https?:\/\/[^\s,]+/g);
+        if (matches) {
+          matches.forEach(u => {
+            if (!urls.includes(u)) urls.push(u);
+          });
+        }
+      }
+
+      closeDossierModal();
+      openCreateModal();
+      switchContentSourceTab('url');
+
+      const urlInput = document.getElementById('gen-url-input');
+      if (urls.length > 0) {
+        urlInput.value = urls.join('\n');
+      } else if (currentModalContentItem.source_reference && currentModalContentItem.source_reference.startsWith('http')) {
+        urlInput.value = currentModalContentItem.source_reference;
+      }
+      const topicInput = document.getElementById('gen-topic-input');
+      if (topicInput && !topicInput.value) {
+        topicInput.value = `Synthesis: ${currentModalContentItem.topic || currentModalContentItem.title}`;
+      }
+      showToast(`Pre-populated ${urls.length || 1} researched link(s)!`);
     }
 
     function closeDossierModal() {
@@ -3735,6 +4357,33 @@ import openpyxl
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+
+try:
+    from dotenv import load_dotenv
+    env_file = os.path.join(BASE_DIR, ".env")
+    load_dotenv(env_file)
+except Exception:
+    pass
+
+if not os.environ.get("GEMINI_API_KEY"):
+    for ep in [
+        os.path.join(BASE_DIR, ".env"),
+        os.path.join(BASE_DIR, "..", ".env"),
+        os.path.join(os.getcwd(), ".env"),
+        os.path.join(os.getcwd(), "media_prospecting", ".env")
+    ]:
+        if os.path.exists(ep):
+            try:
+                with open(ep, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("GEMINI_API_KEY=") and not line.startswith("#"):
+                            os.environ["GEMINI_API_KEY"] = line.split("=", 1)[1].strip().strip('"').strip("'")
+                            break
+            except Exception:
+                pass
+        if os.environ.get("GEMINI_API_KEY"):
+            break
 
 for p in [
     os.path.abspath(os.path.join(BASE_DIR, "scripts")),
@@ -4197,20 +4846,80 @@ def search_presets():
 
 @app.route("/api/content")
 def get_content():
+    items = None
     if db.is_connected:
         items = db.get_content_items()
-        if items:
-            return jsonify(items)
-    return jsonify(load_local_content())
+    if not items:
+        items = load_local_content()
+    
+    # Restore campaign fields if packed inside research_dossier
+    for item in (items or []):
+        rd = item.get("research_dossier")
+        if isinstance(rd, dict) and "campaign_pack" in rd:
+            cp = rd["campaign_pack"]
+            item["campaign_pack"] = cp
+            if "weekly_posts" in cp and not item.get("weekly_posts"):
+                item["weekly_posts"] = cp["weekly_posts"]
+            if "carousel_1" in cp and not item.get("carousel_1"):
+                item["carousel_1"] = cp["carousel_1"]
+            if "carousel_2" in cp and not item.get("carousel_2"):
+                item["carousel_2"] = cp["carousel_2"]
+            if "article" in cp and not item.get("article"):
+                item["article"] = cp["article"]
+    return jsonify(items)
+
+
+@app.route("/api/content/researched-links")
+def get_researched_links():
+    """Returns distinct citation URLs and titles from existing dossiers across all content."""
+    items = (db.get_content_items() if db.is_connected else None) or load_local_content()
+    seen_urls = set()
+    links = []
+    for item in items:
+        dossier = item.get("research_dossier") or {}
+        # 1. Citations
+        citations = dossier.get("citations") or []
+        for c in citations:
+            if isinstance(c, dict):
+                url = (c.get("url") or "").strip()
+                title = (c.get("title") or "").strip() or url
+            elif isinstance(c, str):
+                url = c.strip()
+                title = c.strip()
+            else:
+                continue
+            if url and url.startswith("http") and url not in seen_urls:
+                seen_urls.add(url)
+                links.append({"url": url, "title": title, "topic": item.get("topic", "")})
+
+        # 2. Source reference if URL
+        src_ref = (item.get("source_reference") or "").strip()
+        if src_ref and src_ref.startswith("http"):
+            for u in re.findall(r'https?://[^\s,]+', src_ref):
+                if u not in seen_urls:
+                    seen_urls.add(u)
+                    links.append({"url": u, "title": item.get("topic") or u, "topic": item.get("topic", "")})
+
+        # 3. Data points URLs
+        data_points = dossier.get("data_points") or []
+        for dp in data_points:
+            if isinstance(dp, dict):
+                u = (dp.get("url") or "").strip()
+                if u and u.startswith("http") and u not in seen_urls:
+                    seen_urls.add(u)
+                    links.append({"url": u, "title": dp.get("source") or item.get("topic") or u, "topic": item.get("topic", "")})
+
+    return jsonify(links)
 
 
 @app.route("/api/content/generate", methods=["POST"])
 def generate_content_item():
     is_form = request.content_type and "multipart/form-data" in request.content_type
+    source_urls = None
     
     if is_form:
         source_type = request.form.get("source_type", "text")
-        tier = request.form.get("tier", "Tier 1: Short-Form Carousel")
+        tier = request.form.get("tier", "Full Campaign Distribution Pack")
         topic = request.form.get("topic", "").strip()
         voice_id = request.form.get("voice_id", "forensic-operator")
         raw_text = ""
@@ -4229,6 +4938,7 @@ def generate_content_item():
             if url:
                 scraped = extract_text_from_url(url)
                 raw_text = scraped.get("text", "")
+                source_urls = scraped.get("urls", [])
                 if not topic and scraped.get("title") and scraped.get("title") != url:
                     topic = scraped["title"]
         elif source_type == "lead":
@@ -4253,7 +4963,7 @@ def generate_content_item():
     else:
         data = request.get_json() or {}
         source_type = data.get("source_type", "text")
-        tier = data.get("tier", "Tier 1: Short-Form Carousel")
+        tier = data.get("tier", "Full Campaign Distribution Pack")
         topic = data.get("topic", "").strip()
         voice_id = data.get("voice_id", "forensic-operator")
         raw_text = data.get("text", "").strip()
@@ -4265,6 +4975,7 @@ def generate_content_item():
             if url:
                 scraped = extract_text_from_url(url)
                 raw_text = scraped.get("text", "")
+                source_urls = scraped.get("urls", [])
                 if not topic and scraped.get("title") and scraped.get("title") != url:
                     topic = scraped["title"]
         elif source_type == "lead":
@@ -4290,8 +5001,13 @@ def generate_content_item():
     if not raw_text.strip():
         return jsonify({"error": "No content could be extracted or provided."}), 400
 
+    if not source_urls and raw_text:
+        urls_found = re.findall(r'https?://[^\s,]+', raw_text)
+        if urls_found:
+            source_urls = urls_found
+
     voice_profile = get_voice_profile_by_id(voice_id)
-    generated = synthesizer.generate_content(raw_text, voice_profile, source_title=topic, tier=tier)
+    generated = synthesizer.generate_content(raw_text, voice_profile, source_title=topic, tier=tier, source_urls=source_urls)
 
     item_id = f"item_{int(datetime.now().timestamp())}_{os.urandom(2).hex()}"
     new_item = {
@@ -4309,6 +5025,24 @@ def generate_content_item():
         "created_at": datetime.utcnow().isoformat(),
         "updated_at": datetime.utcnow().isoformat()
     }
+
+    # Attach campaign pack properties if present
+    if generated.get("campaign_pack") or "weekly_posts" in generated:
+        new_item["campaign_pack"] = generated.get("campaign_pack", {})
+        new_item["weekly_posts"] = generated.get("weekly_posts", [])
+        new_item["carousel_1"] = generated.get("carousel_1", {})
+        new_item["carousel_2"] = generated.get("carousel_2", {})
+        new_item["article"] = generated.get("article", generated.get("content_markdown", ""))
+
+        # Mirror inside research_dossier for Neon Postgres JSONB persistence
+        if not isinstance(new_item["research_dossier"], dict):
+            new_item["research_dossier"] = {}
+        new_item["research_dossier"]["campaign_pack"] = {
+            "weekly_posts": new_item["weekly_posts"],
+            "carousel_1": new_item["carousel_1"],
+            "carousel_2": new_item["carousel_2"],
+            "article": new_item["article"]
+        }
 
     if db.is_connected:
         db.save_content_item(new_item)

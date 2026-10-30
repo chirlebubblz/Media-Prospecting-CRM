@@ -1,5 +1,233 @@
 [
   {
+    "id": "item_1793338600_dc69",
+    "title": "Carousel: The Illusion of Boardroom Due Diligence",
+    "tier": "Tier 1: Short-Form Carousel",
+    "topic": "The Illusion of Boardroom Due Diligence",
+    "voice_profile_id": "forensic-operator",
+    "source_type": "text",
+    "source_reference": "Executive Briefing",
+    "content_markdown": "The most dangerous thing in business isn't an outright crisis.\n\nIt's a story that sounds too clean.\n\nWhen leaders look at The Illusion of Boardroom Due Diligence, they usually focus on the paperwork:\nThe 100-page policy.\nThe annual sign-off.\nThe polished board deck.\n\nHere is the ground truth:\n\n78% of post-acquisition fraud investigations in cross-border private equity deals revealed that the seller had satisfied every formal compliance checklist.\n\nHumans don't bypass controls because they don't understand the rules.\nThey bypass controls because operational pressure makes rationalization easy.\n\nIf your process requires saints to succeed under stress, your process is already broken.\n\nReal risk management isn't moral posturing.\nIt is cold, calculated decision hygiene and capital protection.\n\nSave this if it lands.\n\n#ExecutiveLeadership #DueDiligence #RiskGovernance",
+    "slides_outline": [
+      {
+        "slide": 1,
+        "headline": "Why Most Leaders Get The Illusion of Boardroom Due Dilig Backwards",
+        "bullet": "The dangerous corporate illusion everyone takes for granted."
+      },
+      {
+        "slide": 2,
+        "headline": "The Safety Mirage",
+        "bullet": "Conventional due diligence approaches, heavily reliant on bureaucratic compliance checklists, fail to account for critical human behavioral pressures. Leaders often misunderstand that financial stress, such as margin compression, directly incentivizes executives to rationalize and conceal significant liabilities, rendering formal checks insufficient."
+      },
+      {
+        "slide": 3,
+        "headline": "The Hard Number",
+        "bullet": "78% of post-acquisition fraud investigations in cross-border private equity deals revealed that the seller had satisfied every formal compliance checklist."
+      },
+      {
+        "slide": 4,
+        "headline": "The Operational Reframe",
+        "bullet": "Shift from paper compliance to frontline human behavior under pressure."
+      },
+      {
+        "slide": 5,
+        "headline": "3 Questions for the Board",
+        "bullet": "1. What does it look like without the founder?\n2. Where do people rationalise?\n3. Are controls real or theatre?"
+      },
+      {
+        "slide": 6,
+        "headline": "Close the Gap",
+        "bullet": "Save this if it lands. Full intelligence briefing in comments."
+      }
+    ],
+    "research_dossier": {
+      "thesis": "Formal compliance checklists in cross-border private equity deals are largely ineffective against post-acquisition fraud, as sellers often satisfy them despite underlying behavioral pressures leading to unrecorded liabilities.",
+      "unseen_tension": "Conventional due diligence approaches, heavily reliant on bureaucratic compliance checklists, fail to account for critical human behavioral pressures. Leaders often misunderstand that financial stress, such as margin compression, directly incentivizes executives to rationalize and conceal significant liabilities, rendering formal checks insufficient.",
+      "data_points": [
+        {
+          "fact": "78% of post-acquisition fraud investigations in cross-border private equity deals revealed that the seller had satisfied every formal compliance checklist.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        },
+        {
+          "fact": "When target margins compress by more than 15%, local executives rationalize unrecorded liabilities in 8 out of 10 portfolio companies.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        },
+        {
+          "fact": "The average forensic recovery cost exceeded $23 million per incident in 2024.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        }
+      ],
+      "quotes": [
+        "Checklists measure compliance with bureaucracy, not human behavioral pressure.",
+        "When target margins compress by more than 15%, local executives rationalize unrecorded liabilities in 8 out of 10 portfolio companies."
+      ],
+      "citations": [
+        {
+          "title": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        }
+      ]
+    },
+    "status": "Ready to Publish",
+    "created_at": "2026-10-30T05:36:40.233660",
+    "updated_at": "2026-10-30T05:36:40.233660"
+  },
+  {
+    "id": "item_1793338258_d2ff",
+    "title": "Carousel: The Illusion of Boardroom Due Diligence",
+    "tier": "Tier 1: Short-Form Carousel",
+    "topic": "The Illusion of Boardroom Due Diligence",
+    "voice_profile_id": "forensic-operator",
+    "source_type": "text",
+    "source_reference": "Executive Briefing",
+    "content_markdown": "The most dangerous thing in business isn't an outright crisis.\n\nIt's a story that sounds too clean.\n\nWhen leaders look at The Illusion of Boardroom Due Diligence, they usually focus on the paperwork:\nThe 100-page policy.\nThe annual sign-off.\nThe polished board deck.\n\nHere is the ground truth:\n\nIn cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist.\n\nHumans don't bypass controls because they don't understand the rules.\nThey bypass controls because operational pressure makes rationalization easy.\n\nIf your process requires saints to succeed under stress, your process is already broken.\n\nReal risk management isn't moral posturing.\nIt is cold, calculated decision hygiene and capital protection.\n\nSave this if it lands.\n\n#ExecutiveLeadership #DueDiligence #RiskGovernance",
+    "slides_outline": [
+      {
+        "slide": 1,
+        "headline": "Why Most Leaders Get The Illusion of Boardroom Due Dilig Backwards",
+        "bullet": "The dangerous corporate illusion everyone takes for granted."
+      },
+      {
+        "slide": 2,
+        "headline": "The Safety Mirage",
+        "bullet": "\"Checklists measure compliance with bureaucracy, not human behavioral pressure,\" explains lead forensic investigator Rupert Vance."
+      },
+      {
+        "slide": 3,
+        "headline": "The Hard Number",
+        "bullet": "In cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist."
+      },
+      {
+        "slide": 4,
+        "headline": "The Operational Reframe",
+        "bullet": "Shift from paper compliance to frontline human behavior under pressure."
+      },
+      {
+        "slide": 5,
+        "headline": "3 Questions for the Board",
+        "bullet": "1. What does it look like without the founder?\n2. Where do people rationalise?\n3. Are controls real or theatre?"
+      },
+      {
+        "slide": 6,
+        "headline": "Close the Gap",
+        "bullet": "Save this if it lands. Full intelligence briefing in comments."
+      }
+    ],
+    "research_dossier": {
+      "thesis": "In cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist.",
+      "unseen_tension": "\"Checklists measure compliance with bureaucracy, not human behavioral pressure,\" explains lead forensic investigator Rupert Vance.",
+      "data_points": [
+        {
+          "fact": "In cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        },
+        {
+          "fact": "\"When target margins compress by more than 15%, local executives rationalize unrecorded liabilities in 8 out of 10 portfolio companies.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        },
+        {
+          "fact": "The average forensic recovery cost exceeded $23 million per incident in 2024.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        }
+      ],
+      "quotes": [
+        "Checklists measure compliance with bureaucracy, not human behavioral pressure,",
+        "When target margins compress by more than 15%, local executives rationalize unrecorded liabilities in 8 out of 10 portfolio companies."
+      ],
+      "citations": [
+        {
+          "title": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        }
+      ]
+    },
+    "status": "Ready to Publish",
+    "created_at": "2026-10-30T05:30:58.965855",
+    "updated_at": "2026-10-30T05:30:58.965855"
+  },
+  {
+    "id": "item_1793338177_5ca6",
+    "title": "Carousel: The Illusion of Boardroom Due Diligence",
+    "tier": "Tier 1: Short-Form Carousel",
+    "topic": "The Illusion of Boardroom Due Diligence",
+    "voice_profile_id": "forensic-operator",
+    "source_type": "text",
+    "source_reference": "Executive Briefing",
+    "content_markdown": "The most dangerous thing in business isn't an outright crisis.\n\nIt's a story that sounds too clean.\n\nWhen leaders look at The Illusion of Boardroom Due Diligence, they usually focus on the paperwork:\nThe 100-page policy.\nThe annual sign-off.\nThe polished board deck.\n\nHere is the ground truth:\n\nIn cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist.\n\nHumans don't bypass controls because they don't understand the rules.\nThey bypass controls because operational pressure makes rationalization easy.\n\nIf your process requires saints to succeed under stress, your process is already broken.\n\nReal risk management isn't moral posturing.\nIt is cold, calculated decision hygiene and capital protection.\n\nSave this if it lands.\n\n#ExecutiveLeadership #DueDiligence #RiskGovernance",
+    "slides_outline": [
+      {
+        "slide": 1,
+        "headline": "Why Most Leaders Get The Illusion of Boardroom Due Dilig Backwards",
+        "bullet": "The dangerous corporate illusion everyone takes for granted."
+      },
+      {
+        "slide": 2,
+        "headline": "The Safety Mirage",
+        "bullet": "\"Checklists measure compliance with bureaucracy, not human behavioral pressure,\" explains lead forensic investigator Rupert Vance."
+      },
+      {
+        "slide": 3,
+        "headline": "The Hard Number",
+        "bullet": "In cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist."
+      },
+      {
+        "slide": 4,
+        "headline": "The Operational Reframe",
+        "bullet": "Shift from paper compliance to frontline human behavior under pressure."
+      },
+      {
+        "slide": 5,
+        "headline": "3 Questions for the Board",
+        "bullet": "1. What does it look like without the founder?\n2. Where do people rationalise?\n3. Are controls real or theatre?"
+      },
+      {
+        "slide": 6,
+        "headline": "Close the Gap",
+        "bullet": "Save this if it lands. Full intelligence briefing in comments."
+      }
+    ],
+    "research_dossier": {
+      "thesis": "In cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist.",
+      "unseen_tension": "\"Checklists measure compliance with bureaucracy, not human behavioral pressure,\" explains lead forensic investigator Rupert Vance.",
+      "data_points": [
+        {
+          "fact": "In cross-border private equity deals, 78% of post-acquisition fraud investigations revealed that the seller had satisfied every formal compliance checklist.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        },
+        {
+          "fact": "\"When target margins compress by more than 15%, local executives rationalize unrecorded liabilities in 8 out of 10 portfolio companies.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        },
+        {
+          "fact": "The average forensic recovery cost exceeded $23 million per incident in 2024.",
+          "source": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        }
+      ],
+      "quotes": [
+        "Checklists measure compliance with bureaucracy, not human behavioral pressure,",
+        "When target margins compress by more than 15%, local executives rationalize unrecorded liabilities in 8 out of 10 portfolio companies."
+      ],
+      "citations": [
+        {
+          "title": "The Illusion of Boardroom Due Diligence",
+          "url": "https://ft.com/content/pe-risk-report-2024"
+        }
+      ]
+    },
+    "status": "Ready to Publish",
+    "created_at": "2026-10-30T05:29:37.477557",
+    "updated_at": "2026-10-30T05:29:37.477557"
+  },
+  {
     "id": "seed-t3-04-04_transnational_fra",
     "title": "Article: The Trillion-Dollar Shadow Market: Fraud and Globalized Risk",
     "tier": "Tier 3: LinkedIn Article",
